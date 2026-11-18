@@ -14,7 +14,7 @@ import {
   YAxis,
 } from 'recharts';
 import { formatMonth, formatNumber, formatPct } from '@/lib/format';
-import type { Metrics } from '@/lib/types';
+import type { Metrics } from '@/lib/api/types';
 import { Card } from '../ui/Card';
 import { Tabs } from '../ui/Tabs';
 

@@ -1,6 +1,6 @@
 import { Bot } from 'lucide-react';
 import { formatNumber } from '@/lib/format';
-import type { Meta } from '@/lib/types';
+import type { Meta } from '@/lib/api/types';
 
 export function PageHeader({
   title,

@@ -1,5 +1,5 @@
-import { Categories } from '../src/categorization/taxonomy';
-import { Client } from '../src/data/client.model';
+import { Categories } from '../src/domain/taxonomy';
+import { Client } from '../src/domain/client';
 
 export const baseCategories: Categories = {
   industry: 'salud',

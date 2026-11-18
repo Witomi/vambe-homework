@@ -1,4 +1,4 @@
-import type { DimensionKey, Meta } from './types';
+import type { DimensionKey, Meta } from './api/types';
 
 /** Resuelve etiquetas legibles a partir de la taxonomía que expone el backend. */
 export function createLabeler(meta: Meta) {

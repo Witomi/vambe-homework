@@ -1,24 +1,26 @@
 import { Bot, Calendar, Mail, Phone, UserRound, X } from 'lucide-react';
 import Link from 'next/link';
-import type { SearchParams } from '@/lib/filters';
-import { formatDate, formatNumber } from '@/lib/format';
-import type { ClientDetail, Meta } from '@/lib/types';
-import { hrefWith } from '@/lib/url';
-import { Badge, ClosedBadge } from '../ui/Badge';
+import type { ClientDetail, Meta } from '@/lib/api/types';
+import type { SearchParams } from '@/lib/filters/params';
+import { hrefWith } from '@/lib/filters/url';
+import { formatDate } from '@/lib/format';
+import { ClosedBadge } from '../ui/Badge';
+import { ClientCategories } from './ClientCategories';
 import { DrawerEscape } from './DrawerEscape';
 
-/** Detalle del cliente: transcripción original junto a su categorización. */
-export function ClientDrawer({
-  client,
-  meta,
-  params,
-}: {
+interface ClientDrawerProps {
   client: ClientDetail;
   meta: Meta;
   params: SearchParams;
-}) {
+}
+
+/**
+ * Panel lateral con el detalle del cliente: la transcripción original junto
+ * a su categorización, para verificar cómo la interpretó el LLM.
+ * Se abre con `?cliente=<id>` y se cierra quitando ese parámetro.
+ */
+export function ClientDrawer({ client, meta, params }: ClientDrawerProps) {
   const closeHref = hrefWith('/clientes', params, { cliente: null });
-  const c = client.categories;
 
   return (
     <div
@@ -56,10 +58,14 @@ export function ClientDrawer({
 
         <div className="flex-1 space-y-6 overflow-y-auto p-5">
           <dl className="text-muted grid grid-cols-2 gap-3 text-sm">
-            <Info icon={Mail} label="Email" value={client.email} />
-            <Info icon={Phone} label="Teléfono" value={client.phone} />
-            <Info icon={UserRound} label="Vendedor" value={client.seller} />
-            <Info
+            <ContactField icon={Mail} label="Email" value={client.email} />
+            <ContactField icon={Phone} label="Teléfono" value={client.phone} />
+            <ContactField
+              icon={UserRound}
+              label="Vendedor"
+              value={client.seller}
+            />
+            <ContactField
               icon={Calendar}
               label="Reunión"
               value={formatDate(client.meetingDate)}
@@ -67,57 +73,22 @@ export function ClientDrawer({
           </dl>
 
           <section>
-            <h3 className="text-subtle mb-2 text-xs font-medium tracking-wide uppercase">
-              Transcripción
-            </h3>
+            <SectionTitle>Transcripción</SectionTitle>
             <blockquote className="border-brand/40 bg-background rounded-r-lg border-l-2 p-4 text-sm leading-relaxed">
               {client.transcript}
             </blockquote>
           </section>
 
           <section>
-            <h3 className="text-subtle mb-2 flex items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
+            <SectionTitle>
               <Bot className="text-brand size-3.5" aria-hidden /> Categorización
               del LLM
-            </h3>
-            {c ? (
-              <div className="space-y-3">
-                {c.summary && (
-                  <p className="text-sm font-medium">{c.summary}</p>
-                )}
-                <dl className="divide-border divide-y text-sm">
-                  <Row
-                    label="Consultas / mes"
-                    value={formatNumber(c.monthlyInquiries)}
-                  />
-                  {meta.dimensions.map((d) => {
-                    const raw = c[d.key];
-                    const values = Array.isArray(raw) ? raw : [raw];
-                    const labels = values.map(
-                      (v) => d.options.find((o) => o.value === v)?.label ?? v,
-                    );
-                    return (
-                      <Row
-                        key={d.key}
-                        label={d.label}
-                        value={
-                          labels.length ? (
-                            <span className="flex flex-wrap justify-end gap-1">
-                              {labels.map((l) => (
-                                <Badge key={l} tone="brand">
-                                  {l}
-                                </Badge>
-                              ))}
-                            </span>
-                          ) : (
-                            <span className="text-subtle">Ninguno</span>
-                          )
-                        }
-                      />
-                    );
-                  })}
-                </dl>
-              </div>
+            </SectionTitle>
+            {client.categories ? (
+              <ClientCategories
+                categories={client.categories}
+                dimensions={meta.dimensions}
+              />
             ) : (
               <p className="text-muted text-sm">
                 Este cliente aún no fue categorizado. Corre{' '}
@@ -131,7 +102,15 @@ export function ClientDrawer({
   );
 }
 
-function Info({
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="text-subtle mb-2 flex items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
+      {children}
+    </h3>
+  );
+}
+
+function ContactField({
   icon: Icon,
   label,
   value,
@@ -147,15 +126,6 @@ function Info({
         {label}
       </dt>
       <dd className="text-foreground truncate">{value}</dd>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2">
-      <dt className="text-muted shrink-0">{label}</dt>
-      <dd className="text-right">{value}</dd>
     </div>
   );
 }

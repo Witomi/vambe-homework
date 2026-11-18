@@ -110,23 +110,83 @@ Semántica: OR dentro de una dimensión (salud **o** educación), AND entre dime
 
 La visualización sigue una paleta validada para daltonismo: azul = sobre el promedio, rojo = bajo el promedio, y siempre con texto (pp de diferencia y n) que acompaña al color.
 
-## Estructura
+## Estructura del código
+
+### Backend (`backend/src`)
+
+Cada módulo de Nest sigue la misma forma: `*.controller.ts` (HTTP, sin lógica) → `*.service.ts` (coordina) → funciones puras en archivos propios (fáciles de testear). Los contratos de respuesta están en `*.types.ts` y los de entrada en DTOs validados con `class-validator`.
 
 ```
 backend/src
-├── categorization/   taxonomía, prompt, parser, proveedor LLM, servicio de lotes
-├── data/             CSV loader, repositorio en memoria, store de categorizaciones
-├── filters/          DTO de filtros + applyFilters (compartidos)
-├── clients/          /api/clients
-├── metrics/          /api/metrics: agregaciones puras + generador de insights
-├── meta/             /api/meta
-├── config/           validación de variables de entorno (Zod)
-└── cli/              comando de categorización
-frontend/src
-├── app/              páginas (Server Components): panel y clientes
-├── components/       dashboard/, clients/, filters/, ui/
-└── lib/              cliente de la API, tipos, filtros↔URL, formato
+├── main.ts / app.module.ts / app.setup.ts   arranque y configuración HTTP compartida
+├── config/env.ts                 variables de entorno validadas con Zod (falla al arrancar si son inválidas)
+├── domain/                       modelo de negocio, sin dependencias de Nest
+│   ├── taxonomy.ts               dimensiones y valores permitidos (fuente única de verdad)
+│   └── client.ts                 RawClient, Client, CategorizationRecord
+├── common/                       utilidades genéricas: texto, colecciones, async
+├── data/                         persistencia
+│   ├── csv-loader.ts             CSV → RawClient[]
+│   ├── clients.repository.ts     clientes en memoria + índice de búsqueda
+│   └── categorization.store.ts   categorizaciones en JSON (escritura atómica)
+├── filters/                      segmento de clientes compartido por tabla y métricas
+│   ├── client-filter.dto.ts      query params validados contra la taxonomía
+│   ├── query-transforms.ts       "a,b" → ['a','b'], "true" → true
+│   ├── apply-filters.ts          lógica de filtrado (pura)
+│   └── client-filter.service.ts  punto único para obtener el segmento
+├── clients/                      GET /api/clients[/:id]
+│   ├── dto/clients-query.dto.ts  filtros + paginación + orden
+│   ├── clients.sorting.ts        orden (puro)
+│   ├── clients.mapper.ts         Client → ClientListItem
+│   └── clients.types.ts          contratos de respuesta
+├── metrics/                      GET /api/metrics
+│   ├── kpis.ts / aggregations.ts / insights.ts   cálculos (puros)
+│   └── metrics.types.ts          contrato de respuesta
+├── meta/                         GET /api/meta (taxonomía y opciones de filtro)
+├── health/                       GET /api/health
+├── categorization/               pipeline LLM
+│   ├── categorization.service.ts orquesta la corrida: muestra, cola, workers, reintentos
+│   ├── batch-categorizer.ts      un lote: prompt → LLM → parseo → registros
+│   ├── llm/                      LlmProvider (interfaz), GemmaProvider, RateLimitedLlmProvider (decorator), factory
+│   ├── prompt/                   construcción del prompt desde la taxonomía
+│   ├── parsing/                  validación y normalización de la respuesta del modelo
+│   └── utils/                    rate limiter, muestreo reproducible
+└── cli/categorize.ts             comando `npm run categorize`
 ```
+
+### Frontend (`frontend/src`)
+
+Las páginas son Server Components que leen los filtros de la URL, llaman a la API y pasan datos ya validados a los componentes. Solo los componentes interactivos llevan `'use client'`.
+
+```
+frontend/src
+├── app/                          páginas: panel (/) y clientes (/clientes), loading y error
+├── lib/
+│   ├── api/
+│   │   ├── schemas.ts            esquemas Zod de cada respuesta (contrato con el backend)
+│   │   ├── types.ts              tipos derivados de los esquemas (z.infer)
+│   │   ├── http.ts               fetch + validación + ApiError
+│   │   └── index.ts              cliente tipado: api.meta(), api.metrics(), …
+│   ├── filters/                  filtros ↔ URL (params.ts), chips de filtros activos, hrefs
+│   ├── format.ts / labels.ts / metrics.ts   formato es-CL, etiquetas de la taxonomía, umbrales
+└── components/
+    ├── filters/                  FilterBar compuesta de SearchInput, ClosedFilter, MultiSelect,
+    │                             DateRangeFilter, ActiveFilterChips + hook useFilterParams
+    ├── dashboard/                KPIs, hallazgos, gráficos y desgloses
+    ├── clients/                  tabla (ClientRow, SortableHeader), Pagination, ClientDrawer
+    └── ui/                       Card, Badge, Tabs, Sidebar, PageHeader
+```
+
+### Validación de tipos en ambos lados
+
+| Dónde | Qué se valida | Con qué |
+| --- | --- | --- |
+| Backend, entrada | Query params (filtros, paginación, orden); valores fuera de la taxonomía → 400 | `class-validator` + `ValidationPipe` |
+| Backend, configuración | Variables de entorno al arrancar | Zod |
+| Backend, LLM | Respuesta del modelo (JSON, valores permitidos, números) | `response-parser.ts` |
+| Backend, salida | Cada endpoint declara su tipo de respuesta | interfaces `*.types.ts` |
+| Frontend, entrada | Cada respuesta de la API se valida al llegar | Zod (`lib/api/schemas.ts`) |
+
+Los tipos del frontend se derivan de sus esquemas Zod, no de una copia manual, así que si el backend cambia un contrato el error aparece en el punto de entrada. Una alternativa sería un paquete compartido de tipos en un monorepo con workspaces; se descartó para no complicar el build y el despliegue por separado de Vercel y Render.
 
 ## Limitaciones y próximos pasos
 

@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { Env } from '../config/env';
-import { CategorizationRecord } from './client.model';
+import { CategorizationRecord } from '../domain/client';
 
 interface StoreFile {
   version: 1;

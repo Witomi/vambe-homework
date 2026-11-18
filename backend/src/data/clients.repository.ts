@@ -2,11 +2,18 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { normalizeText } from '../common/text';
 import { Env } from '../config/env';
-import { normalizeText } from './text';
+import { Client, RawClient } from '../domain/client';
 import { CategorizationStore } from './categorization.store';
-import { Client, RawClient } from './client.model';
 import { parseClientsCsv } from './csv-loader';
+
+/** Vista de clientes + categorizaciones, recalculada cuando cambia el store. */
+interface Snapshot {
+  revision: number;
+  clients: Client[];
+  byId: Map<string, Client>;
+}
 
 /**
  * Repositorio en memoria de clientes. Con ~10k filas, mantener todo en
@@ -19,7 +26,7 @@ export class ClientsRepository implements OnModuleInit {
   private readonly csvPath: string;
   private raw: RawClient[] = [];
   private searchIndex = new Map<string, string>();
-  private cache: { revision: number; clients: Client[] } | null = null;
+  private snapshot: Snapshot | null = null;
 
   constructor(
     config: ConfigService<Env, true>,
@@ -42,24 +49,16 @@ export class ClientsRepository implements OnModuleInit {
     this.logger.log(`${this.raw.length} clientes cargados desde el CSV`);
   }
 
-  /** Todos los clientes con su categorización; cacheado por revisión. */
+  /** Todos los clientes con su categorización (o `null` si aún no la tienen). */
   findAll(): Client[] {
-    if (this.cache?.revision !== this.store.revision) {
-      this.cache = {
-        revision: this.store.revision,
-        clients: this.raw.map((c) => ({
-          ...c,
-          categories: this.store.get(c.id)?.categories ?? null,
-        })),
-      };
-    }
-    return this.cache.clients;
+    return this.currentSnapshot().clients;
   }
 
   findById(id: string): Client | undefined {
-    return this.findAll().find((c) => c.id === id);
+    return this.currentSnapshot().byId.get(id);
   }
 
+  /** Filas del CSV sin categorización (para el pipeline del LLM). */
   findRaw(): readonly RawClient[] {
     return this.raw;
   }
@@ -67,5 +66,20 @@ export class ClientsRepository implements OnModuleInit {
   /** Texto normalizado (sin tildes, minúsculas) para búsquedas. */
   searchableText(id: string): string {
     return this.searchIndex.get(id) ?? '';
+  }
+
+  private currentSnapshot(): Snapshot {
+    if (this.snapshot?.revision !== this.store.revision) {
+      const clients = this.raw.map((c) => ({
+        ...c,
+        categories: this.store.get(c.id)?.categories ?? null,
+      }));
+      this.snapshot = {
+        revision: this.store.revision,
+        clients,
+        byId: new Map(clients.map((c) => [c.id, c])),
+      };
+    }
+    return this.snapshot;
   }
 }

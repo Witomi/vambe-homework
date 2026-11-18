@@ -1,65 +1,46 @@
 import { Injectable } from '@nestjs/common';
-import { ClientsRepository } from '../data/clients.repository';
-import { applyFilters } from '../filters/apply-filters';
 import { ClientFilterDto } from '../filters/client-filter.dto';
+import { ClientFilterService } from '../filters/client-filter.service';
 import {
   breakdownAllDimensions,
   breakdownByVolume,
   bySeller,
-  median,
-  rateStat,
   sellerIndustryMatrix,
   timeline,
 } from './aggregations';
 import { generateInsights } from './insights';
+import { computeKpis } from './kpis';
+import { MetricsResponse } from './metrics.types';
 
 @Injectable()
 export class MetricsService {
-  constructor(private readonly repository: ClientsRepository) {}
+  constructor(private readonly clientFilter: ClientFilterService) {}
 
   /**
-   * Métricas del segmento filtrado. Las métricas de negocio (cierres,
-   * vendedores, evolución) usan todos los clientes; las basadas en
-   * categorías usan solo los ya categorizados por el LLM.
+   * Métricas del segmento filtrado.
+   * - Métricas de negocio (cierres, vendedores, evolución): todos los clientes.
+   * - Métricas basadas en categorías: solo los ya categorizados por el LLM.
    */
-  compute(filter: ClientFilterDto) {
-    const clients = applyFilters(this.repository.findAll(), filter, (id) =>
-      this.repository.searchableText(id),
-    );
+  compute(filter: ClientFilterDto): MetricsResponse {
+    const clients = this.clientFilter.filter(filter);
     const categorized = clients.filter((c) => c.categories);
-    const inquiries = categorized
-      .map((c) => c.categories!.monthlyInquiries)
-      .filter((n): n is number => n !== null);
 
-    const overall = rateStat(clients);
-    const categorizedStats = rateStat(categorized);
+    const kpis = computeKpis(clients, categorized);
     const dimensions = breakdownAllDimensions(categorized);
-    const matrix = sellerIndustryMatrix(categorized);
+    const sellerIndustry = sellerIndustryMatrix(categorized);
 
     return {
-      kpis: {
-        meetings: overall.count,
-        closed: overall.closed,
-        closeRate: overall.closeRate,
-        categorized: categorized.length,
-        coverage: clients.length ? categorized.length / clients.length : 0,
-        categorizedCloseRate: categorizedStats.closeRate,
-        medianMonthlyInquiries: median(inquiries),
-        /** Consultas mensuales que los clientes cerrados delegan en Vambe. */
-        automatedMonthlyInquiries: categorized
-          .filter((c) => c.closed)
-          .reduce((sum, c) => sum + (c.categories!.monthlyInquiries ?? 0), 0),
-      },
+      kpis,
       timeline: timeline(clients),
       sellers: bySeller(clients),
       dimensions,
       volume: breakdownByVolume(categorized),
-      sellerIndustry: matrix,
+      sellerIndustry,
       insights: generateInsights({
-        baseRate: categorizedStats.closeRate,
+        baseRate: kpis.categorizedCloseRate,
         categorizedCount: categorized.length,
         dimensions,
-        matrix,
+        matrix: sellerIndustry,
       }),
     };
   }

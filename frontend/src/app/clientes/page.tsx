@@ -4,7 +4,7 @@ import { Pagination } from '@/components/clients/Pagination';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { CoverageNote, PageHeader } from '@/components/ui/PageHeader';
 import { ApiError, api } from '@/lib/api';
-import { SearchParams, filterQuery } from '@/lib/filters';
+import { SearchParams, filterQuery } from '@/lib/filters/params';
 import { createLabeler } from '@/lib/labels';
 
 const single = (v: string | string[] | undefined) =>

@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { Check, ChevronDown } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
-import type { Option } from '@/lib/types';
+import type { Option } from '@/lib/api/types';
 
 interface MultiSelectProps {
   label: string;

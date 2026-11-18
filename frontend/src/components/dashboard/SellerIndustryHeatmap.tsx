@@ -1,7 +1,7 @@
 'use client';
 
 import { formatPct } from '@/lib/format';
-import type { Metrics } from '@/lib/types';
+import type { Metrics } from '@/lib/api/types';
 import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
 

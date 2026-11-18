@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { DataModule } from '../data/data.module';
+import { FiltersModule } from '../filters/filters.module';
 import { MetricsController } from './metrics.controller';
 import { MetricsService } from './metrics.service';
 
 @Module({
-  imports: [DataModule],
+  imports: [FiltersModule],
   controllers: [MetricsController],
   providers: [MetricsService],
 })

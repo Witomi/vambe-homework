@@ -3,11 +3,11 @@ import {
   breakdownAllDimensions,
   breakdownByDimension,
   breakdownByVolume,
-  median,
   rateStat,
   sellerIndustryMatrix,
   timeline,
 } from './aggregations';
+import { median } from '../common/collections';
 import { generateInsights } from './insights';
 
 describe('aggregations', () => {

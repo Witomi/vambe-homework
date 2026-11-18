@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { listParam } from '@/lib/filters';
-import type { DimensionKey, Meta, Metrics } from '@/lib/types';
+import { listParam } from '@/lib/filters/params';
+import { minReliableSample } from '@/lib/metrics';
+import type { DimensionKey, Meta, Metrics } from '@/lib/api/types';
 import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
 import { Tabs } from '../ui/Tabs';
@@ -35,7 +36,7 @@ export function DimensionExplorer({
 }) {
   const [tab, setTab] = useState<Tab>('industry');
   const [metric, setMetric] = useState<BreakdownMetric>('rate');
-  const { searchParams, setParam } = useFilterParams();
+  const { searchParams, toggleParamValue } = useFilterParams();
 
   const dimension = meta.dimensions.find((d) => d.key === tab);
   const rows =
@@ -44,17 +45,7 @@ export function DimensionExplorer({
       : metrics.dimensions[tab];
   const label =
     tab === 'volume' ? 'Volumen de consultas' : (dimension?.label ?? tab);
-  const minSample = Math.max(5, Math.round(metrics.kpis.categorized * 0.02));
-
-  const toggle = (value: string) => {
-    const current = listParam(searchParams, tab);
-    setParam(
-      tab,
-      current.includes(value)
-        ? current.filter((v) => v !== value)
-        : [...current, value],
-    );
-  };
+  const minSample = minReliableSample(metrics.kpis);
 
   return (
     <Card
@@ -94,7 +85,7 @@ export function DimensionExplorer({
         metric={metric}
         baseRate={metrics.kpis.categorizedCloseRate}
         minSample={minSample}
-        onSelect={toggle}
+        onSelect={(value) => toggleParamValue(tab, value)}
         selected={listParam(searchParams, tab)}
       />
     </Card>

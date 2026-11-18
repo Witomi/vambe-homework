@@ -7,23 +7,8 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { VOLUME_BUCKETS, optionValues } from '../categorization/taxonomy';
-
-/** `?industry=salud,retail` y `?industry=salud&industry=retail` → `['salud','retail']` */
-const toList = ({ value }: { value: unknown }): string[] | undefined => {
-  if (value === undefined || value === '') return undefined;
-  const list = (Array.isArray(value) ? value : [value])
-    .flatMap((v) => String(v).split(','))
-    .map((v) => v.trim())
-    .filter(Boolean);
-  return list.length ? list : undefined;
-};
-
-const toBool = ({ value }: { value: unknown }): unknown => {
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-  return value;
-};
+import { VOLUME_BUCKETS, optionValues } from '../domain/taxonomy';
+import { toBoolean, toList } from './query-transforms';
 
 /** Decorador para filtros de dimensión: lista de valores permitidos. */
 function DimensionFilter(values: string[]): PropertyDecorator {
@@ -51,12 +36,12 @@ export class ClientFilterDto {
   sellers?: string[];
 
   @IsOptional()
-  @Transform(toBool)
+  @Transform(toBoolean)
   @IsBoolean()
   closed?: boolean;
 
   @IsOptional()
-  @Transform(toBool)
+  @Transform(toBoolean)
   @IsBoolean()
   categorized?: boolean;
 

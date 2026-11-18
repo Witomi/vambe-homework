@@ -1,14 +1,23 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { CategorizationModule } from './categorization/categorization.module';
 import { ClientsModule } from './clients/clients.module';
 import { validateEnv } from './config/env';
 import { DataModule } from './data/data.module';
+import { HealthModule } from './health/health.module';
 import { MetaModule } from './meta/meta.module';
 import { MetricsModule } from './metrics/metrics.module';
 
+/**
+ * Módulo raíz.
+ *
+ * - DataModule:           acceso a datos (CSV + categorizaciones)
+ * - ClientsModule:        GET /api/clients
+ * - MetricsModule:        GET /api/metrics
+ * - MetaModule:           GET /api/meta
+ * - HealthModule:         GET /api/health
+ * - CategorizationModule: pipeline LLM (usado por el CLI `npm run categorize`)
+ */
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
@@ -16,9 +25,8 @@ import { MetricsModule } from './metrics/metrics.module';
     ClientsModule,
     MetricsModule,
     MetaModule,
+    HealthModule,
     CategorizationModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

@@ -8,7 +8,7 @@ import {
   TrendingUp,
   UserCheck,
 } from 'lucide-react';
-import type { Insight } from '@/lib/types';
+import type { Insight } from '@/lib/api/types';
 import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
 

@@ -4,23 +4,18 @@ import {
   DimensionKey,
   VOLUME_BUCKETS,
   volumeBucket,
-} from '../categorization/taxonomy';
-import { Client } from '../data/client.model';
+} from '../domain/taxonomy';
+import { groupBy } from '../common/collections';
+import { Client } from '../domain/client';
+import {
+  BreakdownRow,
+  RateStat,
+  SellerIndustryMatrix,
+  SellerStat,
+  TimelinePoint,
+} from './metrics.types';
 
-export interface RateStat {
-  count: number;
-  closed: number;
-  /** 0..1, o null si no hay datos. */
-  closeRate: number | null;
-}
-
-export interface BreakdownRow extends RateStat {
-  value: string;
-  label: string;
-  /** Proporción del segmento categorizado que cae en este valor (0..1). */
-  share: number;
-}
-
+/** Cantidad, cerradas y tasa de cierre de un grupo de clientes. */
 export function rateStat(clients: readonly Client[]): RateStat {
   const closed = clients.filter((c) => c.closed).length;
   return {
@@ -28,18 +23,6 @@ export function rateStat(clients: readonly Client[]): RateStat {
     closed,
     closeRate: clients.length ? closed / clients.length : null,
   };
-}
-
-function groupBy<T>(items: readonly T[], keysOf: (item: T) => string[]) {
-  const groups = new Map<string, T[]>();
-  for (const item of items) {
-    for (const key of keysOf(item)) {
-      const group = groups.get(key);
-      if (group) group.push(item);
-      else groups.set(key, [item]);
-    }
-  }
-  return groups;
 }
 
 /** Tasa de cierre por cada valor de una dimensión (multi: un cliente cuenta en cada valor). */
@@ -65,7 +48,9 @@ export function breakdownByDimension(
     .sort((a, b) => b.count - a.count);
 }
 
-export function breakdownAllDimensions(categorized: readonly Client[]) {
+export function breakdownAllDimensions(
+  categorized: readonly Client[],
+): Record<DimensionKey, BreakdownRow[]> {
   return Object.fromEntries(
     DIMENSION_KEYS.map((k) => [k, breakdownByDimension(categorized, k)]),
   ) as Record<DimensionKey, BreakdownRow[]>;
@@ -89,14 +74,16 @@ export function breakdownByVolume(
   });
 }
 
-export function timeline(clients: readonly Client[]) {
+/** Reuniones y tasa de cierre por mes, en orden cronológico. */
+export function timeline(clients: readonly Client[]): TimelinePoint[] {
   const groups = groupBy(clients, (c) => [c.meetingDate.slice(0, 7)]);
   return [...groups.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, group]) => ({ month, ...rateStat(group) }));
 }
 
-export function bySeller(clients: readonly Client[]) {
+/** Reuniones y tasa de cierre por vendedor, de mayor a menor volumen. */
+export function bySeller(clients: readonly Client[]): SellerStat[] {
   const groups = groupBy(clients, (c) => [c.seller]);
   return [...groups.entries()]
     .map(([seller, group]) => ({ seller, ...rateStat(group) }))
@@ -104,7 +91,9 @@ export function bySeller(clients: readonly Client[]) {
 }
 
 /** Matriz vendedor × industria: ¿quién convierte mejor cada rubro? */
-export function sellerIndustryMatrix(categorized: readonly Client[]) {
+export function sellerIndustryMatrix(
+  categorized: readonly Client[],
+): SellerIndustryMatrix {
   const sellers = [...new Set(categorized.map((c) => c.seller))].sort();
   const industries = breakdownByDimension(categorized, 'industry').map(
     ({ value, label }) => ({ value, label }),
@@ -120,11 +109,4 @@ export function sellerIndustryMatrix(categorized: readonly Client[]) {
     })),
   );
   return { sellers, industries, cells };
-}
-
-export function median(values: number[]): number | null {
-  if (!values.length) return null;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }

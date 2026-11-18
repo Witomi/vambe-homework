@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
-import { ClientFilterDto } from '../filters/client-filter.dto';
+import { ClientFilterDto } from '../../filters/client-filter.dto';
 
 export const SORT_FIELDS = [
   'meetingDate',
@@ -11,6 +11,10 @@ export const SORT_FIELDS = [
 ] as const;
 export type SortField = (typeof SORT_FIELDS)[number];
 
+export const SORT_DIRECTIONS = ['asc', 'desc'] as const;
+export type SortDirection = (typeof SORT_DIRECTIONS)[number];
+
+/** Filtros + paginación y orden del listado de clientes. */
 export class ClientsQueryDto extends ClientFilterDto {
   @IsOptional()
   @Type(() => Number)
@@ -30,6 +34,6 @@ export class ClientsQueryDto extends ClientFilterDto {
   sortBy: SortField = 'meetingDate';
 
   @IsOptional()
-  @IsIn(['asc', 'desc'])
-  sortDir: 'asc' | 'desc' = 'desc';
+  @IsIn(SORT_DIRECTIONS)
+  sortDir: SortDirection = 'desc';
 }

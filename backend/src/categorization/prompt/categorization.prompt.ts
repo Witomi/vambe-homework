@@ -1,4 +1,4 @@
-import { DIMENSIONS, DIMENSION_KEYS } from './taxonomy';
+import { DIMENSIONS, DIMENSION_KEYS } from '../../domain/taxonomy';
 
 export interface PromptItem {
   /** Identificador corto dentro del lote (1..n) para emparejar respuestas. */

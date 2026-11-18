@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { LayoutDashboard, Sparkles, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { filterQuery } from '@/lib/filters';
+import { filterQuery } from '@/lib/filters/params';
 
 const NAV = [
   { href: '/', label: 'Panel', icon: LayoutDashboard },

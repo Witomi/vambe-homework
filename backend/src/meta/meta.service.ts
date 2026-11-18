@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  DIMENSION_KEYS,
-  DIMENSIONS,
-  VOLUME_BUCKETS,
-} from '../categorization/taxonomy';
+import { DIMENSION_KEYS, DIMENSIONS, VOLUME_BUCKETS } from '../domain/taxonomy';
 import { CategorizationStore } from '../data/categorization.store';
 import { ClientsRepository } from '../data/clients.repository';
 

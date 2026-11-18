@@ -1,4 +1,4 @@
-import type { SearchParams } from './filters';
+import type { SearchParams } from './params';
 
 /** Construye un href a partir de los parámetros actuales con cambios aplicados. */
 export function hrefWith(

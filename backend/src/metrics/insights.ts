@@ -1,16 +1,10 @@
-import { DIMENSIONS, DimensionKey } from '../categorization/taxonomy';
-import { BreakdownRow } from './aggregations';
-
-export type InsightTone = 'positive' | 'negative' | 'neutral';
-
-export interface Insight {
-  id: string;
-  tone: InsightTone;
-  title: string;
-  detail: string;
-  /** Filtro sugerido para explorar el insight en el panel. */
-  filter?: { key: string; value: string };
-}
+import { DIMENSIONS, DimensionKey } from '../domain/taxonomy';
+import {
+  BreakdownRow,
+  Insight,
+  InsightTone,
+  SellerIndustryMatrix,
+} from './metrics.types';
 
 interface Candidate {
   dimension: DimensionKey;
@@ -22,15 +16,7 @@ export interface InsightInput {
   baseRate: number | null;
   categorizedCount: number;
   dimensions: Record<DimensionKey, BreakdownRow[]>;
-  matrix: {
-    industries: { value: string; label: string }[];
-    cells: {
-      seller: string;
-      industry: string;
-      count: number;
-      closeRate: number | null;
-    }[];
-  };
+  matrix: SellerIndustryMatrix;
 }
 
 /** Valores comodín: un hallazgo sobre "Otro" no es accionable. */

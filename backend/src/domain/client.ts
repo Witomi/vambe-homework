@@ -1,4 +1,4 @@
-import { Categories } from '../categorization/taxonomy';
+import { Categories } from './taxonomy';
 
 /** Fila del CSV, ya tipada y normalizada. */
 export interface RawClient {

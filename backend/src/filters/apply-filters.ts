@@ -3,9 +3,9 @@ import {
   DIMENSIONS,
   DimensionKey,
   volumeBucket,
-} from '../categorization/taxonomy';
-import { Client } from '../data/client.model';
-import { normalizeText } from '../data/text';
+} from '../domain/taxonomy';
+import { Client } from '../domain/client';
+import { normalizeText } from '../common/text';
 import { ClientFilterDto } from './client-filter.dto';
 
 export type SearchableText = (id: string) => string;

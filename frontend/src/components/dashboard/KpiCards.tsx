@@ -1,6 +1,6 @@
 import { Bot, Handshake, MessagesSquare, Target } from 'lucide-react';
 import { formatCompact, formatNumber, formatPct } from '@/lib/format';
-import type { Metrics } from '@/lib/types';
+import type { Metrics } from '@/lib/api/types';
 
 interface Kpi {
   label: string;

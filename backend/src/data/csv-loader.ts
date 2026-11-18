@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { parse } from 'csv-parse/sync';
-import { RawClient } from './client.model';
+import { RawClient } from '../domain/client';
 
 /** Columnas del CSV de origen. */
 const COLUMNS = {

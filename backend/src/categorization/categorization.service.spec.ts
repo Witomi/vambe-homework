@@ -1,11 +1,11 @@
 import { Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { CategorizationStore } from '../data/categorization.store';
-import { CategorizationRecord, RawClient } from '../data/client.model';
+import { CategorizationRecord, RawClient } from '../domain/client';
 import { ClientsRepository } from '../data/clients.repository';
 import { baseCategories } from '../../test/fixtures';
+import { BatchCategorizer } from './batch-categorizer';
 import { CategorizationService } from './categorization.service';
-import { LlmProvider, LlmRateLimitError } from './llm/llm-provider';
+import { LlmProvider } from './llm/llm-provider';
 
 const rawClients: RawClient[] = Array.from({ length: 5 }, (_, i) => ({
   id: `id${i}`,
@@ -45,12 +45,10 @@ function setup(llm: LlmProvider) {
   const repository = {
     findRaw: () => rawClients,
   } as unknown as ClientsRepository;
-  const config = {
-    get: () => 60_000, // RPM alto: sin esperas en tests
-  } as unknown as ConfigService;
+  const categorizer = new BatchCategorizer(llm);
   return {
     saved,
-    service: new CategorizationService(llm, store, repository, config),
+    service: new CategorizationService(categorizer, store, repository),
   };
 }
 
@@ -100,21 +98,6 @@ describe('CategorizationService', () => {
     const summary = await service.run({ ...options, limit: 2 });
 
     expect(summary).toMatchObject({ categorized: 0, failed: 2 });
-  });
-
-  it('espera y reintenta ante rate limit', async () => {
-    const generate = jest
-      .fn()
-      .mockRejectedValueOnce(new LlmRateLimitError('429', 1))
-      .mockImplementation((prompt: string) =>
-        Promise.resolve({ text: answer(prompt), model: 'm' }),
-      );
-    const { service } = setup({ model: 'm', generate });
-
-    const summary = await service.run(options);
-
-    expect(generate).toHaveBeenCalledTimes(2);
-    expect(summary.categorized).toBe(5);
   });
 
   it('no vuelve a procesar clientes ya categorizados', async () => {

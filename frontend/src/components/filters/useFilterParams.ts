@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useTransition } from 'react';
-import { FILTER_KEYS } from '@/lib/filters';
+import { FILTER_KEYS, listParam, toggleValue } from '@/lib/filters/params';
 
 type Value = string | string[] | null | undefined;
 
@@ -46,11 +46,25 @@ export function useFilterParams() {
     [setParams],
   );
 
+  /** Agrega o quita un valor de un filtro de lista (p. ej. clic en una barra). */
+  const toggleParamValue = useCallback(
+    (key: string, value: string) =>
+      setParam(key, toggleValue(listParam(searchParams, key), value)),
+    [searchParams, setParam],
+  );
+
   const clearAll = useCallback(() => {
     const next = new URLSearchParams(searchParams);
     FILTER_KEYS.forEach((k) => next.delete(k));
     navigate(next);
   }, [navigate, searchParams]);
 
-  return { searchParams, setParam, setParams, clearAll, isPending };
+  return {
+    searchParams,
+    setParam,
+    setParams,
+    toggleParamValue,
+    clearAll,
+    isPending,
+  };
 }

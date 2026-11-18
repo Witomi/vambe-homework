@@ -60,7 +60,9 @@ La corrida es **reanudable**: solo procesa clientes sin categorizar y guarda des
 | --- | --- | --- |
 | raíz | `npm run dev` | Levanta backend y frontend en paralelo |
 | raíz | `npm run build` | Compila ambos |
+| raíz | `npm test` | Corre todos los tests (backend unitarios + e2e y frontend) |
 | backend | `npm test` | Tests unitarios (parser, filtros, agregaciones, servicio de categorización) |
+| frontend | `npm test` | Tests de la lógica pura (filtros ↔ URL, chips, formato, esquemas Zod) |
 | backend | `npm run test:e2e` | Tests de la API contra el CSV real |
 | backend | `npm run categorize` | Categoriza clientes con Gemma |
 | ambos | `npm run lint` / `npm run format` | ESLint / Prettier |

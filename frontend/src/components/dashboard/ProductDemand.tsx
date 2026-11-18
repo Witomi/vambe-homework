@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { listParam } from '@/lib/filters';
-import type { DimensionKey, Metrics } from '@/lib/types';
+import { listParam } from '@/lib/filters/params';
+import { minReliableSample } from '@/lib/metrics';
+import type { DimensionKey, Metrics } from '@/lib/api/types';
 import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
 import { Tabs } from '../ui/Tabs';
@@ -30,8 +31,8 @@ const SECTIONS: { key: DimensionKey; title: string; subtitle: string }[] = [
 /** Señales de producto: qué piden los clientes y qué frena la venta. */
 export function ProductDemand({ metrics }: { metrics: Metrics }) {
   const [metric, setMetric] = useState<BreakdownMetric>('share');
-  const { searchParams, setParam } = useFilterParams();
-  const minSample = Math.max(5, Math.round(metrics.kpis.categorized * 0.02));
+  const { searchParams, toggleParamValue } = useFilterParams();
+  const minSample = minReliableSample(metrics.kpis);
 
   return (
     <section>
@@ -53,29 +54,18 @@ export function ProductDemand({ metrics }: { metrics: Metrics }) {
         />
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
-        {SECTIONS.map(({ key, title, subtitle }) => {
-          const toggle = (value: string) => {
-            const current = listParam(searchParams, key);
-            setParam(
-              key,
-              current.includes(value)
-                ? current.filter((v) => v !== value)
-                : [...current, value],
-            );
-          };
-          return (
-            <Card key={key} title={title} subtitle={subtitle}>
-              <BreakdownBars
-                rows={metrics.dimensions[key]}
-                metric={metric}
-                baseRate={metrics.kpis.categorizedCloseRate}
-                minSample={minSample}
-                onSelect={toggle}
-                selected={listParam(searchParams, key)}
-              />
-            </Card>
-          );
-        })}
+        {SECTIONS.map(({ key, title, subtitle }) => (
+          <Card key={key} title={title} subtitle={subtitle}>
+            <BreakdownBars
+              rows={metrics.dimensions[key]}
+              metric={metric}
+              baseRate={metrics.kpis.categorizedCloseRate}
+              minSample={minSample}
+              onSelect={(value) => toggleParamValue(key, value)}
+              selected={listParam(searchParams, key)}
+            />
+          </Card>
+        ))}
       </div>
     </section>
   );

@@ -8,7 +8,7 @@ import { TimelineChart } from '@/components/dashboard/TimelineChart';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { CoverageNote, PageHeader } from '@/components/ui/PageHeader';
 import { api } from '@/lib/api';
-import { SearchParams, filterQuery } from '@/lib/filters';
+import { SearchParams, filterQuery } from '@/lib/filters/params';
 
 export default async function DashboardPage({
   searchParams,

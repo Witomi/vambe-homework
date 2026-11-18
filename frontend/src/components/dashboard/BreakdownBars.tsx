@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { formatNumber, formatPct, formatPp } from '@/lib/format';
-import type { BreakdownRow } from '@/lib/types';
+import type { BreakdownRow } from '@/lib/api/types';
 
 export type BreakdownMetric = 'rate' | 'share';
 
