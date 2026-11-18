@@ -1,0 +1,16 @@
+# Blueprint de Render para el backend (https://render.com/docs/blueprint-spec)
+services:
+  - type: web
+    name: vambe-insights-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/main.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      # URL del frontend en Vercel (separar varias con coma)
+      - key: FRONTEND_URL
+        sync: false
