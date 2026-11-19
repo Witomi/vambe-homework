@@ -18,7 +18,8 @@
     "test:cov": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test:debug": "NODE_OPTIONS=--experimental-vm-modules node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json",
-    "categorize": "nest build && node dist/cli/categorize.js"
+    "categorize": "nest build && node dist/cli/categorize.js",
+    "evaluate": "nest build && node dist/cli/evaluate.js"
   },
   "dependencies": {
     "@google/genai": "^3.6.0",

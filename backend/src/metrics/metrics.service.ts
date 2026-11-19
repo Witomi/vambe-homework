@@ -1,16 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ClientFilterDto } from '../filters/client-filter.dto';
 import { ClientFilterService } from '../filters/client-filter.service';
-import {
-  breakdownAllDimensions,
-  breakdownByVolume,
-  bySeller,
-  sellerIndustryMatrix,
-  timeline,
-} from './aggregations';
+import { breakdownAllDimensions, timeline } from './aggregations';
 import { generateInsights } from './insights';
 import { computeKpis } from './kpis';
 import { MetricsResponse } from './metrics.types';
+import { sellerPerformance } from './seller-performance';
 
 @Injectable()
 export class MetricsService {
@@ -18,8 +13,9 @@ export class MetricsService {
 
   /**
    * Métricas del segmento filtrado.
-   * - Métricas de negocio (cierres, vendedores, evolución): todos los clientes.
-   * - Métricas basadas en categorías: solo los ya categorizados por el LLM.
+   * - Métricas de negocio (cierres, evolución): todos los clientes.
+   * - Métricas basadas en categorías (incluye vendedores ajustados por
+   *   cartera): solo los ya categorizados por el LLM.
    */
   compute(filter: ClientFilterDto): MetricsResponse {
     const clients = this.clientFilter.filter(filter);
@@ -27,20 +23,16 @@ export class MetricsService {
 
     const kpis = computeKpis(clients, categorized);
     const dimensions = breakdownAllDimensions(categorized);
-    const sellerIndustry = sellerIndustryMatrix(categorized);
 
     return {
       kpis,
       timeline: timeline(clients),
-      sellers: bySeller(clients),
+      sellers: sellerPerformance(categorized),
       dimensions,
-      volume: breakdownByVolume(categorized),
-      sellerIndustry,
       insights: generateInsights({
         baseRate: kpis.categorizedCloseRate,
         categorizedCount: categorized.length,
         dimensions,
-        matrix: sellerIndustry,
       }),
     };
   }

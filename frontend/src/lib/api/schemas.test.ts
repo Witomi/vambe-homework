@@ -10,6 +10,7 @@ const client = {
   meetingDate: '2024-01-01',
   closed: true,
   categories: null,
+  prediction: { probability: 0.72, grade: 'B' },
   excerpt: 'Somos una clínica…',
 };
 

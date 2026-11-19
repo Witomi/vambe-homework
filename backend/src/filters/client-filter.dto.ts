@@ -7,7 +7,8 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { VOLUME_BUCKETS, optionValues } from '../domain/taxonomy';
+import { VOLUME_BUCKETS, filterValues } from '../domain/taxonomy';
+import { GRADE_VALUES } from '../prediction/grades';
 import { toBoolean, toList } from './query-transforms';
 
 /** Decorador para filtros de dimensión: lista de valores permitidos. */
@@ -53,39 +54,43 @@ export class ClientFilterDto {
   @IsISO8601({ strict: true })
   to?: string;
 
+  /** Nota A–D según la probabilidad de cierre estimada. */
+  @DimensionFilter([...GRADE_VALUES])
+  grade?: string[];
+
   @DimensionFilter(VOLUME_BUCKETS.map((b) => b.value))
   volume?: string[];
 
-  @DimensionFilter(optionValues('industry'))
+  @DimensionFilter(filterValues('industry'))
   industry?: string[];
 
-  @DimensionFilter(optionValues('businessSize'))
+  @DimensionFilter(filterValues('businessSize'))
   businessSize?: string[];
 
-  @DimensionFilter(optionValues('leadSource'))
+  @DimensionFilter(filterValues('leadSource'))
   leadSource?: string[];
 
-  @DimensionFilter(optionValues('inquiryChannel'))
+  @DimensionFilter(filterValues('inquiryChannel'))
   inquiryChannel?: string[];
 
-  @DimensionFilter(optionValues('painPoint'))
+  @DimensionFilter(filterValues('painPoint'))
   painPoint?: string[];
 
-  @DimensionFilter(optionValues('useCases'))
+  @DimensionFilter(filterValues('useCases'))
   useCases?: string[];
 
-  @DimensionFilter(optionValues('integrations'))
+  @DimensionFilter(filterValues('integrations'))
   integrations?: string[];
 
-  @DimensionFilter(optionValues('requirements'))
+  @DimensionFilter(filterValues('requirements'))
   requirements?: string[];
 
-  @DimensionFilter(optionValues('objections'))
+  @DimensionFilter(filterValues('objections'))
   objections?: string[];
 
-  @DimensionFilter(optionValues('urgency'))
+  @DimensionFilter(filterValues('urgency'))
   urgency?: string[];
 
-  @DimensionFilter(optionValues('complexity'))
+  @DimensionFilter(filterValues('complexity'))
   complexity?: string[];
 }

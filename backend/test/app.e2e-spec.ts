@@ -73,4 +73,49 @@ describe('API (e2e)', () => {
     expect(body.kpis.closed).toBe(0);
     expect(body.kpis.meetings).toBeGreaterThan(0);
   });
+
+  it('GET /opportunities devuelve las cinco secciones de acción', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/opportunities')
+      .expect(200);
+    const body = res.body as Record<string, unknown>;
+    expect(Object.keys(body)).toEqual(
+      expect.arrayContaining([
+        'quadrants',
+        'solutions',
+        'recovery',
+        'assignments',
+        'blockers',
+      ]),
+    );
+  });
+
+  it('GET /prediction devuelve calidad del modelo y distribución', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/prediction')
+      .expect(200);
+    const body = res.body as {
+      quality: { auc: number; sampleSize: number };
+      buckets: { closed: number; open: number }[];
+    };
+    expect(body.quality.auc).toBeGreaterThan(0);
+    const total = body.buckets.reduce((s, b) => s + b.closed + b.open, 0);
+    expect(total).toBe(body.quality.sampleSize);
+  });
+
+  it('GET /clients filtra por nota y ordena por probabilidad', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/clients')
+      .query({ grade: 'A', sortBy: 'probability', pageSize: 10 })
+      .expect(200);
+    const items = (
+      res.body as {
+        items: { prediction: { grade: string; probability: number } }[];
+      }
+    ).items;
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every((c) => c.prediction.grade === 'A')).toBe(true);
+    const probs = items.map((c) => c.prediction.probability);
+    expect(probs).toEqual([...probs].sort((a, b) => b - a));
+  });
 });

@@ -13,6 +13,10 @@ export interface DimensionMeta {
 export interface MetaResponse {
   dimensions: DimensionMeta[];
   volumeBuckets: DimensionOption[];
+  /** Notas A–D para filtrar por probabilidad de cierre. */
+  grades: DimensionOption[];
+  /** Valor que representa "no mencionó nada" en dimensiones de lista. */
+  notMentioned: DimensionOption;
   sellers: string[];
   dateRange: { from: string | null; to: string | null };
   categorization: {

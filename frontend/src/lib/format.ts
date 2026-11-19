@@ -13,10 +13,21 @@ export const formatCompact = (n: number | null | undefined) =>
 export const formatPct = (n: number | null | undefined, digits = 0) =>
   n === null || n === undefined ? '—' : `${(n * 100).toFixed(digits)}%`;
 
-/** Diferencia en puntos porcentuales: +4 pp / −3 pp */
-export const formatPp = (n: number) => {
-  const pp = Math.round(n * 100);
-  return `${pp > 0 ? '+' : pp < 0 ? '−' : '±'}${Math.abs(pp)} pp`;
+/** Porcentaje entero tal como se muestra en pantalla: 0.676 → 68. */
+export const displayedPct = (rate: number) => Math.round(rate * 100);
+
+/**
+ * Diferencia en puntos entre dos tasas, calculada sobre los porcentajes ya
+ * redondeados para que siempre cuadre con lo que se ve: 69% vs. 68% → "+1 pts".
+ * (Se usan puntos y no "%" para no confundirlo con un aumento relativo.)
+ */
+export const pointsDiff = (rate: number, base: number) =>
+  displayedPct(rate) - displayedPct(base);
+
+export const formatPointsDiff = (rate: number, base: number) => {
+  const pts = pointsDiff(rate, base);
+  const sign = pts > 0 ? '+' : pts < 0 ? '−' : '±';
+  return `${sign}${Math.abs(pts)} pts`;
 };
 
 const MONTHS = [

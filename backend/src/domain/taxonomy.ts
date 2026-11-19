@@ -241,6 +241,28 @@ export function optionValues(key: DimensionKey): string[] {
   return DIMENSIONS[key].options.map((o) => o.value);
 }
 
+/**
+ * Valor sintético para dimensiones de lista: el cliente no mencionó nada
+ * (p. ej. ninguna integración). No es una opción para el LLM —una lista
+ * vacía ya lo expresa—, pero sí se muestra en métricas y filtros para que
+ * los porcentajes cuenten a todos los clientes.
+ */
+export const NOT_MENTIONED: DimensionOption = {
+  value: 'no_menciona',
+  label: 'No lo menciona',
+};
+
+/** Opciones visibles para filtrar y mostrar: las del LLM + "No lo menciona" en listas. */
+export function displayOptions(key: DimensionKey): DimensionOption[] {
+  const options = [...DIMENSIONS[key].options];
+  return DIMENSIONS[key].multi ? [...options, NOT_MENTIONED] : options;
+}
+
+/** Valores aceptados como filtro de una dimensión. */
+export function filterValues(key: DimensionKey): string[] {
+  return displayOptions(key).map((o) => o.value);
+}
+
 export function isDimensionKey(key: string): key is DimensionKey {
   return key in DIMENSIONS;
 }

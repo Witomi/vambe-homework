@@ -3,8 +3,9 @@ import Link from 'next/link';
 import type { ClientDetail, Meta } from '@/lib/api/types';
 import type { SearchParams } from '@/lib/filters/params';
 import { hrefWith } from '@/lib/filters/url';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatPct } from '@/lib/format';
 import { ClosedBadge } from '../ui/Badge';
+import { GradeBadge } from '../ui/GradeBadge';
 import { ClientCategories } from './ClientCategories';
 import { DrawerEscape } from './DrawerEscape';
 
@@ -71,6 +72,26 @@ export function ClientDrawer({ client, meta, params }: ClientDrawerProps) {
               value={formatDate(client.meetingDate)}
             />
           </dl>
+
+          {client.prediction && (
+            <section className="border-border flex items-center gap-3 rounded-lg border p-3">
+              <GradeBadge
+                grade={client.prediction.grade}
+                probability={client.prediction.probability}
+                size="md"
+              />
+              <div className="text-sm">
+                <p className="font-medium">
+                  {meta.grades.find((g) => g.value === client.prediction!.grade)
+                    ?.label ?? `Nota ${client.prediction.grade}`}
+                </p>
+                <p className="text-muted text-xs">
+                  Probabilidad de cierre estimada:{' '}
+                  {formatPct(client.prediction.probability)}
+                </p>
+              </div>
+            </section>
+          )}
 
           <section>
             <SectionTitle>Transcripción</SectionTitle>

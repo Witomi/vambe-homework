@@ -1,8 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { DIMENSION_KEYS, DIMENSIONS, VOLUME_BUCKETS } from '../domain/taxonomy';
+import {
+  DIMENSION_KEYS,
+  DIMENSIONS,
+  NOT_MENTIONED,
+  VOLUME_BUCKETS,
+  displayOptions,
+} from '../domain/taxonomy';
 import { CategorizationStore } from '../data/categorization.store';
 import { ClientsRepository } from '../data/clients.repository';
+import { GRADES, gradeRange } from '../prediction/grades';
+import { DimensionMeta, MetaResponse } from './meta.types';
 
+/** Expone la taxonomía y las opciones de filtro para construir la UI. */
 @Injectable()
 export class MetaService {
   constructor(
@@ -10,7 +19,7 @@ export class MetaService {
     private readonly store: CategorizationStore,
   ) {}
 
-  get() {
+  get(): MetaResponse {
     const clients = this.repository.findRaw();
     const dates = clients.map((c) => c.meetingDate).sort();
     const models = new Set(
@@ -18,14 +27,19 @@ export class MetaService {
     );
 
     return {
-      dimensions: DIMENSION_KEYS.map((key) => {
-        const { label, description, multi, options } = DIMENSIONS[key];
-        return { key, label, description, multi, options };
+      dimensions: DIMENSION_KEYS.map((key): DimensionMeta => {
+        const { label, description, multi } = DIMENSIONS[key];
+        return { key, label, description, multi, options: displayOptions(key) };
       }),
       volumeBuckets: VOLUME_BUCKETS.map(({ value, label }) => ({
         value,
         label,
       })),
+      grades: GRADES.map(({ grade, title }) => ({
+        value: grade,
+        label: `${grade} · ${title} (${gradeRange(grade)})`,
+      })),
+      notMentioned: NOT_MENTIONED,
       sellers: [...new Set(clients.map((c) => c.seller))].sort(),
       dateRange: { from: dates[0] ?? null, to: dates.at(-1) ?? null },
       categorization: {

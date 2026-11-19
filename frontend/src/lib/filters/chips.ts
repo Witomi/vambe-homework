@@ -59,6 +59,7 @@ export function buildFilterChips(
   if (to) chips.push(single('to', to, 'Hasta'));
 
   chips.push(...many(params, 'sellers', 'Vendedor'));
+  chips.push(...many(params, 'grade', 'Nota', (v) => labels.value('grade', v)));
   chips.push(
     ...many(params, 'volume', 'Volumen', (v) => labels.value('volume', v)),
   );

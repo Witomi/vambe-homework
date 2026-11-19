@@ -15,6 +15,7 @@ export const FILTER_KEYS = [
   'from',
   'to',
   'volume',
+  'grade',
   ...DIMENSION_KEYS,
 ] as const;
 

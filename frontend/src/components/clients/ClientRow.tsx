@@ -5,6 +5,7 @@ import { hrefWith } from '@/lib/filters/url';
 import { formatDate, formatNumber } from '@/lib/format';
 import type { Labeler } from '@/lib/labels';
 import { Badge, ClosedBadge } from '../ui/Badge';
+import { GradeBadge } from '../ui/GradeBadge';
 
 interface ClientRowProps {
   client: ClientListItem;
@@ -18,6 +19,16 @@ export function ClientRow({ client, params, labels }: ClientRowProps) {
 
   return (
     <tr className="hover:bg-background/60 group">
+      <td className="px-4 py-3">
+        {client.prediction ? (
+          <GradeBadge
+            grade={client.prediction.grade}
+            probability={client.prediction.probability}
+          />
+        ) : (
+          <span className="text-subtle text-xs">—</span>
+        )}
+      </td>
       <td className="px-4 py-3">
         <Link
           href={hrefWith('/clientes', params, { cliente: client.id })}

@@ -1,4 +1,5 @@
 import { Client } from '../domain/client';
+import { ClientPrediction } from '../prediction/prediction.types';
 
 /** Contratos de respuesta de `GET /api/clients` y `GET /api/clients/:id`. */
 
@@ -10,7 +11,13 @@ export interface Paginated<T> {
   totalPages: number;
 }
 
-/** En el listado se envía un extracto; la transcripción completa va en el detalle. */
-export type ClientListItem = Omit<Client, 'transcript'> & { excerpt: string };
+/** Probabilidad de cierre y nota A–D; null si el cliente no está categorizado. */
+interface WithPrediction {
+  prediction: ClientPrediction | null;
+}
 
-export type ClientDetail = Client;
+/** En el listado se envía un extracto; la transcripción completa va en el detalle. */
+export type ClientListItem = Omit<Client, 'transcript'> &
+  WithPrediction & { excerpt: string };
+
+export type ClientDetail = Client & WithPrediction;

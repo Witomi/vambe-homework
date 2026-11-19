@@ -3,10 +3,7 @@
 import { SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import type { Meta } from '@/lib/api/types';
-import { FilterChip, buildFilterChips } from '@/lib/filters/chips';
 import { PRIMARY_DIMENSIONS, listParam } from '@/lib/filters/params';
-import { createLabeler } from '@/lib/labels';
-import { ActiveFilterChips } from './ActiveFilterChips';
 import { ClosedFilter } from './ClosedFilter';
 import { DateRangeFilter } from './DateRangeFilter';
 import { MultiSelect } from './MultiSelect';
@@ -22,9 +19,7 @@ const SECONDARY_PARAMS = ['volume', 'categorized', 'from', 'to'];
  * extraídas por el LLM se despliegan en "Más filtros".
  */
 export function FilterBar({ meta }: { meta: Meta }) {
-  const { searchParams, setParam, setParams, clearAll, isPending } =
-    useFilterParams();
-  const labels = createLabeler(meta);
+  const { searchParams, setParam, setParams, isPending } = useFilterParams();
 
   const primary = PRIMARY_DIMENSIONS.map((key) =>
     meta.dimensions.find((d) => d.key === key)!,
@@ -37,19 +32,6 @@ export function FilterBar({ meta }: { meta: Meta }) {
     ...SECONDARY_PARAMS,
   ].some((key) => searchParams.get(key));
   const [showMore, setShowMore] = useState(hasSecondaryActive);
-
-  const chips = buildFilterChips(
-    searchParams,
-    labels,
-    meta.dimensions.map((d) => d.key),
-  );
-  const removeChip = (chip: FilterChip) =>
-    setParam(
-      chip.key,
-      chip.multi
-        ? listParam(searchParams, chip.key).filter((v) => v !== chip.value)
-        : null,
-    );
 
   return (
     <div className="border-border bg-surface relative rounded-xl border p-3">
@@ -75,6 +57,12 @@ export function FilterBar({ meta }: { meta: Meta }) {
           options={meta.sellers.map((s) => ({ value: s, label: s }))}
           selected={listParam(searchParams, 'sellers')}
           onChange={(v) => setParam('sellers', v)}
+        />
+        <MultiSelect
+          label="Nota"
+          options={meta.grades}
+          selected={listParam(searchParams, 'grade')}
+          onChange={(v) => setParam('grade', v)}
         />
         {primary.map((d) => (
           <MultiSelect
@@ -133,12 +121,6 @@ export function FilterBar({ meta }: { meta: Meta }) {
           ))}
         </div>
       )}
-
-      <ActiveFilterChips
-        chips={chips}
-        onRemove={removeChip}
-        onClearAll={clearAll}
-      />
     </div>
   );
 }

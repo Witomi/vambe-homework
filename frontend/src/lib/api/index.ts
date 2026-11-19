@@ -4,6 +4,8 @@ import {
   clientsPageSchema,
   metaSchema,
   metricsSchema,
+  opportunitiesSchema,
+  predictionSchema,
 } from './schemas';
 
 export { ApiError } from './http';
@@ -13,6 +15,8 @@ export const api = {
   meta: () => getJson('/meta', metaSchema),
   metrics: (query: URLSearchParams) =>
     getJson('/metrics', metricsSchema, query),
+  opportunities: () => getJson('/opportunities', opportunitiesSchema),
+  prediction: () => getJson('/prediction', predictionSchema),
   clients: (query: URLSearchParams) =>
     getJson('/clients', clientsPageSchema, query),
   client: (id: string) =>

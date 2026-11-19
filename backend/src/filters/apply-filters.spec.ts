@@ -27,10 +27,14 @@ const clients = [
   makeClient({ id: 'c', seller: 'Puma', categories: null }),
 ];
 
-const text = (id: string) =>
-  normalizeText(clients.find((c) => c.id === id)!.transcript);
+const grades: Record<string, string> = { a: 'A', b: 'C' };
+const context = {
+  searchableText: (id: string) =>
+    normalizeText(clients.find((c) => c.id === id)!.transcript),
+  gradeOf: (id: string) => grades[id],
+};
 const ids = (filter: Parameters<typeof applyFilters>[1]) =>
-  applyFilters(clients, filter, text).map((c) => c.id);
+  applyFilters(clients, filter, context).map((c) => c.id);
 
 describe('applyFilters', () => {
   it('sin filtros devuelve todo', () => {
@@ -51,6 +55,19 @@ describe('applyFilters', () => {
     expect(ids({ integrations: ['agenda'] })).toEqual(['a']);
   });
 
+  it('"no_menciona" coincide con clientes cuya lista está vacía', () => {
+    const withoutIntegrations = makeClient({
+      id: 'd',
+      categories: { integrations: [] },
+    });
+    const result = applyFilters(
+      [...clients, withoutIntegrations],
+      { integrations: ['no_menciona'] },
+      { searchableText: () => '', gradeOf: () => undefined },
+    );
+    expect(result.map((c) => c.id)).toEqual(['d']);
+  });
+
   it('AND entre dimensiones distintas', () => {
     expect(ids({ industry: ['salud'], sellers: ['Toro'] })).toEqual([]);
   });
@@ -58,6 +75,11 @@ describe('applyFilters', () => {
   it('los filtros de categoría excluyen a los no categorizados', () => {
     expect(ids({ categorized: false })).toEqual(['c']);
     expect(ids({ volume: ['muy_alto'] })).toEqual(['b']);
+  });
+
+  it('filtra por nota y excluye a los no categorizados', () => {
+    expect(ids({ grade: ['A'] })).toEqual(['a']);
+    expect(ids({ grade: ['A', 'C'] })).toEqual(['a', 'b']);
   });
 
   it('busca sin distinguir tildes ni mayúsculas, en todos los términos', () => {

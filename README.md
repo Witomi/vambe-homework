@@ -7,9 +7,12 @@ Panel comercial que toma las transcripciones de reuniones de venta de Vambe, las
 - ¿Qué integraciones y capacidades piden los clientes? (para el roadmap de producto)
 - ¿Cuántas consultas mensuales estamos automatizando en los clientes que cerramos?
 
-| Panel | Clientes |
+| Vista | Para qué sirve |
 | --- | --- |
-| KPIs, hallazgos automáticos, evolución mensual, explorador de segmentos, matriz vendedor × industria y señales de producto | Búsqueda de texto, filtros por cualquier dimensión, orden, paginación y detalle con transcripción + categorización |
+| **Panel** | Tres cifras clave, los hallazgos más importantes, qué clientes cierran más, qué piden, reuniones por mes y desempeño por vendedor |
+| **Oportunidades** | Qué hacer con los datos: dónde poner el esfuerzo, a quién volver a llamar, qué vendedor toma cada lead, qué frena las ventas y qué solución construir una vez para muchos rubros |
+| **Predicción** | Probabilidad de cierre con regresión logística y **notas A–D** por cliente: qué tan bien funciona, cerrados vs. no cerrados por probabilidad, calibración y qué rasgos la mueven |
+| **Clientes** | Búsqueda de texto, filtros por cualquier dimensión, orden, paginación y detalle con transcripción + categorización |
 
 > La arquitectura, las dimensiones elegidas y las decisiones técnicas están en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -54,6 +57,17 @@ npm run categorize -- --limit 500 --batch 10 --concurrency 4
 
 La corrida es **reanudable**: solo procesa clientes sin categorizar y guarda después de cada lote, así que se puede cortar con Ctrl+C y retomar. Reinicia el backend para que lea los nuevos resultados.
 
+## Medir la precisión del LLM
+
+```bash
+cd backend
+npm run evaluate -- --init 50   # genera data/evaluation/gold.json con 50 casos al azar
+# Revisar cada caso: leer la transcripción, corregir "expected" y marcar "reviewed": true
+npm run evaluate                # reporta el acierto por dimensión
+```
+
+El reporte muestra el acierto exacto por dimensión, el solapamiento en las de lista y cuántas veces el volumen de consultas queda dentro de ±20%. La plantilla trae pre-cargada la respuesta del modelo para acelerar la revisión; conviene leer la transcripción antes de mirarla, para no sesgarse.
+
 ## Scripts
 
 | Dónde | Comando | Qué hace |
@@ -65,6 +79,7 @@ La corrida es **reanudable**: solo procesa clientes sin categorizar y guarda des
 | frontend | `npm test` | Tests de la lógica pura (filtros ↔ URL, chips, formato, esquemas Zod) |
 | backend | `npm run test:e2e` | Tests de la API contra el CSV real |
 | backend | `npm run categorize` | Categoriza clientes con Gemma |
+| backend | `npm run evaluate` | Mide la precisión del LLM contra etiquetas humanas (ver abajo) |
 | ambos | `npm run lint` / `npm run format` | ESLint / Prettier |
 
 ## Variables de entorno
@@ -95,8 +110,10 @@ La corrida es **reanudable**: solo procesa clientes sin categorizar y guarda des
 | `GET /api/metrics?…filtros` | KPIs, series y desgloses del segmento filtrado |
 | `GET /api/clients?…filtros&page&pageSize&sortBy&sortDir` | Listado paginado |
 | `GET /api/clients/:id` | Detalle con transcripción completa |
+| `GET /api/prediction` | Calidad del modelo de cierre, distribución por probabilidad y factores |
+| `GET /api/opportunities` | Acciones sugeridas: mapa de segmentos, leads recuperables, asignación, frenos y soluciones replicables |
 
-Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume` y cada dimensión (`industry`, `leadSource`, …) como lista separada por comas. Los valores se validan contra la taxonomía (400 si no existen).
+Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `grade` (A–D) y cada dimensión (`industry`, `leadSource`, …) como lista separada por comas. Los valores se validan contra la taxonomía (400 si no existen).
 
 ## Despliegue
 

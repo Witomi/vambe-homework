@@ -32,6 +32,8 @@ export const optionSchema = z.object({
 
 const rate = z.number().min(0).max(1);
 
+export const gradeSchema = z.enum(['A', 'B', 'C', 'D']);
+
 // ---------- /api/meta ----------
 
 export const dimensionSchema = z.object({
@@ -45,6 +47,10 @@ export const dimensionSchema = z.object({
 export const metaSchema = z.object({
   dimensions: z.array(dimensionSchema),
   volumeBuckets: z.array(optionSchema),
+  /** Notas A–D para filtrar por probabilidad de cierre. */
+  grades: z.array(optionSchema),
+  /** Valor de "no mencionó nada" en dimensiones de lista. */
+  notMentioned: optionSchema,
   sellers: z.array(z.string()),
   dateRange: z.object({
     from: z.string().nullable(),
@@ -85,6 +91,8 @@ const clientBaseSchema = z.object({
   meetingDate: z.string(),
   closed: z.boolean(),
   categories: categoriesSchema.nullable(),
+  /** Probabilidad de cierre y nota; null si no está categorizado. */
+  prediction: z.object({ probability: rate, grade: gradeSchema }).nullable(),
 });
 
 export const clientListItemSchema = clientBaseSchema.extend({
@@ -119,7 +127,7 @@ export const breakdownRowSchema = rateStatSchema.extend({
 
 export const insightSchema = z.object({
   id: z.string(),
-  tone: z.enum(['positive', 'negative', 'neutral']),
+  tone: z.enum(['positive', 'negative']),
   title: z.string(),
   detail: z.string(),
   filter: z.object({ key: z.string(), value: z.string() }).optional(),
@@ -137,15 +145,131 @@ export const metricsSchema = z.object({
     automatedMonthlyInquiries: z.number(),
   }),
   timeline: z.array(rateStatSchema.extend({ month: z.string() })),
-  sellers: z.array(rateStatSchema.extend({ seller: z.string() })),
+  sellers: z.array(
+    z.object({
+      seller: z.string(),
+      count: z.number().int(),
+      closed: z.number().int(),
+      closeRate: rate,
+      expectedRate: rate,
+    }),
+  ),
   dimensions: z.record(dimensionKeySchema, z.array(breakdownRowSchema)),
-  volume: z.array(breakdownRowSchema),
-  sellerIndustry: z.object({
-    sellers: z.array(z.string()),
-    industries: z.array(optionSchema),
-    cells: z.array(
-      rateStatSchema.extend({ seller: z.string(), industry: z.string() }),
+  insights: z.array(insightSchema),
+});
+
+// ---------- /api/opportunities ----------
+
+const segmentSchema = z.object({
+  dimension: dimensionKeySchema,
+  dimensionLabel: z.string(),
+  value: z.string(),
+  label: z.string(),
+  count: z.number().int(),
+  closeRate: rate,
+});
+
+export const opportunitiesSchema = z.object({
+  baseRate: rate.nullable(),
+  categorized: z.number().int(),
+  quadrants: z.array(
+    z.object({
+      key: z.enum(['protect', 'grow', 'fix', 'deprioritize']),
+      title: z.string(),
+      action: z.string(),
+      segments: z.array(segmentSchema),
+    }),
+  ),
+  solutions: z.array(
+    z.object({
+      useCases: z.array(optionSchema),
+      topIntegration: optionSchema.nullable(),
+      clients: z.number().int(),
+      industries: z.array(optionSchema),
+      closeRate: rate,
+      monthlyInquiries: z.number(),
+    }),
+  ),
+  recovery: z.object({
+    candidates: z.number().int(),
+    monthlyInquiries: z.number(),
+    top: z.array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        seller: z.string(),
+        industry: z.string(),
+        monthlyInquiries: z.number(),
+        winScore: rate,
+        grade: gradeSchema,
+        reasons: z.array(z.string()),
+      }),
     ),
   }),
-  insights: z.array(insightSchema),
+  assignments: z.array(
+    z.object({
+      industry: optionSchema,
+      seller: z.string(),
+      sellerRate: rate,
+      sellerMeetings: z.number().int(),
+      industryRate: rate,
+    }),
+  ),
+  blockers: z.array(segmentSchema.extend({ action: z.string() })),
+});
+
+// ---------- /api/prediction ----------
+
+const factorSchema = z.object({
+  label: z.string(),
+  weight: z.number(),
+  oddsRatio: z.number().positive(),
+});
+
+export const predictionSchema = z.object({
+  quality: z.object({
+    sampleSize: z.number().int(),
+    baseRate: rate,
+    auc: rate,
+    logLoss: z.number(),
+    baselineLogLoss: z.number(),
+    folds: z.number().int(),
+  }),
+  grades: z.array(
+    z.object({
+      grade: gradeSchema,
+      title: z.string(),
+      range: z.string(),
+      action: z.string(),
+      count: z.number().int(),
+      closed: z.number().int(),
+      closeRate: rate.nullable(),
+    }),
+  ),
+  gradeThresholds: z.array(
+    z.object({ grade: gradeSchema, minScore: z.number().nullable() }),
+  ),
+  points: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      score: z.number(),
+      probability: rate,
+      closed: z.boolean(),
+      grade: gradeSchema,
+    }),
+  ),
+  buckets: z.array(
+    z.object({
+      from: rate,
+      to: rate,
+      closed: z.number().int(),
+      open: z.number().int(),
+      meanPredicted: rate,
+    }),
+  ),
+  factors: z.object({
+    positive: z.array(factorSchema),
+    negative: z.array(factorSchema),
+  }),
 });

@@ -36,6 +36,9 @@ export function ClientsTable({
       <table className="w-full min-w-[56rem] text-sm">
         <thead className="border-border text-muted border-b text-left text-xs">
           <tr>
+            <SortableHeader field="probability" {...sortProps}>
+              Nota
+            </SortableHeader>
             <SortableHeader field="name" {...sortProps}>
               Cliente
             </SortableHeader>

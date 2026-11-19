@@ -8,6 +8,7 @@ export const SORT_FIELDS = [
   'seller',
   'closed',
   'monthlyInquiries',
+  'probability',
 ] as const;
 export type SortField = (typeof SORT_FIELDS)[number];
 

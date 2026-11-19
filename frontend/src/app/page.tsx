@@ -1,15 +1,22 @@
+import { CustomerNeeds } from '@/components/dashboard/CustomerNeeds';
 import { DimensionExplorer } from '@/components/dashboard/DimensionExplorer';
 import { InsightsPanel } from '@/components/dashboard/InsightsPanel';
 import { KpiCards } from '@/components/dashboard/KpiCards';
-import { ProductDemand } from '@/components/dashboard/ProductDemand';
-import { SellerIndustryHeatmap } from '@/components/dashboard/SellerIndustryHeatmap';
 import { SellerPerformance } from '@/components/dashboard/SellerPerformance';
 import { TimelineChart } from '@/components/dashboard/TimelineChart';
-import { FilterBar } from '@/components/filters/FilterBar';
+import { ActiveFiltersBanner } from '@/components/filters/ActiveFiltersBanner';
+import { DashboardFilters } from '@/components/filters/DashboardFilters';
 import { CoverageNote, PageHeader } from '@/components/ui/PageHeader';
 import { api } from '@/lib/api';
+import { formatNumber } from '@/lib/format';
 import { SearchParams, filterQuery } from '@/lib/filters/params';
 
+/**
+ * Panel comercial. Se lee de arriba hacia abajo:
+ * 1. Cifras clave y hallazgos (la respuesta rápida).
+ * 2. Qué clientes cierran más y qué piden (el detalle).
+ * 3. Evolución mensual y vendedores (el contexto).
+ */
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -19,24 +26,30 @@ export default async function DashboardPage({
   const [meta, metrics] = await Promise.all([api.meta(), api.metrics(query)]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         title="Panel comercial"
-        description="Qué clientes llegan, qué necesitan y qué los lleva a cerrar, a partir de las transcripciones de reuniones categorizadas con IA."
+        description="Qué clientes llegan, qué necesitan y cuáles terminan comprando."
         aside={<CoverageNote meta={meta} />}
       />
-      <FilterBar meta={meta} />
+      <DashboardFilters meta={meta} />
+      <ActiveFiltersBanner
+        meta={meta}
+        summary={`${formatNumber(metrics.kpis.meetings)} de ${formatNumber(meta.categorization.total)} reuniones`}
+      />
       <KpiCards kpis={metrics.kpis} />
       <InsightsPanel insights={metrics.insights} />
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+        <DimensionExplorer meta={meta} metrics={metrics} />
+        <CustomerNeeds meta={meta} metrics={metrics} />
+      </div>
+      {/* min-w-0: permite que los gráficos se achiquen dentro de la grilla. */}
+      <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
         <div className="lg:col-span-2">
           <TimelineChart data={metrics.timeline} />
         </div>
         <SellerPerformance metrics={metrics} />
       </div>
-      <DimensionExplorer meta={meta} metrics={metrics} />
-      <SellerIndustryHeatmap matrix={metrics.sellerIndustry} />
-      <ProductDemand metrics={metrics} />
     </div>
   );
 }

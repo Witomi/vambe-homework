@@ -1,4 +1,4 @@
-import { DimensionKey, DimensionOption } from '../domain/taxonomy';
+import { DimensionKey } from '../domain/taxonomy';
 
 /** Contrato de respuesta de `GET /api/metrics`. */
 
@@ -22,22 +22,18 @@ export interface TimelinePoint extends RateStat {
   month: string;
 }
 
-export interface SellerStat extends RateStat {
+/** Desempeño de un vendedor frente a lo esperado según su cartera. */
+export interface SellerPerformance {
   seller: string;
+  count: number;
+  closed: number;
+  closeRate: number;
+  /** Tasa que se esperaba según los leads que recibió (0..1). */
+  expectedRate: number;
 }
 
-export interface SellerIndustryCell extends RateStat {
-  seller: string;
-  industry: string;
-}
-
-export interface SellerIndustryMatrix {
-  sellers: string[];
-  industries: DimensionOption[];
-  cells: SellerIndustryCell[];
-}
-
-export type InsightTone = 'positive' | 'negative' | 'neutral';
+/** positive: cierra sobre el promedio · negative: cierra bajo el promedio. */
+export type InsightTone = 'positive' | 'negative';
 
 export interface Insight {
   id: string;
@@ -65,9 +61,8 @@ export interface Kpis {
 export interface MetricsResponse {
   kpis: Kpis;
   timeline: TimelinePoint[];
-  sellers: SellerStat[];
+  /** Sobre las reuniones analizadas con IA, ordenado por desempeño ajustado. */
+  sellers: SellerPerformance[];
   dimensions: Record<DimensionKey, BreakdownRow[]>;
-  volume: BreakdownRow[];
-  sellerIndustry: SellerIndustryMatrix;
   insights: Insight[];
 }

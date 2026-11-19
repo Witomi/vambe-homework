@@ -1,10 +1,12 @@
 import { ClientDrawer } from '@/components/clients/ClientDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable';
 import { Pagination } from '@/components/clients/Pagination';
+import { ActiveFiltersBanner } from '@/components/filters/ActiveFiltersBanner';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { CoverageNote, PageHeader } from '@/components/ui/PageHeader';
 import { ApiError, api } from '@/lib/api';
 import { SearchParams, filterQuery } from '@/lib/filters/params';
+import { formatNumber } from '@/lib/format';
 import { createLabeler } from '@/lib/labels';
 
 const single = (v: string | string[] | undefined) =>
@@ -43,6 +45,10 @@ export default async function ClientsPage({
         aside={<CoverageNote meta={meta} />}
       />
       <FilterBar meta={meta} />
+      <ActiveFiltersBanner
+        meta={meta}
+        summary={`${formatNumber(page.total)} ${page.total === 1 ? 'cliente' : 'clientes'}`}
+      />
       <div className="border-border bg-surface overflow-hidden rounded-xl border">
         <ClientsTable
           page={page}

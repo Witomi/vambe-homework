@@ -14,6 +14,8 @@ const meta: Meta = {
     },
   ],
   volumeBuckets: [],
+  grades: [],
+  notMentioned: { value: 'no_menciona', label: 'No lo menciona' },
   sellers: ['Puma'],
   dateRange: { from: null, to: null },
   categorization: { total: 1, categorized: 1, models: [] },

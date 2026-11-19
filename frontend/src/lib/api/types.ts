@@ -7,10 +7,13 @@ import type {
   clientsPageSchema,
   dimensionKeySchema,
   dimensionSchema,
+  gradeSchema,
   insightSchema,
   metaSchema,
   metricsSchema,
+  opportunitiesSchema,
   optionSchema,
+  predictionSchema,
 } from './schemas';
 
 /** Tipos derivados de los esquemas: una sola definición por contrato. */
@@ -28,3 +31,12 @@ export type ClientsPage = z.infer<typeof clientsPageSchema>;
 export type Metrics = z.infer<typeof metricsSchema>;
 export type BreakdownRow = z.infer<typeof breakdownRowSchema>;
 export type Insight = z.infer<typeof insightSchema>;
+
+export type Opportunities = z.infer<typeof opportunitiesSchema>;
+export type Quadrant = Opportunities['quadrants'][number];
+export type Segment = Quadrant['segments'][number];
+
+export type Prediction = z.infer<typeof predictionSchema>;
+export type Factor = Prediction['factors']['positive'][number];
+export type Grade = z.infer<typeof gradeSchema>;
+export type ClientPoint = Prediction['points'][number];

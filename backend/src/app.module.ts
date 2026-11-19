@@ -7,6 +7,8 @@ import { DataModule } from './data/data.module';
 import { HealthModule } from './health/health.module';
 import { MetaModule } from './meta/meta.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { OpportunitiesModule } from './opportunities/opportunities.module';
+import { PredictionModule } from './prediction/prediction.module';
 
 /**
  * Módulo raíz.
@@ -14,6 +16,8 @@ import { MetricsModule } from './metrics/metrics.module';
  * - DataModule:           acceso a datos (CSV + categorizaciones)
  * - ClientsModule:        GET /api/clients
  * - MetricsModule:        GET /api/metrics
+ * - OpportunitiesModule:  GET /api/opportunities
+ * - PredictionModule:     GET /api/prediction (regresión logística)
  * - MetaModule:           GET /api/meta
  * - HealthModule:         GET /api/health
  * - CategorizationModule: pipeline LLM (usado por el CLI `npm run categorize`)
@@ -24,6 +28,8 @@ import { MetricsModule } from './metrics/metrics.module';
     DataModule,
     ClientsModule,
     MetricsModule,
+    OpportunitiesModule,
+    PredictionModule,
     MetaModule,
     HealthModule,
     CategorizationModule,

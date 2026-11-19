@@ -1,13 +1,21 @@
 'use client';
 
 import clsx from 'clsx';
-import { LayoutDashboard, Sparkles, Users } from 'lucide-react';
+import {
+  Gauge,
+  LayoutDashboard,
+  Lightbulb,
+  Sparkles,
+  Users,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { filterQuery } from '@/lib/filters/params';
 
 const NAV = [
   { href: '/', label: 'Panel', icon: LayoutDashboard },
+  { href: '/oportunidades', label: 'Oportunidades', icon: Lightbulb },
+  { href: '/prediccion', label: 'Predicción', icon: Gauge },
   { href: '/clientes', label: 'Clientes', icon: Users },
 ];
 

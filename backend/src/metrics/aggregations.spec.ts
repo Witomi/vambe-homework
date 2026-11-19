@@ -2,12 +2,11 @@ import { makeClient } from '../../test/fixtures';
 import {
   breakdownAllDimensions,
   breakdownByDimension,
-  breakdownByVolume,
   rateStat,
-  sellerIndustryMatrix,
   timeline,
 } from './aggregations';
 import { median } from '../common/collections';
+import { sellerPerformance } from './seller-performance';
 import { generateInsights } from './insights';
 
 describe('aggregations', () => {
@@ -48,16 +47,18 @@ describe('aggregations', () => {
     expect(rows[0].share).toBeCloseTo(2 / 3);
   });
 
+  it('en dimensiones múltiples cuenta a quienes no mencionan nada', () => {
+    const rows = breakdownByDimension(clients, 'useCases');
+    // El tercer cliente tiene useCases: [] → 1 de 3.
+    const none = rows.find((r) => r.value === 'no_menciona');
+    expect(none).toMatchObject({ count: 1, label: 'No lo menciona' });
+    expect(none?.share).toBeCloseTo(1 / 3);
+  });
+
   it('en dimensiones múltiples un cliente cuenta en cada valor', () => {
     const rows = breakdownByDimension(clients, 'useCases');
     expect(rows.find((r) => r.value === 'faq')?.count).toBe(2);
     expect(rows.find((r) => r.value === 'agendamiento')?.count).toBe(1);
-  });
-
-  it('agrupa por volumen de consultas', () => {
-    const rows = breakdownByVolume(clients);
-    expect(rows.find((r) => r.value === 'bajo')?.count).toBe(1);
-    expect(rows.find((r) => r.value === 'medio')?.count).toBe(2);
   });
 
   it('timeline por mes en orden cronológico', () => {
@@ -65,15 +66,6 @@ describe('aggregations', () => {
       ['2024-01', 2],
       ['2024-02', 1],
     ]);
-  });
-
-  it('matriz vendedor × industria', () => {
-    const m = sellerIndustryMatrix(clients);
-    expect(m.sellers).toEqual(['Puma', 'Toro']);
-    const cell = m.cells.find(
-      (c) => c.seller === 'Puma' && c.industry === 'salud',
-    );
-    expect(cell).toMatchObject({ count: 2, closed: 1 });
   });
 
   it('median', () => {
@@ -101,7 +93,6 @@ describe('generateInsights', () => {
       baseRate: rateStat(clients).closeRate,
       categorizedCount: clients.length,
       dimensions,
-      matrix: sellerIndustryMatrix(clients),
     });
 
     const positive = insights.find((i) => i.tone === 'positive');
@@ -120,8 +111,71 @@ describe('generateInsights', () => {
         baseRate: 1,
         categorizedCount: 1,
         dimensions: breakdownAllDimensions(clients),
-        matrix: sellerIndustryMatrix(clients),
       }),
     ).toEqual([]);
+  });
+
+  it('la diferencia en puntos cuadra con los porcentajes del texto', () => {
+    // Tasas "incómodas" para el redondeo: 29/43 = 67,4%, 31/44 = 70,5%, etc.
+    const groups: [string, number, number][] = [
+      ['referido', 44, 31],
+      ['linkedin', 43, 29],
+      ['google', 41, 22],
+      ['evento', 47, 37],
+      ['contenido', 39, 24],
+    ];
+    const clients = groups.flatMap(([leadSource, count, closed]) =>
+      Array.from({ length: count }, (_, i) =>
+        makeClient({ closed: i < closed, categories: { leadSource } }),
+      ),
+    );
+
+    const insights = generateInsights({
+      baseRate: rateStat(clients).closeRate,
+      categorizedCount: clients.length,
+      dimensions: breakdownAllDimensions(clients),
+    });
+
+    expect(insights.length).toBeGreaterThan(0);
+    for (const { detail } of insights) {
+      const [, rate, points, direction, base] =
+        /Cierran (\d+)%, (\d+) puntos (más|menos) que el promedio \((\d+)%\)/.exec(
+          detail,
+        )!;
+      const diff = Number(rate) - Number(base);
+      expect(Math.abs(diff)).toBe(Number(points));
+      expect(direction).toBe(diff > 0 ? 'más' : 'menos');
+    }
+  });
+});
+
+describe('sellerPerformance', () => {
+  /** `n` clientes de un vendedor en un rubro, de los cuales `closed` cerraron. */
+  const leads = (seller: string, industry: string, n: number, closed: number) =>
+    Array.from({ length: n }, (_, i) =>
+      makeClient({ seller, closed: i < closed, categories: { industry } }),
+    );
+
+  it('ajusta por cartera: compara con lo esperado en los rubros de cada vendedor', () => {
+    // Salud cierra 80% en el equipo; Educación, 40%.
+    const clients = [
+      ...leads('Toro', 'salud', 20, 17), // 85% donde se espera 80% → +5
+      ...leads('Zorro', 'salud', 20, 15), // 75% donde se espera 80% → −5
+      ...leads('Puma', 'educacion', 20, 11), // 55% donde se espera 40% → +15
+      ...leads('Boa', 'educacion', 20, 5), // 25% donde se espera 40% → −15
+    ];
+
+    const result = sellerPerformance(clients);
+
+    // Por tasa cruda Puma (55%) quedaría tercero; ajustado, es el mejor.
+    expect(result.map((s) => s.seller)).toEqual([
+      'Puma',
+      'Toro',
+      'Zorro',
+      'Boa',
+    ]);
+    const puma = result[0];
+    expect(puma.closeRate).toBeCloseTo(0.55);
+    expect(puma.expectedRate).toBeCloseTo(0.4);
   });
 });

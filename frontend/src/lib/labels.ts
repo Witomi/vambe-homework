@@ -7,6 +7,7 @@ export function createLabeler(meta: Meta) {
     map.set(d.key, new Map(d.options.map((o) => [o.value, o.label])));
   }
   map.set('volume', new Map(meta.volumeBuckets.map((o) => [o.value, o.label])));
+  map.set('grade', new Map(meta.grades.map((o) => [o.value, o.label])));
 
   return {
     dimension: (key: DimensionKey | string) =>

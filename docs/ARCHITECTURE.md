@@ -100,15 +100,45 @@ Semántica: OR dentro de una dimensión (salud **o** educación), AND entre dime
 
 ## Métricas del panel
 
-- **KPIs**: reuniones, tasa de cierre, consultas mensuales automatizadas en clientes cerrados (el valor entregado por Vambe) y cobertura de la IA.
-- **Hallazgos automáticos**: segmentos cuya tasa de cierre se desvía del promedio, solo con muestras ≥ 3% del total y sin valores comodín como "Otro". Incluyen vendedores "especialistas" por rubro. Cada hallazgo es clicable y filtra el panel.
-- **Evolución mensual**: volumen y tasa de cierre en vistas separadas, sin doble eje.
-- **Desempeño por vendedor**: tasa de cierre frente al promedio.
-- **Explorador de segmentos**: cada dimensión vista como *tasa de cierre* (frente al promedio, con muestras chicas atenuadas) o como *demanda* (% de clientes).
-- **Matriz vendedor × industria**: heatmap para asignar cada lead entrante al vendedor con mejor historial en su rubro.
-- **Señales de producto**: casos de uso, integraciones y requisitos, ordenados por demanda o por impacto en el cierre.
+El panel se diseñó para leerse de arriba hacia abajo en pocos segundos: primero la respuesta rápida, después el detalle y al final el contexto. La exploración detallada (búsqueda y todas las dimensiones como filtro) vive en la vista *Clientes*.
 
-La visualización sigue una paleta validada para daltonismo: azul = sobre el promedio, rojo = bajo el promedio, y siempre con texto (pp de diferencia y n) que acompaña al color.
+1. **Tres cifras clave**: reuniones, tasa de cierre y consultas mensuales automatizadas en los clientes cerrados (el valor que entrega Vambe).
+2. **Lo más importante**: los 2 grupos de clientes que más suben la tasa de cierre y los 2 que más la bajan. Solo se consideran grupos con al menos 3% de la muestra y se excluyen valores comodín como "Otro". Cada hallazgo filtra el panel al hacer clic.
+3. **¿Qué clientes cierran más?**: tasa de cierre por industria, canal de adquisición, tamaño o dolor principal, frente al promedio. Los grupos muy chicos se atenúan.
+4. **¿Qué piden los clientes?**: los 6 casos de uso o integraciones más mencionados.
+5. **Reuniones por mes** y **¿Cómo le va a cada vendedor?** como contexto. Los vendedores se comparan **ajustados por cartera**: para cada uno se calcula cuánto se esperaba que cerrara si hubiera cerrado como el promedio del equipo en cada uno de sus rubros (estandarización directa), y se ordena por la diferencia entre lo real y lo esperado. Así un vendedor con rubros difíciles no queda último por la asignación que le tocó.
+
+**Muestras chicas:** en los desgloses, los grupos con menos de 10 reuniones (o 2% de las analizadas) no compiten en el ranking: van plegados al final, porque "3 de 3" no es un 100% confiable. Al pasar el mouse por cualquier fila se ve su rango probable (intervalo de Wilson al 95%).
+
+La visualización sigue una paleta validada para daltonismo: azul = sobre el promedio, rojo = bajo el promedio, y el color siempre va acompañado de la cifra (diferencia en puntos y cantidad de reuniones).
+
+## Oportunidades: de las métricas a la acción
+
+El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un panel lateral con sus cifras, la acción sugerida y enlaces explícitos ("Ver este grupo en el panel" / "Ver sus N clientes"); al llegar al destino, un banner fijo muestra el filtro aplicado y permite volver. Cada bloque es una función pura en `backend/src/opportunities/` con su test, y responde una pregunta del equipo:
+
+| Bloque | Pregunta | Cómo se calcula |
+| --- | --- | --- |
+| **Mapa de segmentos** | ¿Dónde pongo el esfuerzo? | Cada rubro, canal y tamaño se clasifica por volumen (sobre o bajo la mediana de su dimensión) y conversión (±3 puntos del promedio; lo que queda dentro es ruido y se omite). Resultado: *proteger*, *invertir para captar más*, *mejorar el pitch* o *despriorizar*. |
+| **Leads recuperables** | ¿A quién vuelvo a llamar? | A cada lead perdido se le estima una probabilidad de cierre como el promedio de las tasas de los grupos a los que pertenece (rubro, canal, tamaño, dolor, urgencia). Modelo simple y explicable: cada razón se muestra. Se proponen los que tienen perfil sobre el promedio, empezando por los de más consultas al mes (más valor para Vambe). |
+| **Asignación sugerida** | ¿Qué vendedor toma cada lead? | Para cada rubro frecuente, el vendedor que más cierra frente al equipo (al menos +5 puntos y 8 reuniones). |
+| **Frenos a resolver** | ¿Qué baja las ventas? | Requisitos, objeciones, integraciones y casos de uso que cierran bajo el promedio, ordenados por impacto (puntos perdidos × reuniones). Cada uno trae una acción de un *playbook* (`playbook.ts`) que el equipo comercial puede editar sin tocar la lógica. |
+| **Soluciones replicables** | ¿Qué construyo una vez y vendo en muchos rubros? | Pares de casos de uso (sin contar FAQ, que piden casi todos) presentes en 4 o más industrias distintas. Son candidatos a plantillas verticales. |
+
+## Predicción de cierre (regresión logística)
+
+`backend/src/prediction/` estima la probabilidad de que cada cliente compre a partir de lo que extrajo el LLM.
+
+- **Variables:** una variable 0/1 por cada valor de cada dimensión (rubro, canal, tamaño, dolor, urgencia, complejidad, canal de consultas, casos de uso, integraciones, requisitos, objeciones), más el volumen de consultas en escala logarítmica.
+- **Modelo:** regresión logística con regularización L2, implementada sin dependencias (`logistic-regression.ts`). La regularización se aplica como paso proximal, que es numéricamente estable.
+- **Validación cruzada de 5 partes:** cada cliente recibe la probabilidad de un modelo que no lo vio al entrenar, así que las métricas no están infladas.
+- **Elección de la regularización:** probé l2 entre 1 y 400. Con l2 = 30 el log loss es mínimo (0,618 vs. 0,629 de no usar modelo). Con menos regularización sobreajusta y predice extremos que la realidad no respalda.
+- **Resultado honesto:** AUC de 0,59. Hay señal real pero débil: lo que el cliente cuenta explica solo parte de si compra. Sirve para priorizar, no para asegurar cierres, y así se comunica en la UI.
+- **Notas A–D:** cada cliente recibe una nota según su probabilidad (A ≥ 75%, B 70–75%, C 62–70%, D < 62%), definida en `prediction/grades.ts` con una acción sugerida por nota. Los cortes se eligieron sobre la distribución real para que la tasa de cierre baje de forma consistente: A cierra 78%, B 73%, C 64% y D 60%. Las notas se pueden filtrar y ordenar en *Clientes* (`?grade=A&sortBy=probability`).
+- **Uso:** la pestaña *Predicción* muestra la calidad, la tabla de notas, **la curva de la regresión con cada cliente como punto** (arriba los que cerraron, abajo los que no, con las notas como bandas de fondo; clic en un punto abre la ficha), la distribución de cerrados vs. no cerrados por probabilidad, la calibración y los factores (razones de chances). *Oportunidades* usa estas probabilidades para elegir los leads a recuperar, y explica cada uno con las variables que más suben su probabilidad.
+
+## Medición de precisión
+
+`npm run evaluate` compara las categorías del LLM con un *gold standard* etiquetado a mano (`data/evaluation/gold.json`): acierto exacto por dimensión, solapamiento (Jaccard) en dimensiones de lista y volumen de consultas dentro de ±20%. Solo cuentan los casos marcados como revisados por una persona.
 
 ## Estructura del código
 
@@ -141,6 +171,8 @@ backend/src
 ├── metrics/                      GET /api/metrics
 │   ├── kpis.ts / aggregations.ts / insights.ts   cálculos (puros)
 │   └── metrics.types.ts          contrato de respuesta
+├── opportunities/                GET /api/opportunities: una función pura por bloque + playbook.ts
+├── prediction/                   GET /api/prediction: regresión logística, validación cruzada, métricas
 ├── meta/                         GET /api/meta (taxonomía y opciones de filtro)
 ├── health/                       GET /api/health
 ├── categorization/               pipeline LLM
@@ -149,8 +181,9 @@ backend/src
 │   ├── llm/                      LlmProvider (interfaz), GemmaProvider, RateLimitedLlmProvider (decorator), factory
 │   ├── prompt/                   construcción del prompt desde la taxonomía
 │   ├── parsing/                  validación y normalización de la respuesta del modelo
+│   ├── evaluation/               comparación contra etiquetas humanas
 │   └── utils/                    rate limiter, muestreo reproducible
-└── cli/categorize.ts             comando `npm run categorize`
+└── cli/                          comandos `npm run categorize` y `npm run evaluate`
 ```
 
 ### Frontend (`frontend/src`)
@@ -159,7 +192,7 @@ Las páginas son Server Components que leen los filtros de la URL, llaman a la A
 
 ```
 frontend/src
-├── app/                          páginas: panel (/) y clientes (/clientes), loading y error
+├── app/                          páginas: panel (/), oportunidades, predicción y clientes
 ├── lib/
 │   ├── api/
 │   │   ├── schemas.ts            esquemas Zod de cada respuesta (contrato con el backend)
@@ -172,6 +205,8 @@ frontend/src
     ├── filters/                  FilterBar compuesta de SearchInput, ClosedFilter, MultiSelect,
     │                             DateRangeFilter, ActiveFilterChips + hook useFilterParams
     ├── dashboard/                KPIs, hallazgos, gráficos y desgloses
+    ├── opportunities/            mapa de segmentos, leads recuperables, asignación, frenos, soluciones
+    ├── prediction/               calidad del modelo, distribución, calibración y factores
     ├── clients/                  tabla (ClientRow, SortableHeader), Pagination, ClientDrawer
     └── ui/                       Card, Badge, Tabs, Sidebar, PageHeader
 ```
@@ -191,6 +226,6 @@ Los tipos del frontend se derivan de sus esquemas Zod, no de una copia manual, a
 ## Limitaciones y próximos pasos
 
 - **Cobertura**: se categorizó una muestra de 1.000 de 10.000 reuniones (10%) por la cuota del free tier. El pipeline soporta procesar el resto con `npm run categorize -- --limit 9000`.
-- **Evaluación de calidad**: hoy la validación es estructural más una revisión manual de muestras. El siguiente paso sería un set etiquetado a mano (~100 casos) para medir precisión por dimensión y comparar prompts y modelos.
+- **Evaluación de calidad**: la herramienta `npm run evaluate` está lista y la plantilla de 50 casos generada; falta etiquetarlos a mano para tener el número de precisión.
 - **Categorización online**: un endpoint o cola (BullMQ) para categorizar reuniones nuevas a medida que llegan.
 - **Persistencia**: migrar a Postgres si el volumen crece o si se necesita escritura concurrente.

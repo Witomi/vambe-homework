@@ -2,13 +2,20 @@ import {
   DIMENSION_KEYS,
   DIMENSIONS,
   DimensionKey,
+  NOT_MENTIONED,
   volumeBucket,
 } from '../domain/taxonomy';
 import { Client } from '../domain/client';
 import { normalizeText } from '../common/text';
 import { ClientFilterDto } from './client-filter.dto';
 
-export type SearchableText = (id: string) => string;
+/** Datos derivados que el filtro necesita además del cliente. */
+export interface FilterContext {
+  /** Texto normalizado (sin tildes) para la búsqueda. */
+  searchableText: (id: string) => string;
+  /** Nota A–D del cliente, o undefined si no está categorizado. */
+  gradeOf: (id: string) => string | undefined;
+}
 
 function matchesDimension(
   client: Client,
@@ -17,9 +24,12 @@ function matchesDimension(
 ): boolean {
   if (!client.categories) return false;
   const value = client.categories[key];
-  return DIMENSIONS[key].multi
-    ? (value as string[]).some((v) => selected.includes(v))
-    : selected.includes(value as string);
+  if (!DIMENSIONS[key].multi) return selected.includes(value as string);
+
+  const values = value as string[];
+  return values.length === 0
+    ? selected.includes(NOT_MENTIONED.value)
+    : values.some((v) => selected.includes(v));
 }
 
 /**
@@ -29,7 +39,7 @@ function matchesDimension(
 export function applyFilters(
   clients: Client[],
   filter: ClientFilterDto,
-  searchableText: SearchableText,
+  context: FilterContext,
 ): Client[] {
   const terms = filter.search
     ? normalizeText(filter.search).split(/\s+/).filter(Boolean)
@@ -48,6 +58,10 @@ export function applyFilters(
     if (filter.from && c.meetingDate < filter.from) return false;
     if (filter.to && c.meetingDate > filter.to) return false;
 
+    if (filter.grade) {
+      const grade = context.gradeOf(c.id);
+      if (!grade || !filter.grade.includes(grade)) return false;
+    }
     if (filter.volume) {
       const bucket = volumeBucket(c.categories?.monthlyInquiries ?? null);
       if (!bucket || !filter.volume.includes(bucket)) return false;
@@ -56,7 +70,7 @@ export function applyFilters(
       if (!matchesDimension(c, key, filter[key]!)) return false;
     }
     if (terms.length) {
-      const text = `${searchableText(c.id)} ${normalizeText(c.categories?.summary ?? '')}`;
+      const text = `${context.searchableText(c.id)} ${normalizeText(c.categories?.summary ?? '')}`;
       if (!terms.every((t) => text.includes(t))) return false;
     }
     return true;
