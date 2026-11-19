@@ -2,7 +2,7 @@ import { makeClient } from '../../test/fixtures';
 import { breakdownAllDimensions } from '../analytics/breakdown';
 import { rateStat } from '../analytics/rates';
 import { generateInsights } from './insights';
-import { sellerPerformance } from './seller-performance';
+import { sellerPerformance } from '../analytics/seller-performance';
 import { timeline } from './timeline';
 
 describe('timeline', () => {

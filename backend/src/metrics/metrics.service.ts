@@ -7,7 +7,7 @@ import { timeline } from './timeline';
 import { generateInsights } from './insights';
 import { computeKpis } from './kpis';
 import { MetricsResponse } from './metrics.types';
-import { sellerPerformance } from './seller-performance';
+import { sellerPerformance } from '../analytics/seller-performance';
 
 @Injectable()
 export class MetricsService {

@@ -1,5 +1,5 @@
 import { makeClient } from '../../test/fixtures';
-import { Categories } from '../domain/taxonomy';
+import { Categories } from '../domain/categories';
 import { rateStat } from '../analytics/rates';
 import { findBlockers } from './blockers';
 import { findRecoverableLeads } from './lead-recovery';
@@ -114,7 +114,7 @@ describe('findRecoverableLeads', () => {
     const scorer = {
       probabilityOf: (id: string) => probabilities[id],
       reasonsFor: () => [
-        { label: 'Integraciones: CRM', weight: 0.5, oddsRatio: 1.65 },
+        { label: 'Integraciones: CRM', weight: 0.5, oddsRatio: 1.62 },
       ],
     };
 

@@ -4,6 +4,7 @@ import { SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import type { Meta } from '@/lib/api/types';
 import { PRIMARY_DIMENSIONS, listParam } from '@/lib/filters/params';
+import { findDimension } from '@/lib/labels';
 import { ClosedFilter } from './ClosedFilter';
 import { DateRangeFilter } from './DateRangeFilter';
 import { MultiSelect } from './MultiSelect';
@@ -21,9 +22,7 @@ const SECONDARY_PARAMS = ['volume', 'categorized', 'from', 'to'];
 export function FilterBar({ meta }: { meta: Meta }) {
   const { searchParams, setParam, setParams, isPending } = useFilterParams();
 
-  const primary = PRIMARY_DIMENSIONS.map((key) =>
-    meta.dimensions.find((d) => d.key === key)!,
-  );
+  const primary = PRIMARY_DIMENSIONS.map((key) => findDimension(meta, key));
   const secondary = meta.dimensions.filter(
     (d) => !PRIMARY_DIMENSIONS.includes(d.key),
   );

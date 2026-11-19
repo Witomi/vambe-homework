@@ -90,6 +90,18 @@ describe('API (e2e)', () => {
     );
   });
 
+  it('GET /sellers devuelve la tabla vendedor × industria', async () => {
+    const res = await request(app.getHttpServer()).get('/sellers').expect(200);
+    const body = res.body as {
+      sellers: { seller: string }[];
+      industries: { sellers: unknown[] }[];
+    };
+    expect(body.sellers.length).toBeGreaterThan(0);
+    for (const row of body.industries) {
+      expect(row.sellers).toHaveLength(body.sellers.length);
+    }
+  });
+
   it('GET /prediction devuelve calidad del modelo y distribución', async () => {
     const res = await request(app.getHttpServer())
       .get('/prediction')

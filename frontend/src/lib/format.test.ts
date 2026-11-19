@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatMonth, formatPct, formatPointsDiff } from './format';
+import {
+  formatDate,
+  formatMonth,
+  formatOdds,
+  formatPct,
+  formatPointsDiff,
+} from './format';
 
 describe('format', () => {
   it('porcentajes y diferencia en puntos', () => {
-    expect(formatPct(0.6888, 1)).toBe('68.9%');
+    expect(formatPct(0.6888, 1)).toBe('68,9%');
+    expect(formatPct(0.6888)).toBe('69%');
     expect(formatPct(null)).toBe('—');
     expect(formatPointsDiff(0.72, 0.68)).toBe('+4 pts');
     expect(formatPointsDiff(0.65, 0.68)).toBe('−3 pts');
@@ -16,6 +23,10 @@ describe('format', () => {
     expect(formatPointsDiff(0.694, 0.676)).toBe('+1 pts');
     // 67,4% vs. 67,6%: ambos se ven como 67% y 68% → −1, no ±0.
     expect(formatPointsDiff(0.674, 0.676)).toBe('−1 pts');
+  });
+
+  it('razones de chances con coma decimal', () => {
+    expect(formatOdds(1.234)).toBe('×1,23');
   });
 
   it('fechas en español', () => {

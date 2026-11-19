@@ -1,17 +1,16 @@
-import type { Categories, Dimension } from '@/lib/api/types';
+import type { Categories, Meta } from '@/lib/api/types';
 import { formatNumber } from '@/lib/format';
+import { createLabeler } from '@/lib/labels';
 import { Badge } from '../ui/Badge';
 
 interface ClientCategoriesProps {
   categories: Categories;
-  dimensions: Dimension[];
+  meta: Meta;
 }
 
 /** Lista de todas las dimensiones que el LLM extrajo para un cliente. */
-export function ClientCategories({
-  categories,
-  dimensions,
-}: ClientCategoriesProps) {
+export function ClientCategories({ categories, meta }: ClientCategoriesProps) {
+  const labels = createLabeler(meta);
   return (
     <div className="space-y-3">
       {categories.summary && (
@@ -21,11 +20,11 @@ export function ClientCategories({
         <Row label="Consultas / mes">
           {formatNumber(categories.monthlyInquiries)}
         </Row>
-        {dimensions.map((dimension) => (
+        {meta.dimensions.map((dimension) => (
           <Row key={dimension.key} label={dimension.label}>
             <ValueBadges
               values={toList(categories[dimension.key])}
-              dimension={dimension}
+              labelOf={(value) => labels.value(dimension.key, value)}
             />
           </Row>
         ))}
@@ -39,15 +38,12 @@ const toList = (value: string | string[]) =>
 
 function ValueBadges({
   values,
-  dimension,
+  labelOf,
 }: {
   values: string[];
-  dimension: Dimension;
+  labelOf: (value: string) => string;
 }) {
   if (values.length === 0) return <span className="text-subtle">Ninguno</span>;
-
-  const labelOf = (value: string) =>
-    dimension.options.find((o) => o.value === value)?.label ?? value;
 
   return (
     <span className="flex flex-wrap justify-end gap-1">

@@ -5,7 +5,7 @@ import {
   NOT_MENTIONED,
   VOLUME_BUCKETS,
   displayOptions,
-} from '../domain/taxonomy';
+} from '../domain/categories';
 import { CategorizationStore } from '../data/categorization.store';
 import { ClientsRepository } from '../data/clients.repository';
 import { GRADES, gradeRange } from '../domain/grades';

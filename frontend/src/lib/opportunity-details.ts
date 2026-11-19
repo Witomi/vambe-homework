@@ -1,8 +1,9 @@
 import type { Opportunities, Segment } from './api/types';
+import { clientsHref } from './filters/url';
 import { formatNumber, formatPct, formatPointsDiff } from './format';
 
 /** Marca la navegación para que el destino muestre "← Volver a Oportunidades". */
-const ORIGIN = 'origin=oportunidades';
+const ORIGIN = 'oportunidades';
 
 /** Lo que se muestra al abrir un elemento de Oportunidades. */
 export interface Detail {
@@ -24,13 +25,13 @@ type Filter = Record<string, string>;
 /** Enlace al panel filtrado por este grupo. */
 const panelLink = (filter: Filter) => ({
   label: 'Ver este grupo en el panel',
-  href: `/?${query(filter)}&${ORIGIN}`,
+  href: `/?${query({ ...filter, origin: ORIGIN })}`,
 });
 
 /** Enlace a la lista de clientes (solo los analizados con IA) de este grupo. */
 const clientsLink = (filter: Filter, label: string) => ({
   label,
-  href: `/clientes?${query({ ...filter, categorized: 'true' })}&${ORIGIN}`,
+  href: clientsHref(filter, ORIGIN),
 });
 
 /** Detalle de un grupo de clientes (cuadrante o freno). */

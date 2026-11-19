@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { DimensionKey, Meta, Metrics } from '@/lib/api/types';
 import { listParam } from '@/lib/filters/params';
+import { findDimension } from '@/lib/labels';
 import { minReliableSample } from '@/lib/metrics';
 import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
@@ -27,8 +28,6 @@ export function DimensionExplorer({
 }) {
   const [tab, setTab] = useState<DimensionKey>('industry');
   const { searchParams, toggleParamValue } = useFilterParams();
-  const labelOf = (key: DimensionKey) =>
-    meta.dimensions.find((d) => d.key === key)?.label ?? key;
 
   return (
     <Card
@@ -38,7 +37,10 @@ export function DimensionExplorer({
         <Tabs<DimensionKey>
           value={tab}
           onChange={setTab}
-          options={TABS.map((key) => ({ value: key, label: labelOf(key) }))}
+          options={TABS.map((key) => ({
+            value: key,
+            label: findDimension(meta, key).label,
+          }))}
         />
       }
     >

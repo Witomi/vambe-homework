@@ -1,4 +1,4 @@
-import { DimensionKey } from '../domain/taxonomy';
+import { DimensionKey } from '../domain/categories';
 
 /** Contrato de respuesta de `GET /api/opportunities`. */
 

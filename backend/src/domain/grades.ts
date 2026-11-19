@@ -1,3 +1,5 @@
+import { formatPct } from '../common/format';
+
 /**
  * Notas de cliente (A–D) según su probabilidad de cierre estimada.
  *
@@ -53,13 +55,13 @@ export function gradeOf(probability: number): Grade {
   return GRADES.find((g) => probability >= g.min)!.grade;
 }
 
-const pct = (v: number) => `${Math.round(v * 100)}%`;
-
 /** Rango legible de cada nota: "≥ 75%", "70%–75%", "< 62%". */
 export function gradeRange(grade: Grade): string {
   const index = GRADES.findIndex((g) => g.grade === grade);
   const min = GRADES[index].min;
-  if (index === 0) return `≥ ${pct(min)}`;
+  if (index === 0) return `≥ ${formatPct(min)}`;
   const max = GRADES[index - 1].min;
-  return min === 0 ? `< ${pct(max)}` : `${pct(min)}–${pct(max)}`;
+  return min === 0
+    ? `< ${formatPct(max)}`
+    : `${formatPct(min)}–${formatPct(max)}`;
 }

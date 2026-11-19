@@ -1,4 +1,4 @@
-import { DimensionKey, DimensionOption } from '../domain/taxonomy';
+import { DimensionKey, DimensionOption } from '../domain/categories';
 
 /** Contrato de respuesta de `GET /api/meta`. */
 

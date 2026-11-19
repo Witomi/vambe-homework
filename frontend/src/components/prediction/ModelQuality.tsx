@@ -18,7 +18,7 @@ export function ModelQuality({ quality }: { quality: Prediction['quality'] }) {
     },
     {
       label: 'Mejora sobre no usar modelo',
-      value: `${(errorReduction * 100).toFixed(1).replace('.', ',')}%`,
+      value: formatPct(errorReduction, 1),
       detail: `Menos error que asignarle a todos el promedio (${formatPct(quality.baseRate)}).`,
     },
     {

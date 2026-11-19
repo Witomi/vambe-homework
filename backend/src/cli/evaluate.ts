@@ -16,14 +16,14 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { AppModule } from '../app.module';
+import { formatPct } from '../common/format';
 import { GoldItem, evaluate } from '../categorization/evaluation/evaluate';
 import { seededShuffle } from '../common/sampling';
 import { ClientsRepository } from '../data/clients.repository';
 import { CategorizedClient } from '../domain/client';
-import { Categories } from '../domain/taxonomy';
+import { Categories } from '../domain/categories';
 
 const GOLD_PATH = resolve('data/evaluation/gold.json');
-const pct = (v: number) => `${Math.round(v * 100)}%`;
 
 async function main() {
   const { values } = parseArgs({
@@ -90,12 +90,12 @@ async function report(predicted: Map<string, Categories>) {
   console.table(
     result.dimensions.map((d) => ({
       Dimensión: d.label,
-      'Acierto exacto': pct(d.exactMatch),
-      Solapamiento: d.overlap === null ? '—' : pct(d.overlap),
+      'Acierto exacto': formatPct(d.exactMatch),
+      Solapamiento: d.overlap === null ? '—' : formatPct(d.overlap),
     })),
   );
   console.log(
-    `Consultas/mes dentro de ±20%: ${pct(result.inquiriesWithin20Pct)}`,
+    `Consultas/mes dentro de ±20%: ${formatPct(result.inquiriesWithin20Pct)}`,
   );
 }
 

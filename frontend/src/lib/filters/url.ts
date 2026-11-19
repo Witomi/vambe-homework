@@ -18,3 +18,19 @@ export function hrefWith(
   const qs = next.toString();
   return qs ? `${pathname}?${qs}` : pathname;
 }
+
+/**
+ * Enlace a la tabla de clientes analizados con IA, filtrada. `origin` marca
+ * la página de partida para que el destino muestre "← Volver a …".
+ */
+export function clientsHref(
+  filter: Record<string, string>,
+  origin: string,
+): string {
+  const query = new URLSearchParams({
+    ...filter,
+    categorized: 'true',
+    origin,
+  });
+  return `/clientes?${query.toString()}`;
+}

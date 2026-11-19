@@ -10,6 +10,7 @@ Panel comercial que toma las transcripciones de reuniones de venta de Vambe, las
 | Vista | Para qué sirve |
 | --- | --- |
 | **Panel** | Tres cifras clave, los hallazgos más importantes, qué clientes cierran más, qué piden, reuniones por mes y desempeño por vendedor |
+| **Vendedores** | Cómo le va a cada vendedor frente a lo esperado según sus rubros, su mejor y peor rubro, y una tabla vendedor × industria comparada con el equipo |
 | **Oportunidades** | Qué hacer con los datos: dónde poner el esfuerzo, a quién volver a llamar, qué vendedor toma cada lead, qué frena las ventas y qué solución construir una vez para muchos rubros |
 | **Predicción** | Probabilidad de cierre con regresión logística y **notas A–D** por cliente: qué tan bien funciona, cerrados vs. no cerrados por probabilidad, calibración y qué rasgos la mueven |
 | **Clientes** | Búsqueda de texto, filtros por cualquier dimensión, orden, paginación y detalle con transcripción + categorización |
@@ -117,6 +118,7 @@ El reporte muestra el acierto exacto por dimensión, el solapamiento en las de l
 | `GET /api/clients?…filtros&page&pageSize&sortBy&sortDir` | Listado paginado |
 | `GET /api/clients/:id` | Detalle con transcripción completa |
 | `GET /api/prediction` | Calidad del modelo de cierre, distribución por probabilidad y factores |
+| `GET /api/sellers` | Desempeño por vendedor y tabla vendedor × industria |
 | `GET /api/opportunities` | Acciones sugeridas: mapa de segmentos, leads recuperables, asignación, frenos y soluciones replicables |
 
 Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `grade` (A–D) y cada dimensión (`industry`, `leadSource`, …) como lista separada por comas. Los valores se validan contra la taxonomía (400 si no existen).

@@ -4,7 +4,7 @@ import {
   DimensionKey,
   NOT_MENTIONED,
   volumeBucket,
-} from '../domain/taxonomy';
+} from '../domain/categories';
 import { Client } from '../domain/client';
 import { normalizeText } from '../common/text';
 import { ClientFilterDto } from './client-filter.dto';

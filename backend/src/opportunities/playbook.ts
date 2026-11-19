@@ -1,4 +1,4 @@
-import { DimensionKey } from '../domain/taxonomy';
+import { DimensionKey } from '../domain/categories';
 
 /**
  * Acción sugerida para cada rasgo que baja la conversión.

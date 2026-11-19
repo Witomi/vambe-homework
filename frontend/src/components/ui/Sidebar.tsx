@@ -5,6 +5,7 @@ import {
   Gauge,
   LayoutDashboard,
   Lightbulb,
+  Medal,
   Sparkles,
   Users,
 } from 'lucide-react';
@@ -14,6 +15,7 @@ import { filterQuery } from '@/lib/filters/params';
 
 const NAV = [
   { href: '/', label: 'Panel', icon: LayoutDashboard },
+  { href: '/vendedores', label: 'Vendedores', icon: Medal },
   { href: '/oportunidades', label: 'Oportunidades', icon: Lightbulb },
   { href: '/prediccion', label: 'Predicción', icon: Gauge },
   { href: '/clientes', label: 'Clientes', icon: Users },

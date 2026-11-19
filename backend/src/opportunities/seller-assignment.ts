@@ -1,11 +1,10 @@
 import { groupBy } from '../common/collections';
 import { CategorizedClient } from '../domain/client';
-import { rateStat } from '../analytics/rates';
+import { pointsDiff, rateStat } from '../analytics/rates';
+import { MIN_SELLER_INDUSTRY_SAMPLE } from '../analytics/seller-performance';
 import { SellerAssignment } from './opportunities.types';
-import { pointsDiff } from '../analytics/rates';
 import { segmentsOf } from './segments';
 
-const MIN_SELLER_MEETINGS = 8;
 /** Solo se recomienda si el vendedor supera al equipo por al menos esto. */
 const MIN_ADVANTAGE_PTS = 5;
 const TOP_INDUSTRIES = 8;
@@ -28,7 +27,7 @@ export function suggestAssignments(
         (c) => c.categories.industry === industry.value,
       );
       const bySeller = [...groupBy(clients, (c) => [c.seller]).entries()]
-        .filter(([, group]) => group.length >= MIN_SELLER_MEETINGS)
+        .filter(([, group]) => group.length >= MIN_SELLER_INDUSTRY_SAMPLE)
         .map(([seller, group]) => ({ seller, ...rateStat(group) }))
         .sort((a, b) => (b.closeRate ?? 0) - (a.closeRate ?? 0));
 

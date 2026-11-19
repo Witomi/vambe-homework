@@ -1,3 +1,4 @@
+import { displayedPct } from '../common/format';
 import { Client } from '../domain/client';
 
 /**
@@ -21,12 +22,6 @@ export function rateStat(clients: readonly Client[]): RateStat {
     closeRate: clients.length ? closed / clients.length : null,
   };
 }
-
-/** Porcentaje entero tal como se muestra: 0.676 → 68. */
-export const displayedPct = (rate: number): number => Math.round(rate * 100);
-
-/** 0.676 → "68%" */
-export const formatPct = (rate: number): string => `${displayedPct(rate)}%`;
 
 /**
  * Diferencia en puntos entre dos tasas, calculada sobre los porcentajes

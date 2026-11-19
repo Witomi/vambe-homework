@@ -1,6 +1,6 @@
 import { median } from '../common/collections';
 import { CategorizedClient } from '../domain/client';
-import { DimensionKey } from '../domain/taxonomy';
+import { DimensionKey } from '../domain/categories';
 import { Quadrant, QuadrantKey, Segment } from './opportunities.types';
 import { pointsDiff } from '../analytics/rates';
 import { segmentsOf } from './segments';

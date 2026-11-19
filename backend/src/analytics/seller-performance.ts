@@ -1,10 +1,25 @@
 import { groupBy } from '../common/collections';
 import { CategorizedClient } from '../domain/client';
-import { rateStat } from '../analytics/rates';
-import { SellerPerformance } from './metrics.types';
+import { rateStat } from './rates';
 
 /** Rubros con menos reuniones usan la tasa global como referencia. */
 const MIN_INDUSTRY_SAMPLE = 10;
+
+/**
+ * Mínimo de reuniones de un vendedor en un rubro para comparar su tasa
+ * con la del equipo (con menos, una o dos ventas mueven mucho el %).
+ */
+export const MIN_SELLER_INDUSTRY_SAMPLE = 8;
+
+/** Desempeño de un vendedor frente a lo esperado según su cartera. */
+export interface SellerPerformance {
+  seller: string;
+  count: number;
+  closed: number;
+  closeRate: number;
+  /** Tasa que se esperaba según los leads que recibió (0..1). */
+  expectedRate: number;
+}
 
 /**
  * Desempeño de cada vendedor ajustado por su cartera de rubros.

@@ -2,6 +2,7 @@
 
 import type { DimensionKey, Meta } from '@/lib/api/types';
 import { listParam } from '@/lib/filters/params';
+import { findDimension } from '@/lib/labels';
 import { ClosedFilter } from './ClosedFilter';
 import { MultiSelect } from './MultiSelect';
 import { useFilterParams } from './useFilterParams';
@@ -38,7 +39,7 @@ export function DashboardFilters({ meta }: { meta: Meta }) {
           onChange={(v) => setParam('sellers', v)}
         />
         {DASHBOARD_DIMENSIONS.map((key) => {
-          const dimension = meta.dimensions.find((d) => d.key === key)!;
+          const dimension = findDimension(meta, key);
           return (
             <MultiSelect
               key={key}

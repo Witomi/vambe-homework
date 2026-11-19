@@ -5,7 +5,7 @@ import {
   DimensionKey,
   NOT_MENTIONED,
   displayOptions,
-} from '../domain/taxonomy';
+} from '../domain/categories';
 import { RateStat, rateStat } from './rates';
 
 /** Un valor de una dimensión y cómo convierten los clientes que lo tienen. */

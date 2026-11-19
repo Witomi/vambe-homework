@@ -1,5 +1,5 @@
 import { baseCategories } from '../../../test/fixtures';
-import { Categories } from '../../domain/taxonomy';
+import { Categories } from '../../domain/categories';
 import { GoldItem, evaluate } from './evaluate';
 
 const gold = (

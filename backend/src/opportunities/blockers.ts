@@ -1,5 +1,5 @@
 import { CategorizedClient } from '../domain/client';
-import { DimensionKey } from '../domain/taxonomy';
+import { DimensionKey } from '../domain/categories';
 import { Blocker } from './opportunities.types';
 import { suggestedAction } from './playbook';
 import { pointsDiff } from '../analytics/rates';

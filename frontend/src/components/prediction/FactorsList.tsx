@@ -1,8 +1,7 @@
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import type { Factor, Prediction } from '@/lib/api/types';
+import { formatOdds } from '@/lib/format';
 import { Card } from '../ui/Card';
-
-const formatOdds = (odds: number) => `×${odds.toFixed(2).replace('.', ',')}`;
 
 /** Qué rasgos de la reunión mueven más la probabilidad de cierre. */
 export function FactorsList({ factors }: { factors: Prediction['factors'] }) {

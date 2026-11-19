@@ -11,6 +11,7 @@ import { useFilterParams } from './useFilterParams';
 /** Páginas que pueden enviar al usuario aquí con `?origin=<clave>` (no es un filtro). */
 const ORIGINS: Record<string, { label: string; href: string }> = {
   oportunidades: { label: 'Volver a Oportunidades', href: '/oportunidades' },
+  vendedores: { label: 'Volver a Vendedores', href: '/vendedores' },
 };
 
 interface ActiveFiltersBannerProps {

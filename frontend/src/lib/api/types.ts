@@ -14,6 +14,7 @@ import type {
   opportunitiesSchema,
   optionSchema,
   predictionSchema,
+  sellersSchema,
 } from './schemas';
 
 /** Tipos derivados de los esquemas: una sola definición por contrato. */
@@ -39,3 +40,8 @@ export type Segment = Quadrant['segments'][number];
 export type Prediction = z.infer<typeof predictionSchema>;
 export type Factor = Prediction['factors']['positive'][number];
 export type Grade = z.infer<typeof gradeSchema>;
+
+export type Sellers = z.infer<typeof sellersSchema>;
+export type SellerSummary = Sellers['sellers'][number];
+export type IndustryRow = Sellers['industries'][number];
+export type IndustryResult = IndustryRow['team'];

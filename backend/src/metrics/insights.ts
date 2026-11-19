@@ -1,5 +1,6 @@
-import { formatPct, minReliableSample, pointsDiff } from '../analytics/rates';
-import { DIMENSIONS, DimensionKey, isActionable } from '../domain/taxonomy';
+import { minReliableSample, pointsDiff } from '../analytics/rates';
+import { formatPct } from '../common/format';
+import { DIMENSIONS, DimensionKey, isActionable } from '../domain/categories';
 import { BreakdownRow, Insight, InsightTone } from './metrics.types';
 
 interface Candidate {

@@ -10,8 +10,20 @@ export const formatNumber = (n: number | null | undefined) =>
 export const formatCompact = (n: number | null | undefined) =>
   n === null || n === undefined ? '—' : compactFormat.format(n);
 
+/** Número con decimales fijos en formato chileno: 1.234 → "1,2". */
+export const formatDecimal = (n: number, digits = 1) =>
+  new Intl.NumberFormat('es-CL', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(n);
+
+/** Tasa como porcentaje: 0.6888 → "69%" (o "68,9%" con 1 decimal). */
 export const formatPct = (n: number | null | undefined, digits = 0) =>
-  n === null || n === undefined ? '—' : `${(n * 100).toFixed(digits)}%`;
+  n === null || n === undefined ? '—' : `${formatDecimal(n * 100, digits)}%`;
+
+/** Razón de chances: 1.234 → "×1,23". */
+export const formatOdds = (odds: number, digits = 2) =>
+  `×${formatDecimal(odds, digits)}`;
 
 /** Porcentaje entero tal como se muestra en pantalla: 0.676 → 68. */
 export const displayedPct = (rate: number) => Math.round(rate * 100);

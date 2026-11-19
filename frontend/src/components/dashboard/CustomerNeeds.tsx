@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { DimensionKey, Meta, Metrics } from '@/lib/api/types';
 import { listParam } from '@/lib/filters/params';
+import { findDimension } from '@/lib/labels';
 import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
 import { Tabs } from '../ui/Tabs';
@@ -21,8 +22,6 @@ export function CustomerNeeds({
 }) {
   const [tab, setTab] = useState<DimensionKey>('useCases');
   const { searchParams, toggleParamValue } = useFilterParams();
-  const labelOf = (key: DimensionKey) =>
-    meta.dimensions.find((d) => d.key === key)?.label ?? key;
 
   // Top N de lo que sí mencionan + la fila "No lo menciona" al final,
   // así los porcentajes cubren a todos los clientes.
@@ -42,7 +41,10 @@ export function CustomerNeeds({
         <Tabs<DimensionKey>
           value={tab}
           onChange={setTab}
-          options={TABS.map((key) => ({ value: key, label: labelOf(key) }))}
+          options={TABS.map((key) => ({
+            value: key,
+            label: findDimension(meta, key).label,
+          }))}
         />
       }
     >

@@ -1,20 +1,11 @@
 import { BreakdownRow } from '../analytics/breakdown';
-import { DimensionKey } from '../domain/taxonomy';
+import { DimensionKey } from '../domain/categories';
+import { SellerPerformance } from '../analytics/seller-performance';
 import { TimelinePoint } from './timeline';
 
-export type { BreakdownRow, TimelinePoint };
+export type { BreakdownRow, SellerPerformance, TimelinePoint };
 
 /** Contrato de respuesta de `GET /api/metrics`. */
-
-/** Desempeño de un vendedor frente a lo esperado según su cartera. */
-export interface SellerPerformance {
-  seller: string;
-  count: number;
-  closed: number;
-  closeRate: number;
-  /** Tasa que se esperaba según los leads que recibió (0..1). */
-  expectedRate: number;
-}
 
 /** positive: cierra sobre el promedio · negative: cierra bajo el promedio. */
 export type InsightTone = 'positive' | 'negative';

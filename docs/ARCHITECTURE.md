@@ -15,7 +15,7 @@ flowchart LR
     Repo --> Filters[applyFilters]
     Filters --> Clients[/api/clients/]
     Filters --> Metrics[/api/metrics<br/>agregaciones + insights/]
-    Tax[taxonomy.ts] -.-> Svc & Filters & Meta[/api/meta/]
+    Tax[categories.ts] -.-> Svc & Filters & Meta[/api/meta/]
   end
   LLM <--> Google[(Google AI Studio<br/>Gemma 4)]
   Clients & Metrics & Meta --> Next[Next.js<br/>Server Components]
@@ -31,7 +31,7 @@ El flujo se divide en dos momentos:
 
 ### 1. La taxonomía es la fuente única de verdad
 
-`backend/src/categorization/taxonomy.ts` define cada dimensión: sus valores, etiquetas, descripción y una pista para el LLM. A partir de ese archivo se generan:
+`backend/src/domain/categories.ts` define cada dimensión: sus valores, etiquetas, descripción y una pista para el LLM. A partir de ese archivo se generan:
 
 - la sección del **prompt** que lista los valores permitidos,
 - la **validación** de la respuesta del modelo,
@@ -123,10 +123,17 @@ El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un pa
 | Bloque | Pregunta | Cómo se calcula |
 | --- | --- | --- |
 | **Mapa de segmentos** | ¿Dónde pongo el esfuerzo? | Cada rubro, canal y tamaño se clasifica por volumen (sobre o bajo la mediana de su dimensión) y conversión (±3 puntos del promedio; lo que queda dentro es ruido y se omite). Resultado: *proteger*, *invertir para captar más*, *mejorar el pitch* o *despriorizar*. |
-| **Leads recuperables** | ¿A quién vuelvo a llamar? | A cada lead perdido se le estima una probabilidad de cierre como el promedio de las tasas de los grupos a los que pertenece (rubro, canal, tamaño, dolor, urgencia). Modelo simple y explicable: cada razón se muestra. Se proponen los que tienen perfil sobre el promedio, empezando por los de más consultas al mes (más valor para Vambe). |
+| **Leads recuperables** | ¿A quién vuelvo a llamar? | Leads perdidos a los que la regresión logística (ver Predicción) les da una probabilidad de cierre sobre el promedio, empezando por los de más consultas al mes (más valor para Vambe). Cada uno muestra las dos variables que más le suben la probabilidad. |
 | **Asignación sugerida** | ¿Qué vendedor toma cada lead? | Para cada rubro frecuente, el vendedor que más cierra frente al equipo (al menos +5 puntos y 8 reuniones). |
 | **Frenos a resolver** | ¿Qué baja las ventas? | Requisitos, objeciones, integraciones y casos de uso que cierran bajo el promedio, ordenados por impacto (puntos perdidos × reuniones). Cada uno trae una acción de un *playbook* (`playbook.ts`) que el equipo comercial puede editar sin tocar la lógica. |
 | **Soluciones replicables** | ¿Qué construyo una vez y vendo en muchos rubros? | Pares de casos de uso (sin contar FAQ, que piden casi todos) presentes en 4 o más industrias distintas. Son candidatos a plantillas verticales. |
+
+## Vendedores
+
+`backend/src/sellers/` (`GET /api/sellers`) muestra cómo le va a cada vendedor:
+
+- **Tarjeta por vendedor:** tasa de cierre frente a la esperada según los rubros de sus leads (la misma estandarización directa del panel, en `analytics/seller-performance.ts`), y su rubro más fuerte y más flojo frente al equipo (solo rubros accionables con 8 o más reuniones suyas).
+- **Tabla vendedor × industria:** tasa de cierre de cada vendedor en cada rubro y su diferencia con el equipo en ese mismo rubro. Se pintan las diferencias de 5 puntos o más; las celdas con menos de 8 reuniones van en gris. Cada celda lleva a esas reuniones en la tabla de clientes.
 
 ## Predicción de cierre (regresión logística)
 
@@ -156,13 +163,14 @@ backend/src
 ├── config/env.ts                 variables de entorno validadas con Zod (falla al arrancar si son inválidas)
 │
 ├── domain/                       modelo de negocio, sin dependencias de Nest
-│   ├── taxonomy.ts               dimensiones, valores permitidos, "No lo menciona", isActionable
+│   ├── categories.ts             dimensiones, valores permitidos, etiquetas (optionLabel), "No lo menciona", isActionable
 │   ├── client.ts                 RawClient, Client, CategorizedClient (+ isCategorized)
 │   └── grades.ts                 notas A–D: cortes, rangos, acción sugerida
-├── common/                       utilidades genéricas: texto, colecciones, muestreo reproducible, async
+├── common/                       utilidades genéricas: texto, formato es-CL, colecciones, muestreo reproducible, async
 ├── analytics/                    cálculos puros compartidos por varios módulos
 │   ├── rates.ts                  rateStat, pointsDiff, minReliableSample
-│   └── breakdown.ts              tasa de cierre por valor de cada dimensión
+│   ├── breakdown.ts              tasa de cierre por valor de cada dimensión
+│   └── seller-performance.ts     desempeño por vendedor ajustado por cartera
 ├── data/                         persistencia
 │   ├── csv-loader.ts             CSV → RawClient[]
 │   ├── clients.repository.ts     clientes en memoria (findAll, findCategorized, findById) + búsqueda
@@ -172,6 +180,7 @@ backend/src
 ├── clients/                      GET /api/clients[/:id]: orden, mapeo y paginación
 ├── metrics/                      GET /api/metrics: kpis, timeline, insights, vendedores ajustados
 ├── opportunities/                GET /api/opportunities: un archivo puro por bloque + playbook.ts
+├── sellers/                      GET /api/sellers: tarjetas por vendedor y tabla vendedor × industria
 ├── prediction/                   GET /api/prediction
 │   ├── features.ts               variables del modelo a partir de la taxonomía
 │   ├── logistic-regression.ts    entrenamiento y predicción (sin dependencias)
@@ -197,6 +206,7 @@ backend/src
 metrics ──► filters ──► prediction
 clients ──► filters, prediction
 opportunities ──► prediction
+sellers: solo capas base
 meta, health, categorization: sin dependencias de otros features
 ```
 
@@ -208,7 +218,7 @@ Las páginas son Server Components que leen los filtros de la URL, llaman a la A
 
 ```
 frontend/src
-├── app/                          páginas: panel (/), oportunidades, predicción y clientes
+├── app/                          páginas: panel (/), vendedores, oportunidades, predicción y clientes
 ├── lib/
 │   ├── api/
 │   │   ├── schemas/              esquemas Zod, un archivo por endpoint (contrato con el backend)
@@ -222,6 +232,7 @@ frontend/src
     ├── filters/                  FilterBar compuesta de SearchInput, ClosedFilter, MultiSelect,
     │                             DateRangeFilter, ActiveFilterChips + hook useFilterParams
     ├── dashboard/                KPIs, hallazgos, gráficos y desgloses
+    ├── sellers/                  tarjetas por vendedor y tabla vendedor × industria
     ├── opportunities/            mapa de segmentos, leads recuperables, asignación, frenos, soluciones
     ├── prediction/               calidad del modelo, distribución, calibración y factores
     ├── clients/                  tabla (ClientRow, SortableHeader), Pagination, ClientDrawer

@@ -1,6 +1,6 @@
 import { groupBy } from '../common/collections';
 import { CategorizedClient } from '../domain/client';
-import { DIMENSIONS } from '../domain/taxonomy';
+import { optionLabel } from '../domain/categories';
 import { rateStat } from '../analytics/rates';
 import { ReplicableSolution } from './opportunities.types';
 import { minReliableSample } from '../analytics/rates';
@@ -9,11 +9,6 @@ import { minReliableSample } from '../analytics/rates';
 const IGNORED_USE_CASES = new Set(['faq']);
 const MIN_INDUSTRIES = 4;
 const TOP = 4;
-
-const labelOf = (
-  key: 'useCases' | 'integrations' | 'industry',
-  value: string,
-) => DIMENSIONS[key].options.find((o) => o.value === value)?.label ?? value;
 
 /** Todos los pares (a, b) de una lista, en orden estable. */
 function pairs(values: string[]): [string, string][] {
@@ -43,7 +38,7 @@ export function findReplicableSolutions(
     .map(([signature, clients]) => {
       const industries = [...new Set(clients.map((c) => c.categories.industry))]
         .filter((i) => i !== 'otro')
-        .map((value) => ({ value, label: labelOf('industry', value) }));
+        .map((value) => ({ value, label: optionLabel('industry', value) }));
       return { signature, clients, industries };
     })
     .filter(
@@ -59,7 +54,7 @@ export function findReplicableSolutions(
     .map(({ signature, clients, industries }) => ({
       useCases: signature
         .split('+')
-        .map((value) => ({ value, label: labelOf('useCases', value) })),
+        .map((value) => ({ value, label: optionLabel('useCases', value) })),
       topIntegration: topIntegration(clients),
       clients: clients.length,
       industries,
@@ -82,5 +77,5 @@ function topIntegration(
     (a, b) => b[1].length - a[1].length,
   );
   if (!best || best[1].length < clients.length / 4) return null;
-  return { value: best[0], label: labelOf('integrations', best[0]) };
+  return { value: best[0], label: optionLabel('integrations', best[0]) };
 }

@@ -1,7 +1,7 @@
 import { breakdownByDimension } from '../analytics/breakdown';
 import { minReliableSample } from '../analytics/rates';
 import { CategorizedClient } from '../domain/client';
-import { DIMENSIONS, DimensionKey, isActionable } from '../domain/taxonomy';
+import { DIMENSIONS, DimensionKey, isActionable } from '../domain/categories';
 import { Segment } from './opportunities.types';
 
 /**

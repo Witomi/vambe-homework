@@ -1,5 +1,5 @@
 import { CategorizedClient } from '../domain/client';
-import { DIMENSIONS, DimensionKey } from '../domain/taxonomy';
+import { DIMENSIONS, DimensionKey } from '../domain/categories';
 
 /** Dimensiones que entran al modelo como variables 0/1 (una por valor). */
 const CATEGORICAL: DimensionKey[] = [

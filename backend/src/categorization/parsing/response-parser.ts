@@ -5,7 +5,7 @@ import {
   SINGLE_DIMENSION_KEYS,
   SingleDimensionKey,
   optionValues,
-} from '../../domain/taxonomy';
+} from '../../domain/categories';
 import { normalizeText } from '../../common/text';
 
 export class LlmResponseParseError extends Error {}

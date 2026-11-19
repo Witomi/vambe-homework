@@ -19,8 +19,6 @@ export const FILTER_KEYS = [
   ...DIMENSION_KEYS,
 ] as const;
 
-export type FilterKey = (typeof FILTER_KEYS)[number];
-
 /** Dimensiones que se ofrecen siempre visibles en la barra de filtros. */
 export const PRIMARY_DIMENSIONS: DimensionKey[] = [
   'industry',

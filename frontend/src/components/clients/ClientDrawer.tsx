@@ -106,10 +106,7 @@ export function ClientDrawer({ client, meta, params }: ClientDrawerProps) {
               del LLM
             </SectionTitle>
             {client.categories ? (
-              <ClientCategories
-                categories={client.categories}
-                dimensions={meta.dimensions}
-              />
+              <ClientCategories categories={client.categories} meta={meta} />
             ) : (
               <p className="text-muted text-sm">
                 Este cliente aún no fue categorizado. Corre{' '}

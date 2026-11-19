@@ -12,3 +12,4 @@ export * from './clients';
 export * from './metrics';
 export * from './opportunities';
 export * from './prediction';
+export * from './sellers';

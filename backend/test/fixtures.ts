@@ -1,4 +1,4 @@
-import { Categories } from '../src/domain/taxonomy';
+import { Categories } from '../src/domain/categories';
 import { CategorizedClient, Client } from '../src/domain/client';
 
 export const baseCategories: Categories = {

@@ -3,7 +3,7 @@ import {
   DIMENSIONS,
   MULTI_DIMENSION_KEYS,
   SINGLE_DIMENSION_KEYS,
-} from '../../domain/taxonomy';
+} from '../../domain/categories';
 
 /** Una transcripción etiquetada a mano (el "gold standard"). */
 export interface GoldItem {

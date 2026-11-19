@@ -1,5 +1,6 @@
 import { CategorizedClient } from '../domain/client';
-import { DIMENSIONS } from '../domain/taxonomy';
+import { formatOdds } from '../common/format';
+import { optionLabel } from '../domain/categories';
 import { gradeOf } from '../domain/grades';
 import { Factor } from '../prediction/prediction.types';
 import { LeadRecovery } from './opportunities.types';
@@ -11,8 +12,6 @@ export interface LeadScorer {
   probabilityOf(clientId: string): number | undefined;
   reasonsFor(client: CategorizedClient, max?: number): Factor[];
 }
-
-const formatOdds = (odds: number) => `×${odds.toFixed(1).replace('.', ',')}`;
 
 /**
  * Leads perdidos que vale la pena volver a contactar: los que el modelo de
@@ -34,10 +33,7 @@ export function findRecoverableLeads(
           id: client.id,
           name: client.name,
           seller: client.seller,
-          industry:
-            DIMENSIONS.industry.options.find(
-              (o) => o.value === client.categories.industry,
-            )?.label ?? client.categories.industry,
+          industry: optionLabel('industry', client.categories.industry),
           monthlyInquiries: client.categories.monthlyInquiries!,
           winScore,
           grade: gradeOf(winScore),

@@ -9,6 +9,7 @@ import { MetaModule } from './meta/meta.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { OpportunitiesModule } from './opportunities/opportunities.module';
 import { PredictionModule } from './prediction/prediction.module';
+import { SellersModule } from './sellers/sellers.module';
 
 /**
  * Módulo raíz.
@@ -17,6 +18,7 @@ import { PredictionModule } from './prediction/prediction.module';
  * - ClientsModule:        GET /api/clients
  * - MetricsModule:        GET /api/metrics
  * - OpportunitiesModule:  GET /api/opportunities
+ * - SellersModule:        GET /api/sellers
  * - PredictionModule:     GET /api/prediction (regresión logística)
  * - MetaModule:           GET /api/meta
  * - HealthModule:         GET /api/health
@@ -29,6 +31,7 @@ import { PredictionModule } from './prediction/prediction.module';
     ClientsModule,
     MetricsModule,
     OpportunitiesModule,
+    SellersModule,
     PredictionModule,
     MetaModule,
     HealthModule,
