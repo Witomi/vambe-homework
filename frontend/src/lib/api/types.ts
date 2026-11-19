@@ -39,4 +39,3 @@ export type Segment = Quadrant['segments'][number];
 export type Prediction = z.infer<typeof predictionSchema>;
 export type Factor = Prediction['factors']['positive'][number];
 export type Grade = z.infer<typeof gradeSchema>;
-export type ClientPoint = Prediction['points'][number];

@@ -8,7 +8,6 @@ import { buildFeatures, toVector } from './features';
 import { predict, train } from './logistic-regression';
 import { GRADES, gradeOf, gradeRange } from './grades';
 import {
-  ClientPoint,
   ClientPrediction,
   Factor,
   GradeSummary,
@@ -141,18 +140,6 @@ export class PredictionService {
           folds: FOLDS,
         },
         grades: summarizeGrades(probs, outcomes),
-        gradeThresholds: GRADES.map(({ grade, min }) => ({
-          grade,
-          minScore: min > 0 ? logit(min) : null,
-        })),
-        points: categorized.map((c, i): ClientPoint => ({
-          id: c.id,
-          name: c.name,
-          score: logit(probs[i]),
-          probability: probs[i],
-          closed: c.closed,
-          grade: gradeOf(probs[i]),
-        })),
         buckets: binByProbability(probs, outcomes, BUCKET_WIDTH),
         factors: {
           positive: [...factors]
@@ -189,9 +176,4 @@ function summarizeGrades(
       closeRate: members.length ? closed / members.length : null,
     };
   });
-}
-
-/** Inversa de la sigmoide: probabilidad → puntaje (log-odds). */
-function logit(p: number): number {
-  return Math.log(p / (1 - p));
 }

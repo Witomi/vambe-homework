@@ -134,7 +134,7 @@ El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un pa
 - **Elección de la regularización:** probé l2 entre 1 y 400. Con l2 = 30 el log loss es mínimo (0,618 vs. 0,629 de no usar modelo). Con menos regularización sobreajusta y predice extremos que la realidad no respalda.
 - **Resultado honesto:** AUC de 0,59. Hay señal real pero débil: lo que el cliente cuenta explica solo parte de si compra. Sirve para priorizar, no para asegurar cierres, y así se comunica en la UI.
 - **Notas A–D:** cada cliente recibe una nota según su probabilidad (A ≥ 75%, B 70–75%, C 62–70%, D < 62%), definida en `prediction/grades.ts` con una acción sugerida por nota. Los cortes se eligieron sobre la distribución real para que la tasa de cierre baje de forma consistente: A cierra 78%, B 73%, C 64% y D 60%. Las notas se pueden filtrar y ordenar en *Clientes* (`?grade=A&sortBy=probability`).
-- **Uso:** la pestaña *Predicción* muestra la calidad, la tabla de notas, **la curva de la regresión con cada cliente como punto** (arriba los que cerraron, abajo los que no, con las notas como bandas de fondo; clic en un punto abre la ficha), la distribución de cerrados vs. no cerrados por probabilidad, la calibración y los factores (razones de chances). *Oportunidades* usa estas probabilidades para elegir los leads a recuperar, y explica cada uno con las variables que más suben su probabilidad.
+- **Uso:** la pestaña *Predicción* muestra la calidad, la tabla de notas, la distribución de cerrados vs. no cerrados por probabilidad, la calibración y los factores (razones de chances). *Oportunidades* usa estas probabilidades para elegir los leads a recuperar, y explica cada uno con las variables que más suben su probabilidad.
 
 ## Medición de precisión
 

@@ -3,7 +3,6 @@ import { FactorsList } from '@/components/prediction/FactorsList';
 import { GradesTable } from '@/components/prediction/GradesTable';
 import { ModelQuality } from '@/components/prediction/ModelQuality';
 import { ProbabilityDistribution } from '@/components/prediction/ProbabilityDistribution';
-import { RegressionCurve } from '@/components/prediction/RegressionCurve';
 import { CoverageNote, PageHeader } from '@/components/ui/PageHeader';
 import { api } from '@/lib/api';
 
@@ -23,10 +22,6 @@ export default async function PredictionPage() {
       />
       <ModelQuality quality={prediction.quality} />
       <GradesTable grades={prediction.grades} />
-      <RegressionCurve
-        points={prediction.points}
-        thresholds={prediction.gradeThresholds}
-      />
       <ProbabilityDistribution
         buckets={prediction.buckets}
         baseRate={prediction.quality.baseRate}

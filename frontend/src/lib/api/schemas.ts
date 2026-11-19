@@ -246,19 +246,6 @@ export const predictionSchema = z.object({
       closeRate: rate.nullable(),
     }),
   ),
-  gradeThresholds: z.array(
-    z.object({ grade: gradeSchema, minScore: z.number().nullable() }),
-  ),
-  points: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      score: z.number(),
-      probability: rate,
-      closed: z.boolean(),
-      grade: gradeSchema,
-    }),
-  ),
   buckets: z.array(
     z.object({
       from: rate,

@@ -53,23 +53,9 @@ export interface ClientPrediction {
   grade: Grade;
 }
 
-/** Un cliente como punto sobre la curva de regresión. */
-export interface ClientPoint {
-  id: string;
-  name: string;
-  /** Puntaje del modelo (log-odds): la curva lo convierte en probabilidad. */
-  score: number;
-  probability: number;
-  closed: boolean;
-  grade: Grade;
-}
-
 export interface PredictionResponse {
   quality: PredictionQuality;
   grades: GradeSummary[];
-  /** Puntaje desde el que empieza cada nota (para dibujar las bandas). */
-  gradeThresholds: { grade: Grade; minScore: number | null }[];
-  points: ClientPoint[];
   buckets: ProbabilityBucket[];
   factors: { positive: Factor[]; negative: Factor[] };
 }
