@@ -9,6 +9,12 @@ export interface CategorizationRunOptions {
   seed: number;
 }
 
+/** Opciones para volver a categorizar clientes específicos. */
+export type RecategorizeOptions = Pick<
+  CategorizationRunOptions,
+  'batchSize' | 'concurrency'
+>;
+
 export interface CategorizationRunSummary {
   requested: number;
   categorized: number;

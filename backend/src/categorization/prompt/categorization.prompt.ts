@@ -37,6 +37,7 @@ Reglas para "monthlyInquiries":
 - Usa SOLO una cifra explícita de consultas, mensajes, llamadas o chats que recibe el negocio.
 - NO la derives de pedidos, órdenes, entregas, estudiantes, pacientes, seguidores ni clientes.
 - Si solo dice "miles", "muchas" o "constantemente", sin cifra, usa null. Nunca inventes una cifra.
+- Usa el volumen NORMAL. No extrapoles cifras de picos, temporada alta, campañas, lanzamientos, fechas especiales ni cifras por hora: si además da una cifra normal, usa esa; si solo da la del pico, usa null.
 
 Reglas para "urgency":
 - alta: dice que el volumen es insostenible, que pierde clientes/ventas, que el equipo está saturado o que lo necesita ya.

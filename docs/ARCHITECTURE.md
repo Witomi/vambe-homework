@@ -68,6 +68,10 @@ Gemma no soporta *JSON mode* en esta API, así que `response-parser.ts`:
 
 En una primera corrida, revisando valores extremos, vi que el modelo **inventaba volúmenes** cuando la transcripción decía "miles de consultas", o los derivaba de "2.000 entregas mensuales". Eso inflaba el KPI de consultas automatizadas. Agregué reglas explícitas (usar solo cifras explícitas de consultas; si no hay, `null`) y criterios observables para la urgencia, y volví a correr la muestra completa con el prompt corregido.
 
+En una segunda revisión encontré que el modelo **extrapolaba cifras de picos** como si fueran el volumen normal ("120 consultas por hora en el peak" → 345.600/mes; "3.000 mensajes diarios en Black Friday" → 90.000/mes). Agregué la regla de usar solo el volumen normal (si solo hay cifra de pico, `null`) y recategoricé únicamente los 86 clientes cuya transcripción menciona picos, temporadas, campañas o cifras por hora (`npm run categorize -- --ids ...`). El volumen cambió en 29 de ellos, el máximo bajó a 150.000/mes (un "5.000 consultas diarias" legítimo) y el KPI de consultas automatizadas bajó de 2,8 M a 2,06 M.
+
+Efecto colateral observado: al recategorizar, ~19% de las dimensiones simples de esos 86 clientes cambiaron de valor, aunque la temperatura es baja (0,1). Es una medida útil de la estabilidad del modelo: en casos ambiguos (p. ej. urgencia media vs. alta) su respuesta no es determinista.
+
 ### 6. Datos en memoria + JSON versionado, sin base de datos
 
 Con 10.000 filas, filtrar y agregar en memoria toma pocos milisegundos. Una base de datos agregaría infraestructura sin beneficio a esta escala. El acceso a datos está aislado en `ClientsRepository` y `CategorizationStore`, así que migrar a Postgres o SQLite solo implica reimplementar esas dos clases.
@@ -133,7 +137,7 @@ El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un pa
 - **Validación cruzada de 5 partes:** cada cliente recibe la probabilidad de un modelo que no lo vio al entrenar, así que las métricas no están infladas.
 - **Elección de la regularización:** probé l2 entre 1 y 400. Con l2 = 30 el log loss es mínimo (0,618 vs. 0,629 de no usar modelo). Con menos regularización sobreajusta y predice extremos que la realidad no respalda.
 - **Resultado honesto:** AUC de 0,59. Hay señal real pero débil: lo que el cliente cuenta explica solo parte de si compra. Sirve para priorizar, no para asegurar cierres, y así se comunica en la UI.
-- **Notas A–D:** cada cliente recibe una nota según su probabilidad (A ≥ 75%, B 70–75%, C 62–70%, D < 62%), definida en `prediction/grades.ts` con una acción sugerida por nota. Los cortes se eligieron sobre la distribución real para que la tasa de cierre baje de forma consistente: A cierra 78%, B 73%, C 64% y D 60%. Las notas se pueden filtrar y ordenar en *Clientes* (`?grade=A&sortBy=probability`).
+- **Notas A–D:** cada cliente recibe una nota según su probabilidad (A ≥ 75%, B 70–75%, C 62–70%, D < 62%), definida en `prediction/grades.ts` con una acción sugerida por nota. Los cortes se eligieron sobre la distribución real para que la tasa de cierre baje de forma consistente: A cierra 76%, B 74%, C 65% y D 60%. Las notas se pueden filtrar y ordenar en *Clientes* (`?grade=A&sortBy=probability`).
 - **Uso:** la pestaña *Predicción* muestra la calidad, la tabla de notas, la distribución de cerrados vs. no cerrados por probabilidad, la calibración y los factores (razones de chances). *Oportunidades* usa estas probabilidades para elegir los leads a recuperar, y explica cada uno con las variables que más suben su probabilidad.
 
 ## Medición de precisión

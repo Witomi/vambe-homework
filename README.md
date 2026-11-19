@@ -57,6 +57,12 @@ npm run categorize -- --limit 500 --batch 10 --concurrency 4
 
 La corrida es **reanudable**: solo procesa clientes sin categorizar y guarda después de cada lote, así que se puede cortar con Ctrl+C y retomar. Reinicia el backend para que lea los nuevos resultados.
 
+Para volver a categorizar clientes específicos (por ejemplo, después de corregir el prompt), reemplazando su categorización anterior:
+
+```bash
+npm run categorize -- --ids a1b2c3d4e5f6,0f9e8d7c6b5a
+```
+
 ## Medir la precisión del LLM
 
 ```bash

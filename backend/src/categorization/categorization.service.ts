@@ -6,6 +6,7 @@ import { BatchCategorizer } from './batch-categorizer';
 import {
   CategorizationRunOptions,
   CategorizationRunSummary,
+  RecategorizeOptions,
 } from './categorization.types';
 import { chunk, seededShuffle } from './utils/sampling';
 
@@ -43,11 +44,34 @@ export class CategorizationService {
     return seededShuffle(pending, seed);
   }
 
-  async run(
-    options: CategorizationRunOptions,
+  /** Categoriza una muestra de clientes que aún no tienen categorías. */
+  run(options: CategorizationRunOptions): Promise<CategorizationRunSummary> {
+    const targets = this.pendingClients(options.seed).slice(0, options.limit);
+    return this.process(targets, options);
+  }
+
+  /**
+   * Vuelve a categorizar clientes específicos (p. ej. tras corregir el
+   * prompt), reemplazando su categorización anterior.
+   */
+  recategorize(
+    ids: readonly string[],
+    options: RecategorizeOptions,
+  ): Promise<CategorizationRunSummary> {
+    const wanted = new Set(ids);
+    const targets = this.repository.findRaw().filter((c) => wanted.has(c.id));
+    const unknown = ids.filter((id) => !targets.some((c) => c.id === id));
+    if (unknown.length) {
+      throw new Error(`Clientes no encontrados: ${unknown.join(', ')}`);
+    }
+    return this.process(targets, options);
+  }
+
+  private async process(
+    targets: RawClient[],
+    options: RecategorizeOptions,
   ): Promise<CategorizationRunSummary> {
     const startedAt = Date.now();
-    const targets = this.pendingClients(options.seed).slice(0, options.limit);
     const queue: Job[] = chunk(targets, options.batchSize).map((clients) => ({
       clients,
       attempt: 1,

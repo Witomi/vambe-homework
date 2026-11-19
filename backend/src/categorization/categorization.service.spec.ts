@@ -111,4 +111,31 @@ describe('CategorizationService', () => {
 
     expect(second.requested).toBe(0);
   });
+
+  it('recategoriza clientes específicos aunque ya estén categorizados', async () => {
+    let call = 0;
+    const generate = jest.fn((prompt: string) => {
+      call++;
+      // La corrida inicial responde con "v1"; la recategorización, con "v2".
+      return Promise.resolve({ text: answer(prompt), model: `v${call}` });
+    });
+    const { service, saved } = setup({ model: 'v', generate });
+    await service.run(options);
+
+    const summary = await service.recategorize(['id1', 'id3'], {
+      batchSize: 5,
+      concurrency: 1,
+    });
+
+    expect(summary).toMatchObject({ requested: 2, categorized: 2 });
+    expect(saved.get('id1')?.model).toBe('v2'); // reemplazado
+    expect(saved.get('id0')?.model).toBe('v1'); // intacto
+  });
+
+  it('rechaza ids que no existen', () => {
+    const { service } = setup({ model: 'm', generate: jest.fn() });
+    expect(() =>
+      service.recategorize(['no-existe'], { batchSize: 5, concurrency: 1 }),
+    ).toThrow('no-existe');
+  });
 });
