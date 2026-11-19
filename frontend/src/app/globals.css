@@ -16,7 +16,11 @@
   --brand-soft: #e8f1fc;
   --positive: #2a78d6;
   --negative: #e34948;
+  --negative-strong: #a32b2b;
+  --negative-soft: #fdecec;
   --good: #0ca30c;
+  --good-strong: #006300;
+  --good-soft: #e6f6e6;
   --grid: #ecebe7;
 }
 
@@ -32,7 +36,11 @@
   --color-brand-soft: var(--brand-soft);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
+  --color-negative-strong: var(--negative-strong);
+  --color-negative-soft: var(--negative-soft);
   --color-good: var(--good);
+  --color-good-strong: var(--good-strong);
+  --color-good-soft: var(--good-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

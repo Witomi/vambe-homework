@@ -5,8 +5,8 @@ type Tone = 'neutral' | 'brand' | 'good' | 'bad';
 const TONES: Record<Tone, string> = {
   neutral: 'bg-background text-muted border-border',
   brand: 'bg-brand-soft text-brand-strong border-transparent',
-  good: 'bg-[#e6f6e6] text-[#006300] border-transparent',
-  bad: 'bg-[#fdecec] text-[#a32b2b] border-transparent',
+  good: 'bg-good-soft text-good-strong border-transparent',
+  bad: 'bg-negative-soft text-negative-strong border-transparent',
 };
 
 export function Badge({

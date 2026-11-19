@@ -1,26 +1,10 @@
+import { BreakdownRow } from '../analytics/breakdown';
 import { DimensionKey } from '../domain/taxonomy';
+import { TimelinePoint } from './timeline';
+
+export type { BreakdownRow, TimelinePoint };
 
 /** Contrato de respuesta de `GET /api/metrics`. */
-
-export interface RateStat {
-  count: number;
-  closed: number;
-  /** 0..1, o null si no hay datos. */
-  closeRate: number | null;
-}
-
-/** Una fila de desglose: un valor de una dimensión y su conversión. */
-export interface BreakdownRow extends RateStat {
-  value: string;
-  label: string;
-  /** Proporción del segmento categorizado que cae en este valor (0..1). */
-  share: number;
-}
-
-export interface TimelinePoint extends RateStat {
-  /** Mes en formato `YYYY-MM`. */
-  month: string;
-}
 
 /** Desempeño de un vendedor frente a lo esperado según su cartera. */
 export interface SellerPerformance {

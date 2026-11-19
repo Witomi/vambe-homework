@@ -1,5 +1,5 @@
 import { auc, binByProbability, logLoss } from './evaluation';
-import { gradeOf, gradeRange } from './grades';
+import { gradeOf, gradeRange } from '../domain/grades';
 import { predict, train } from './logistic-regression';
 
 describe('logistic regression', () => {

@@ -1,8 +1,9 @@
 import { median } from '../common/collections';
-import { Client } from '../domain/client';
+import { CategorizedClient } from '../domain/client';
 import { DimensionKey } from '../domain/taxonomy';
 import { Quadrant, QuadrantKey, Segment } from './opportunities.types';
-import { pointsDiff, segmentsOf } from './segments';
+import { pointsDiff } from '../analytics/rates';
+import { segmentsOf } from './segments';
 
 /** Dimensiones que el equipo comercial puede atacar directamente. */
 const MAP_DIMENSIONS: DimensionKey[] = [
@@ -44,7 +45,7 @@ const NEUTRAL_BAND_PTS = 3;
  * Los grupos dentro de esa banda no requieren acción y se omiten.
  */
 export function buildSegmentMap(
-  categorized: readonly Client[],
+  categorized: readonly CategorizedClient[],
   baseRate: number,
 ): Quadrant[] {
   const buckets: Record<QuadrantKey, Segment[]> = {

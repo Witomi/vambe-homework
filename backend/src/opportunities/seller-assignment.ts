@@ -1,8 +1,9 @@
 import { groupBy } from '../common/collections';
-import { Client } from '../domain/client';
-import { rateStat } from '../metrics/aggregations';
+import { CategorizedClient } from '../domain/client';
+import { rateStat } from '../analytics/rates';
 import { SellerAssignment } from './opportunities.types';
-import { pointsDiff, segmentsOf } from './segments';
+import { pointsDiff } from '../analytics/rates';
+import { segmentsOf } from './segments';
 
 const MIN_SELLER_MEETINGS = 8;
 /** Solo se recomienda si el vendedor supera al equipo por al menos esto. */
@@ -15,7 +16,7 @@ const TOP_INDUSTRIES = 8;
  * directa: "los leads de Salud, a Tiburón".
  */
 export function suggestAssignments(
-  categorized: readonly Client[],
+  categorized: readonly CategorizedClient[],
 ): SellerAssignment[] {
   const industries = segmentsOf(categorized, 'industry')
     .sort((a, b) => b.count - a.count)
@@ -24,7 +25,7 @@ export function suggestAssignments(
   return industries
     .flatMap((industry): SellerAssignment[] => {
       const clients = categorized.filter(
-        (c) => c.categories!.industry === industry.value,
+        (c) => c.categories.industry === industry.value,
       );
       const bySeller = [...groupBy(clients, (c) => [c.seller]).entries()]
         .filter(([, group]) => group.length >= MIN_SELLER_MEETINGS)

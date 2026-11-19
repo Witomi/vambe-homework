@@ -22,7 +22,7 @@ export function FactorsList({ factors }: { factors: Prediction['factors'] }) {
           title="La bajan"
           icon={<TrendingDown className="text-negative size-4" aria-hidden />}
           factors={factors.negative}
-          tone="text-[#a32b2b]"
+          tone="text-negative-strong"
         />
       </div>
     </Card>

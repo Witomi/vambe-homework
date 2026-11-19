@@ -60,7 +60,9 @@ export function SellerPerformance({ metrics }: { metrics: Metrics }) {
                     <span
                       className={clsx(
                         'ml-1',
-                        diff >= 0 ? 'text-brand-strong' : 'text-[#a32b2b]',
+                        diff >= 0
+                          ? 'text-brand-strong'
+                          : 'text-negative-strong',
                       )}
                     >
                       {formatPointsDiff(s.closeRate, s.expectedRate)}

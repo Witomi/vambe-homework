@@ -197,7 +197,7 @@ function BarRow({
                 <span
                   className={clsx(
                     'ml-1',
-                    above ? 'text-brand-strong' : 'text-[#a32b2b]',
+                    above ? 'text-brand-strong' : 'text-negative-strong',
                   )}
                 >
                   {formatPointsDiff(rate, baseRate)}

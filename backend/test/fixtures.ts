@@ -1,5 +1,5 @@
 import { Categories } from '../src/domain/taxonomy';
-import { Client } from '../src/domain/client';
+import { CategorizedClient, Client } from '../src/domain/client';
 
 export const baseCategories: Categories = {
   industry: 'salud',
@@ -19,8 +19,21 @@ export const baseCategories: Categories = {
 
 let seq = 0;
 
+type ClientOverrides = Partial<Omit<Client, 'categories'>>;
+
+/**
+ * Cliente de prueba. Por defecto viene categorizado (con `baseCategories`
+ * más los cambios indicados); con `categories: null` simula uno sin
+ * categorizar.
+ */
 export function makeClient(
-  overrides: Partial<Omit<Client, 'categories'>> & {
+  overrides: ClientOverrides & { categories: null },
+): Client;
+export function makeClient(
+  overrides?: ClientOverrides & { categories?: Partial<Categories> },
+): CategorizedClient;
+export function makeClient(
+  overrides: ClientOverrides & {
     categories?: Partial<Categories> | null;
   } = {},
 ): Client {

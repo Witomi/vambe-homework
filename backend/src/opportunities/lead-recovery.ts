@@ -1,6 +1,6 @@
-import { Client } from '../domain/client';
+import { CategorizedClient } from '../domain/client';
 import { DIMENSIONS } from '../domain/taxonomy';
-import { gradeOf } from '../prediction/grades';
+import { gradeOf } from '../domain/grades';
 import { Factor } from '../prediction/prediction.types';
 import { LeadRecovery } from './opportunities.types';
 
@@ -9,7 +9,7 @@ const TOP = 10;
 /** Lo que el módulo de predicción entrega por cliente. */
 export interface LeadScorer {
   probabilityOf(clientId: string): number | undefined;
-  reasonsFor(client: Client, max?: number): Factor[];
+  reasonsFor(client: CategorizedClient, max?: number): Factor[];
 }
 
 const formatOdds = (odds: number) => `×${odds.toFixed(1).replace('.', ',')}`;
@@ -20,12 +20,12 @@ const formatOdds = (odds: number) => `×${odds.toFixed(1).replace('.', ',')}`;
  * volumen de consultas (más valor para Vambe).
  */
 export function findRecoverableLeads(
-  categorized: readonly Client[],
+  categorized: readonly CategorizedClient[],
   baseRate: number,
   scorer: LeadScorer,
 ): LeadRecovery {
   const scored = categorized
-    .filter((c) => !c.closed && c.categories!.monthlyInquiries !== null)
+    .filter((c) => !c.closed && c.categories.monthlyInquiries !== null)
     .flatMap((client) => {
       const winScore = scorer.probabilityOf(client.id);
       if (winScore === undefined || winScore <= baseRate) return [];
@@ -36,9 +36,9 @@ export function findRecoverableLeads(
           seller: client.seller,
           industry:
             DIMENSIONS.industry.options.find(
-              (o) => o.value === client.categories!.industry,
-            )?.label ?? client.categories!.industry,
-          monthlyInquiries: client.categories!.monthlyInquiries!,
+              (o) => o.value === client.categories.industry,
+            )?.label ?? client.categories.industry,
+          monthlyInquiries: client.categories.monthlyInquiries!,
           winScore,
           grade: gradeOf(winScore),
           reasons: scorer

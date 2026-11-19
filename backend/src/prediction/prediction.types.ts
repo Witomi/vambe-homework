@@ -1,4 +1,4 @@
-import { Grade } from './grades';
+import { Grade } from '../domain/grades';
 
 /** Contrato de respuesta de `GET /api/prediction`. */
 
@@ -45,12 +45,6 @@ export interface GradeSummary {
   closed: number;
   /** Tasa de cierre real de esta nota: valida que las notas significan algo. */
   closeRate: number | null;
-}
-
-/** Predicción de un cliente, para mostrar junto a sus datos. */
-export interface ClientPrediction {
-  probability: number;
-  grade: Grade;
 }
 
 export interface PredictionResponse {

@@ -23,3 +23,16 @@ export interface CategorizationRecord {
 export interface Client extends RawClient {
   categories: Categories | null;
 }
+
+/**
+ * Cliente que ya fue categorizado por el LLM. Las funciones de análisis
+ * reciben este tipo, así no necesitan comprobar (ni asumir) que
+ * `categories` no es null.
+ */
+export interface CategorizedClient extends Client {
+  categories: Categories;
+}
+
+export function isCategorized(client: Client): client is CategorizedClient {
+  return client.categories !== null;
+}

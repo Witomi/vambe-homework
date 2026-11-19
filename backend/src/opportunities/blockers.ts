@@ -1,8 +1,9 @@
-import { Client } from '../domain/client';
+import { CategorizedClient } from '../domain/client';
 import { DimensionKey } from '../domain/taxonomy';
 import { Blocker } from './opportunities.types';
 import { suggestedAction } from './playbook';
-import { pointsDiff, segmentsOf } from './segments';
+import { pointsDiff } from '../analytics/rates';
+import { segmentsOf } from './segments';
 
 /** Rasgos sobre los que Vambe puede hacer algo (producto o preventa). */
 const BLOCKER_DIMENSIONS: DimensionKey[] = [
@@ -20,7 +21,7 @@ const TOP = 5;
  * impacto (puntos perdidos × reuniones afectadas), con la acción sugerida.
  */
 export function findBlockers(
-  categorized: readonly Client[],
+  categorized: readonly CategorizedClient[],
   baseRate: number,
 ): Blocker[] {
   return BLOCKER_DIMENSIONS.flatMap((dimension) =>

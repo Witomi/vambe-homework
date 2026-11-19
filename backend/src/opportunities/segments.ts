@@ -1,44 +1,30 @@
-import { Client } from '../domain/client';
-import { DIMENSIONS, DimensionKey, NOT_MENTIONED } from '../domain/taxonomy';
-import { breakdownByDimension } from '../metrics/aggregations';
+import { breakdownByDimension } from '../analytics/breakdown';
+import { minReliableSample } from '../analytics/rates';
+import { CategorizedClient } from '../domain/client';
+import { DIMENSIONS, DimensionKey, isActionable } from '../domain/taxonomy';
 import { Segment } from './opportunities.types';
 
-/** Valores comodín que no sirven para decidir nada. */
-const NON_ACTIONABLE = new Set([
-  'otro',
-  'no_especificado',
-  NOT_MENTIONED.value,
-]);
-
-/** Mínimo de reuniones para confiar en la tasa de un grupo. */
-export function minSample(categorized: number): number {
-  return Math.max(10, Math.round(categorized * 0.02));
-}
-
-/** Grupos accionables de una dimensión, con muestra suficiente. */
+/**
+ * Grupos accionables de una dimensión (sin comodines como "Otro") y con
+ * muestra suficiente para confiar en su tasa de cierre.
+ */
 export function segmentsOf(
-  clients: readonly Client[],
+  clients: readonly CategorizedClient[],
   dimension: DimensionKey,
 ): Segment[] {
-  const min = minSample(clients.length);
-  return breakdownByDimension(clients, dimension)
-    .filter(
-      (row) =>
-        row.count >= min &&
-        row.closeRate !== null &&
-        !NON_ACTIONABLE.has(row.value),
-    )
-    .map((row) => ({
-      dimension,
-      dimensionLabel: DIMENSIONS[dimension].label,
-      value: row.value,
-      label: row.label,
-      count: row.count,
-      closeRate: row.closeRate!,
-    }));
-}
-
-/** Diferencia en puntos sobre porcentajes redondeados (cuadra con la UI). */
-export function pointsDiff(rate: number, base: number): number {
-  return Math.round(rate * 100) - Math.round(base * 100);
+  const min = minReliableSample(clients.length);
+  return breakdownByDimension(clients, dimension).flatMap((row) =>
+    row.count >= min && row.closeRate !== null && isActionable(row.value)
+      ? [
+          {
+            dimension,
+            dimensionLabel: DIMENSIONS[dimension].label,
+            value: row.value,
+            label: row.label,
+            count: row.count,
+            closeRate: row.closeRate,
+          },
+        ]
+      : [],
+  );
 }

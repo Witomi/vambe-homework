@@ -8,7 +8,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { VOLUME_BUCKETS, filterValues } from '../domain/taxonomy';
-import { GRADE_VALUES } from '../prediction/grades';
+import { GRADE_VALUES } from '../domain/grades';
 import { toBoolean, toList } from './query-transforms';
 
 /** Decorador para filtros de dimensión: lista de valores permitidos. */

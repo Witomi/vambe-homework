@@ -1,6 +1,6 @@
 import { groupBy } from '../common/collections';
-import { Client } from '../domain/client';
-import { rateStat } from './aggregations';
+import { CategorizedClient } from '../domain/client';
+import { rateStat } from '../analytics/rates';
 import { SellerPerformance } from './metrics.types';
 
 /** Rubros con menos reuniones usan la tasa global como referencia. */
@@ -16,11 +16,11 @@ const MIN_INDUSTRY_SAMPLE = 10;
  * vendedor y no la suerte en la asignación.
  */
 export function sellerPerformance(
-  categorized: readonly Client[],
+  categorized: readonly CategorizedClient[],
 ): SellerPerformance[] {
   const overall = rateStat(categorized).closeRate ?? 0;
   const industryRate = new Map(
-    [...groupBy(categorized, (c) => [c.categories!.industry]).entries()].map(
+    [...groupBy(categorized, (c) => [c.categories.industry]).entries()].map(
       ([industry, group]) => [
         industry,
         group.length >= MIN_INDUSTRY_SAMPLE
@@ -35,7 +35,7 @@ export function sellerPerformance(
       const stats = rateStat(clients);
       const expectedRate =
         clients.reduce(
-          (sum, c) => sum + industryRate.get(c.categories!.industry)!,
+          (sum, c) => sum + industryRate.get(c.categories.industry)!,
           0,
         ) / clients.length;
       return {

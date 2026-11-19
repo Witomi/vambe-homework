@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clientsPageSchema } from './schemas';
+import { clientsPageSchema } from './clients';
 
 const client = {
   id: 'abc',

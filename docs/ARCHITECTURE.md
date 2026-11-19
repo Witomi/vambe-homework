@@ -154,41 +154,53 @@ Cada módulo de Nest sigue la misma forma: `*.controller.ts` (HTTP, sin lógica)
 backend/src
 ├── main.ts / app.module.ts / app.setup.ts   arranque y configuración HTTP compartida
 ├── config/env.ts                 variables de entorno validadas con Zod (falla al arrancar si son inválidas)
+│
 ├── domain/                       modelo de negocio, sin dependencias de Nest
-│   ├── taxonomy.ts               dimensiones y valores permitidos (fuente única de verdad)
-│   └── client.ts                 RawClient, Client, CategorizationRecord
-├── common/                       utilidades genéricas: texto, colecciones, async
+│   ├── taxonomy.ts               dimensiones, valores permitidos, "No lo menciona", isActionable
+│   ├── client.ts                 RawClient, Client, CategorizedClient (+ isCategorized)
+│   └── grades.ts                 notas A–D: cortes, rangos, acción sugerida
+├── common/                       utilidades genéricas: texto, colecciones, muestreo reproducible, async
+├── analytics/                    cálculos puros compartidos por varios módulos
+│   ├── rates.ts                  rateStat, pointsDiff, minReliableSample
+│   └── breakdown.ts              tasa de cierre por valor de cada dimensión
 ├── data/                         persistencia
 │   ├── csv-loader.ts             CSV → RawClient[]
-│   ├── clients.repository.ts     clientes en memoria + índice de búsqueda
+│   ├── clients.repository.ts     clientes en memoria (findAll, findCategorized, findById) + búsqueda
 │   └── categorization.store.ts   categorizaciones en JSON (escritura atómica)
+│
 ├── filters/                      segmento de clientes compartido por tabla y métricas
-│   ├── client-filter.dto.ts      query params validados contra la taxonomía
-│   ├── query-transforms.ts       "a,b" → ['a','b'], "true" → true
-│   ├── apply-filters.ts          lógica de filtrado (pura)
-│   └── client-filter.service.ts  punto único para obtener el segmento
-├── clients/                      GET /api/clients[/:id]
-│   ├── dto/clients-query.dto.ts  filtros + paginación + orden
-│   ├── clients.sorting.ts        orden (puro)
-│   ├── clients.mapper.ts         Client → ClientListItem
-│   └── clients.types.ts          contratos de respuesta
-├── metrics/                      GET /api/metrics
-│   ├── kpis.ts / aggregations.ts / insights.ts   cálculos (puros)
-│   └── metrics.types.ts          contrato de respuesta
-├── opportunities/                GET /api/opportunities: una función pura por bloque + playbook.ts
-├── prediction/                   GET /api/prediction: regresión logística, validación cruzada, métricas
+├── clients/                      GET /api/clients[/:id]: orden, mapeo y paginación
+├── metrics/                      GET /api/metrics: kpis, timeline, insights, vendedores ajustados
+├── opportunities/                GET /api/opportunities: un archivo puro por bloque + playbook.ts
+├── prediction/                   GET /api/prediction
+│   ├── features.ts               variables del modelo a partir de la taxonomía
+│   ├── logistic-regression.ts    entrenamiento y predicción (sin dependencias)
+│   ├── closing-model.ts          validación cruzada + modelo completo + explicaciones
+│   ├── model-report.ts           calidad, notas, distribución y factores
+│   └── prediction.service.ts     cachea el modelo por versión de los datos y expone la API
 ├── meta/                         GET /api/meta (taxonomía y opciones de filtro)
 ├── health/                       GET /api/health
 ├── categorization/               pipeline LLM
-│   ├── categorization.service.ts orquesta la corrida: muestra, cola, workers, reintentos
+│   ├── categorization.service.ts orquesta la corrida (muestra o --ids), cola, workers, reintentos
 │   ├── batch-categorizer.ts      un lote: prompt → LLM → parseo → registros
 │   ├── llm/                      LlmProvider (interfaz), GemmaProvider, RateLimitedLlmProvider (decorator), factory
 │   ├── prompt/                   construcción del prompt desde la taxonomía
 │   ├── parsing/                  validación y normalización de la respuesta del modelo
 │   ├── evaluation/               comparación contra etiquetas humanas
-│   └── utils/                    rate limiter, muestreo reproducible
+│   └── utils/rate-limiter.ts     control de requests por minuto
 └── cli/                          comandos `npm run categorize` y `npm run evaluate`
 ```
+
+**Reglas de dependencia.** Las capas base (`domain`, `common`, `analytics`, `data`) no importan módulos de features. Entre features, las dependencias van en una sola dirección y sin ciclos:
+
+```
+metrics ──► filters ──► prediction
+clients ──► filters, prediction
+opportunities ──► prediction
+meta, health, categorization: sin dependencias de otros features
+```
+
+**Clientes categorizados con tipo propio.** Las funciones de análisis reciben `CategorizedClient` (con `categories` no nulo), que entrega `ClientsRepository.findCategorized()`. Así el compilador garantiza que nunca se analiza un cliente sin categorías, sin aserciones `!` repartidas por el código.
 
 ### Frontend (`frontend/src`)
 
@@ -199,12 +211,13 @@ frontend/src
 ├── app/                          páginas: panel (/), oportunidades, predicción y clientes
 ├── lib/
 │   ├── api/
-│   │   ├── schemas.ts            esquemas Zod de cada respuesta (contrato con el backend)
+│   │   ├── schemas/              esquemas Zod, un archivo por endpoint (contrato con el backend)
 │   │   ├── types.ts              tipos derivados de los esquemas (z.infer)
 │   │   ├── http.ts               fetch + validación + ApiError
 │   │   └── index.ts              cliente tipado: api.meta(), api.metrics(), …
 │   ├── filters/                  filtros ↔ URL (params.ts), chips de filtros activos, hrefs
-│   ├── format.ts / labels.ts / metrics.ts   formato es-CL, etiquetas de la taxonomía, umbrales
+│   ├── format.ts / labels.ts / metrics.ts / stats.ts   formato es-CL, etiquetas, umbrales, intervalo de Wilson
+│   ├── chart-theme.ts            colores y estilos de los gráficos (mismos tokens que globals.css)
 └── components/
     ├── filters/                  FilterBar compuesta de SearchInput, ClosedFilter, MultiSelect,
     │                             DateRangeFilter, ActiveFilterChips + hook useFilterParams

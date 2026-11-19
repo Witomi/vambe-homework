@@ -8,7 +8,7 @@ import {
   CategorizationRunSummary,
   RecategorizeOptions,
 } from './categorization.types';
-import { chunk, seededShuffle } from './utils/sampling';
+import { chunk, seededShuffle } from '../common/sampling';
 
 /** Intentos por transcripción antes de darla por fallida. */
 const MAX_ATTEMPTS = 3;

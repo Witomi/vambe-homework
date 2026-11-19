@@ -1,0 +1,73 @@
+import { makeClient } from '../../test/fixtures';
+import { median } from '../common/collections';
+import { breakdownByDimension } from './breakdown';
+import { minReliableSample, pointsDiff, rateStat } from './rates';
+
+describe('analytics', () => {
+  const clients = [
+    makeClient({
+      closed: true,
+      meetingDate: '2024-01-03',
+      categories: { industry: 'salud', useCases: ['faq', 'agendamiento'] },
+    }),
+    makeClient({
+      closed: false,
+      meetingDate: '2024-01-20',
+      categories: { industry: 'salud', useCases: ['faq'] },
+    }),
+    makeClient({
+      closed: true,
+      meetingDate: '2024-02-11',
+      seller: 'Toro',
+      categories: { industry: 'retail', useCases: [], monthlyInquiries: 50 },
+    }),
+  ];
+
+  it('rateStat calcula la tasa de cierre', () => {
+    expect(rateStat(clients)).toEqual({
+      count: 3,
+      closed: 2,
+      closeRate: 2 / 3,
+    });
+    expect(rateStat([]).closeRate).toBeNull();
+  });
+
+  it('breakdown de dimensión simple ordenado por volumen', () => {
+    const rows = breakdownByDimension(clients, 'industry');
+    expect(rows.map((r) => [r.value, r.count, r.closed])).toEqual([
+      ['salud', 2, 1],
+      ['retail', 1, 1],
+    ]);
+    expect(rows[0].share).toBeCloseTo(2 / 3);
+  });
+
+  it('en dimensiones múltiples cuenta a quienes no mencionan nada', () => {
+    const rows = breakdownByDimension(clients, 'useCases');
+    // El tercer cliente tiene useCases: [] → 1 de 3.
+    const none = rows.find((r) => r.value === 'no_menciona');
+    expect(none).toMatchObject({ count: 1, label: 'No lo menciona' });
+    expect(none?.share).toBeCloseTo(1 / 3);
+  });
+
+  it('en dimensiones múltiples un cliente cuenta en cada valor', () => {
+    const rows = breakdownByDimension(clients, 'useCases');
+    expect(rows.find((r) => r.value === 'faq')?.count).toBe(2);
+    expect(rows.find((r) => r.value === 'agendamiento')?.count).toBe(1);
+  });
+
+  it('median', () => {
+    expect(median([])).toBeNull();
+    expect(median([3, 1, 2])).toBe(2);
+    expect(median([4, 1, 2, 3])).toBe(2.5);
+  });
+
+  it('pointsDiff resta los porcentajes ya redondeados', () => {
+    // 69,4% vs. 67,6%: en pantalla 69% y 68% → 1 punto, no 2.
+    expect(pointsDiff(0.694, 0.676)).toBe(1);
+  });
+
+  it('minReliableSample nunca baja de 10', () => {
+    expect(minReliableSample(100)).toBe(10);
+    expect(minReliableSample(1000, 0.03)).toBe(30);
+  });
+});

@@ -1,9 +1,9 @@
 import { groupBy } from '../common/collections';
-import { Client } from '../domain/client';
+import { CategorizedClient } from '../domain/client';
 import { DIMENSIONS } from '../domain/taxonomy';
-import { rateStat } from '../metrics/aggregations';
+import { rateStat } from '../analytics/rates';
 import { ReplicableSolution } from './opportunities.types';
-import { minSample } from './segments';
+import { minReliableSample } from '../analytics/rates';
 
 /** Casi todos piden FAQ: no distingue una solución de otra. */
 const IGNORED_USE_CASES = new Set(['faq']);
@@ -29,11 +29,11 @@ function pairs(values: string[]): [string, string][] {
  * una vez y se vende en varios rubros.
  */
 export function findReplicableSolutions(
-  categorized: readonly Client[],
+  categorized: readonly CategorizedClient[],
 ): ReplicableSolution[] {
-  const min = minSample(categorized.length);
+  const min = minReliableSample(categorized.length);
   const groups = groupBy(categorized, (c) => {
-    const useCases = c.categories!.useCases.filter(
+    const useCases = c.categories.useCases.filter(
       (u) => !IGNORED_USE_CASES.has(u),
     );
     return pairs(useCases).map((p) => p.join('+'));
@@ -41,9 +41,7 @@ export function findReplicableSolutions(
 
   return [...groups.entries()]
     .map(([signature, clients]) => {
-      const industries = [
-        ...new Set(clients.map((c) => c.categories!.industry)),
-      ]
+      const industries = [...new Set(clients.map((c) => c.categories.industry))]
         .filter((i) => i !== 'otro')
         .map((value) => ({ value, label: labelOf('industry', value) }));
       return { signature, clients, industries };
@@ -67,7 +65,7 @@ export function findReplicableSolutions(
       industries,
       closeRate: rateStat(clients).closeRate ?? 0,
       monthlyInquiries: clients.reduce(
-        (sum, c) => sum + (c.categories!.monthlyInquiries ?? 0),
+        (sum, c) => sum + (c.categories.monthlyInquiries ?? 0),
         0,
       ),
     }));
@@ -75,10 +73,10 @@ export function findReplicableSolutions(
 
 /** La integración más pedida, solo si la pide al menos un cuarto del grupo. */
 function topIntegration(
-  clients: readonly Client[],
+  clients: readonly CategorizedClient[],
 ): ReplicableSolution['topIntegration'] {
   const groups = groupBy(clients, (c) =>
-    c.categories!.integrations.filter((i) => i !== 'otro'),
+    c.categories.integrations.filter((i) => i !== 'otro'),
   );
   const [best] = [...groups.entries()].sort(
     (a, b) => b[1].length - a[1].length,

@@ -258,6 +258,20 @@ export function displayOptions(key: DimensionKey): DimensionOption[] {
   return DIMENSIONS[key].multi ? [...options, NOT_MENTIONED] : options;
 }
 
+/**
+ * Valores comodín que no sirven para decidir nada: un hallazgo sobre
+ * "Otro" o "No lo menciona" no es accionable.
+ */
+const NON_ACTIONABLE_VALUES = new Set([
+  'otro',
+  'no_especificado',
+  NOT_MENTIONED.value,
+]);
+
+export function isActionable(value: string): boolean {
+  return !NON_ACTIONABLE_VALUES.has(value);
+}
+
 /** Valores aceptados como filtro de una dimensión. */
 export function filterValues(key: DimensionKey): string[] {
   return displayOptions(key).map((o) => o.value);

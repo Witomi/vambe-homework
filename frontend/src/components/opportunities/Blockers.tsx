@@ -40,7 +40,7 @@ export function Blockers({
                 </DetailButton>
                 <span className="text-xs tabular-nums">
                   cierra {formatPct(b.closeRate)}{' '}
-                  <span className="font-medium text-[#a32b2b]">
+                  <span className="text-negative-strong font-medium">
                     ({formatPointsDiff(b.closeRate, baseRate)})
                   </span>{' '}
                   <span className="text-subtle">

@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { isCategorized } from '../domain/client';
 import { ClientFilterDto } from '../filters/client-filter.dto';
 import { ClientFilterService } from '../filters/client-filter.service';
-import { breakdownAllDimensions, timeline } from './aggregations';
+import { breakdownAllDimensions } from '../analytics/breakdown';
+import { timeline } from './timeline';
 import { generateInsights } from './insights';
 import { computeKpis } from './kpis';
 import { MetricsResponse } from './metrics.types';
@@ -19,7 +21,7 @@ export class MetricsService {
    */
   compute(filter: ClientFilterDto): MetricsResponse {
     const clients = this.clientFilter.filter(filter);
-    const categorized = clients.filter((c) => c.categories);
+    const categorized = clients.filter(isCategorized);
 
     const kpis = computeKpis(clients, categorized);
     const dimensions = breakdownAllDimensions(categorized);

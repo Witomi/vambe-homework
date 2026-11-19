@@ -1,6 +1,6 @@
 import { median } from '../common/collections';
-import { Client } from '../domain/client';
-import { rateStat } from './aggregations';
+import { CategorizedClient, Client } from '../domain/client';
+import { rateStat } from '../analytics/rates';
 import { Kpis } from './metrics.types';
 
 /**
@@ -10,11 +10,11 @@ import { Kpis } from './metrics.types';
  */
 export function computeKpis(
   clients: readonly Client[],
-  categorized: readonly Client[],
+  categorized: readonly CategorizedClient[],
 ): Kpis {
   const overall = rateStat(clients);
   const inquiries = categorized
-    .map((c) => c.categories!.monthlyInquiries)
+    .map((c) => c.categories.monthlyInquiries)
     .filter((n): n is number => n !== null);
 
   return {
@@ -27,6 +27,6 @@ export function computeKpis(
     medianMonthlyInquiries: median(inquiries),
     automatedMonthlyInquiries: categorized
       .filter((c) => c.closed)
-      .reduce((sum, c) => sum + (c.categories!.monthlyInquiries ?? 0), 0),
+      .reduce((sum, c) => sum + (c.categories.monthlyInquiries ?? 0), 0),
   };
 }

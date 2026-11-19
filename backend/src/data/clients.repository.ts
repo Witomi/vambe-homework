@@ -4,7 +4,12 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { normalizeText } from '../common/text';
 import { Env } from '../config/env';
-import { Client, RawClient } from '../domain/client';
+import {
+  CategorizedClient,
+  Client,
+  RawClient,
+  isCategorized,
+} from '../domain/client';
 import { CategorizationStore } from './categorization.store';
 import { parseClientsCsv } from './csv-loader';
 
@@ -12,6 +17,7 @@ import { parseClientsCsv } from './csv-loader';
 interface Snapshot {
   revision: number;
   clients: Client[];
+  categorized: CategorizedClient[];
   byId: Map<string, Client>;
 }
 
@@ -54,6 +60,11 @@ export class ClientsRepository implements OnModuleInit {
     return this.currentSnapshot().clients;
   }
 
+  /** Solo los clientes que el LLM ya categorizó. */
+  findCategorized(): CategorizedClient[] {
+    return this.currentSnapshot().categorized;
+  }
+
   findById(id: string): Client | undefined {
     return this.currentSnapshot().byId.get(id);
   }
@@ -77,6 +88,7 @@ export class ClientsRepository implements OnModuleInit {
       this.snapshot = {
         revision: this.store.revision,
         clients,
+        categorized: clients.filter(isCategorized),
         byId: new Map(clients.map((c) => [c.id, c])),
       };
     }

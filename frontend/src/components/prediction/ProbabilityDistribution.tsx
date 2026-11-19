@@ -13,10 +13,8 @@ import {
 } from 'recharts';
 import type { Prediction } from '@/lib/api/types';
 import { formatNumber, formatPct } from '@/lib/format';
+import { CHART, legendLabelStyle } from '@/lib/chart-theme';
 import { Card } from '../ui/Card';
-
-const COLORS = { closed: '#2a78d6', open: '#e34948', grid: '#ecebe7' };
-const AXIS = { fontSize: 11, fill: '#52514e' };
 
 const bucketLabel = (from: number) => `${Math.round(from * 100)}%`;
 
@@ -53,12 +51,12 @@ export function ProbabilityDistribution({
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={rows}
-            margin={{ top: 16, right: 8, left: -12, bottom: 16 }}
+            margin={{ top: 28, right: 8, left: -12, bottom: 16 }}
           >
-            <CartesianGrid vertical={false} stroke={COLORS.grid} />
+            <CartesianGrid vertical={false} stroke={CHART.grid} />
             <XAxis
               dataKey="label"
-              tick={AXIS}
+              tick={CHART.axisTick}
               tickLine={false}
               axisLine={false}
               label={{
@@ -66,10 +64,10 @@ export function ProbabilityDistribution({
                 position: 'insideBottom',
                 offset: -10,
                 fontSize: 11,
-                fill: '#52514e',
+                fill: CHART.text,
               }}
             />
-            <YAxis tick={AXIS} tickLine={false} axisLine={false} />
+            <YAxis tick={CHART.axisTick} tickLine={false} axisLine={false} />
             <Tooltip
               cursor={{ fill: 'rgba(0,0,0,0.04)' }}
               content={({ active, payload }) => {
@@ -81,7 +79,7 @@ export function ProbabilityDistribution({
                     <p className="text-brand-strong">
                       Cerraron: {formatNumber(row.closed)}
                     </p>
-                    <p className="text-[#a32b2b]">
+                    <p className="text-negative-strong">
                       No cerraron: {formatNumber(row.open)}
                     </p>
                     <p className="text-muted mt-1">
@@ -95,20 +93,20 @@ export function ProbabilityDistribution({
               verticalAlign="top"
               iconType="circle"
               iconSize={8}
-              wrapperStyle={{ fontSize: 12, paddingBottom: 8 }}
+              wrapperStyle={{ fontSize: 12, paddingBottom: 20 }}
               formatter={(value: string) => (
-                <span style={{ color: '#52514e' }}>{value}</span>
+                <span style={legendLabelStyle}>{value}</span>
               )}
             />
             <ReferenceLine
               x={averageBucket}
-              stroke="#52514e"
+              stroke={CHART.text}
               strokeDasharray="4 3"
               label={{
                 value: `Promedio ${formatPct(baseRate)}`,
                 position: 'top',
                 fontSize: 11,
-                fill: '#52514e',
+                fill: CHART.text,
               }}
             />
             <Bar
@@ -116,8 +114,8 @@ export function ProbabilityDistribution({
               dataKey="closed"
               name="Cerraron"
               stackId="clients"
-              fill={COLORS.closed}
-              stroke="#fff"
+              fill={CHART.series.primary}
+              stroke={CHART.surface}
               strokeWidth={1}
             />
             <Bar
@@ -125,8 +123,8 @@ export function ProbabilityDistribution({
               dataKey="open"
               name="No cerraron"
               stackId="clients"
-              fill={COLORS.open}
-              stroke="#fff"
+              fill={CHART.series.negative}
+              stroke={CHART.surface}
               strokeWidth={1}
               radius={[4, 4, 0, 0]}
             />

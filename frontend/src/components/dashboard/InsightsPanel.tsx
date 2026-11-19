@@ -14,7 +14,7 @@ const TONE = {
   },
   negative: {
     icon: TrendingDown,
-    iconClass: 'text-negative bg-[#fdecec]',
+    iconClass: 'text-negative bg-negative-soft',
     label: 'Cierra menos que el promedio',
   },
 } as const;

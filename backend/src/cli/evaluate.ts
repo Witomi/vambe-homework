@@ -17,8 +17,9 @@ import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { AppModule } from '../app.module';
 import { GoldItem, evaluate } from '../categorization/evaluation/evaluate';
-import { seededShuffle } from '../categorization/utils/sampling';
+import { seededShuffle } from '../common/sampling';
 import { ClientsRepository } from '../data/clients.repository';
+import { CategorizedClient } from '../domain/client';
 import { Categories } from '../domain/taxonomy';
 
 const GOLD_PATH = resolve('data/evaluation/gold.json');
@@ -36,27 +37,20 @@ async function main() {
     logger: ['warn', 'error'],
   });
   try {
-    const categorized = app
-      .get(ClientsRepository)
-      .findAll()
-      .filter((c) => c.categories);
+    const categorized = app.get(ClientsRepository).findCategorized();
 
     if (values.init) {
       await initGold(categorized, Number(values.init), Number(values.seed));
       return;
     }
-    await report(new Map(categorized.map((c) => [c.id, c.categories!])));
+    await report(new Map(categorized.map((c) => [c.id, c.categories])));
   } finally {
     await app.close();
   }
 }
 
 async function initGold(
-  categorized: {
-    id: string;
-    transcript: string;
-    categories: Categories | null;
-  }[],
+  categorized: readonly CategorizedClient[],
   size: number,
   seed: number,
 ) {
@@ -69,7 +63,7 @@ async function initGold(
       id: c.id,
       transcript: c.transcript,
       reviewed: false,
-      expected: c.categories!,
+      expected: c.categories,
     }));
   await mkdir(dirname(GOLD_PATH), { recursive: true });
   await writeFile(GOLD_PATH, JSON.stringify(items, null, 2));

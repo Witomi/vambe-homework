@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ClientsRepository } from '../data/clients.repository';
 import { PredictionService } from '../prediction/prediction.service';
-import { rateStat } from '../metrics/aggregations';
+import { rateStat } from '../analytics/rates';
 import { findBlockers } from './blockers';
 import { findRecoverableLeads } from './lead-recovery';
 import { OpportunitiesResponse } from './opportunities.types';
@@ -23,7 +23,7 @@ export class OpportunitiesService {
   ) {}
 
   compute(): OpportunitiesResponse {
-    const categorized = this.repository.findAll().filter((c) => c.categories);
+    const categorized = this.repository.findCategorized();
     const baseRate = rateStat(categorized).closeRate;
 
     if (baseRate === null) {

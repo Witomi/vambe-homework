@@ -1,5 +1,5 @@
 import { Client } from '../domain/client';
-import { ClientPrediction } from '../prediction/prediction.types';
+import { ClientPrediction } from '../domain/grades';
 
 /** Contratos de respuesta de `GET /api/clients` y `GET /api/clients/:id`. */
 

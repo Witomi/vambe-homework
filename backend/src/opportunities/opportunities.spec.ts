@@ -1,6 +1,6 @@
 import { makeClient } from '../../test/fixtures';
 import { Categories } from '../domain/taxonomy';
-import { rateStat } from '../metrics/aggregations';
+import { rateStat } from '../analytics/rates';
 import { findBlockers } from './blockers';
 import { findRecoverableLeads } from './lead-recovery';
 import { findReplicableSolutions } from './replicable-solutions';

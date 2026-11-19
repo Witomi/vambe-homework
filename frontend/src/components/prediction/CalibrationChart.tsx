@@ -12,11 +12,11 @@ import {
 } from 'recharts';
 import type { Prediction } from '@/lib/api/types';
 import { formatPct } from '@/lib/format';
+import { CHART, legendLabelStyle } from '@/lib/chart-theme';
 import { Card } from '../ui/Card';
 
 /** Rangos con menos clientes se omiten: su tasa real es muy ruidosa. */
 const MIN_BUCKET = 20;
-const AXIS = { fontSize: 11, fill: '#52514e' };
 
 /**
  * ¿Se puede confiar en las probabilidades? Compara, por rango, lo que
@@ -45,15 +45,15 @@ export function CalibrationChart({
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={rows} margin={{ top: 8, right: 8, left: -12 }}>
-            <CartesianGrid vertical={false} stroke="#ecebe7" />
+            <CartesianGrid vertical={false} stroke={CHART.grid} />
             <XAxis
               dataKey="label"
-              tick={AXIS}
+              tick={CHART.axisTick}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
-              tick={AXIS}
+              tick={CHART.axisTick}
               tickLine={false}
               axisLine={false}
               domain={[0.4, 0.9]}
@@ -69,7 +69,7 @@ export function CalibrationChart({
               iconSize={8}
               wrapperStyle={{ fontSize: 12 }}
               formatter={(value: string) => (
-                <span style={{ color: '#52514e' }}>{value}</span>
+                <span style={legendLabelStyle}>{value}</span>
               )}
             />
             <Line
@@ -77,7 +77,7 @@ export function CalibrationChart({
               type="linear"
               dataKey="predicted"
               name="Predicho"
-              stroke="#8a8984"
+              stroke={CHART.series.neutral}
               strokeWidth={2}
               strokeDasharray="5 4"
               dot={false}
@@ -87,9 +87,9 @@ export function CalibrationChart({
               type="linear"
               dataKey="actual"
               name="Real"
-              stroke="#2a78d6"
+              stroke={CHART.series.primary}
               strokeWidth={2}
-              dot={{ r: 3, strokeWidth: 0, fill: '#2a78d6' }}
+              dot={{ r: 3, strokeWidth: 0, fill: CHART.series.primary }}
             />
           </LineChart>
         </ResponsiveContainer>
