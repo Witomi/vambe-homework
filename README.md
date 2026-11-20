@@ -30,16 +30,40 @@ Panel comercial que toma las transcripciones de reuniones de venta de Vambe, las
 
 ## Correr en local
 
+Primero el backend y después el frontend, cada uno en su propia terminal. El frontend necesita que el backend esté corriendo para mostrar datos.
+
+### 1. Backend (API en http://localhost:3001)
+
 ```bash
-npm run install:all          # instala raíz, backend y frontend
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
-npm run dev                  # backend en :3001 y frontend en :3000
+cd backend
+npm install
+cp .env.example .env         # funciona tal cual; la API key solo se usa para categorizar
+npm run start:dev            # modo desarrollo, se reinicia al guardar
+```
+
+Para comprobar que está arriba: http://localhost:3001/api/health debe responder `{"status":"ok",…}`.
+
+El repo incluye `backend/data/categorizations.json` con **las 10.000 reuniones** ya categorizadas, así que la API funciona sin API key. Al arrancar, el backend carga el CSV y las categorizaciones en memoria y entrena el modelo de predicción (unos segundos).
+
+### 2. Frontend (panel en http://localhost:3000)
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local   # apunta a http://localhost:3001/api
+npm run dev
 ```
 
 Abre http://localhost:3000.
 
-El repo incluye `backend/data/categorizations.json` con **las 10.000 reuniones** ya categorizadas, así que la app funciona sin API key.
+### Atajo: los dos juntos
+
+Desde la raíz del repo, un solo comando instala y levanta ambos (después de copiar los dos `.env` como arriba):
+
+```bash
+npm run install:all
+npm run dev                  # backend en :3001 y frontend en :3000
+```
 
 ## Categorizar con el LLM
 
