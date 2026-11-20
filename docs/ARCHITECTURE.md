@@ -205,7 +205,7 @@ Cada módulo de Nest sigue la misma forma: `*.controller.ts` (HTTP, sin lógica)
 
 ```
 backend/src
-├── main.ts / app.module.ts / app.setup.ts   arranque y configuración HTTP compartida
+├── main.ts / app.module.ts       arranque, configuración HTTP y registro de módulos
 ├── config/env.ts                 variables de entorno validadas con Zod (falla al arrancar si son inválidas)
 │
 ├── domain/                       modelo de negocio, sin dependencias de Nest

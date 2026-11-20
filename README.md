@@ -107,9 +107,8 @@ El acierto actual (96% de las dimensiones correctas por caso, sobre 50 casos) y 
 
 | Dónde | Comando | Qué hace |
 | --- | --- | --- |
-| raíz | `npm test` | Corre todos los tests (backend unitarios + e2e y frontend) |
+| raíz | `npm test` | Corre todos los tests (backend y frontend) |
 | backend | `npm test` | Tests unitarios (parser, filtros, agregaciones, servicio de categorización) |
-| backend | `npm run test:e2e` | Tests de la API contra el CSV real |
 | frontend | `npm test` | Tests de la lógica pura (filtros ↔ URL, chips, formato, esquemas Zod) |
 | raíz | `npm run build` | Compila backend y frontend |
 | ambos | `npm run lint` / `npm run format` | ESLint / Prettier |

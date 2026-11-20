@@ -1,8 +1,7 @@
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { configureApp } from './app.setup';
 import { Env } from './config/env';
 import { PredictionService } from './prediction/prediction.service';
 
@@ -14,7 +13,15 @@ async function bootstrap() {
   app.enableCors({
     origin: config.get('FRONTEND_URL', { infer: true }).split(','),
   });
-  configureApp(app);
+  // Valida y tipa los parámetros de cada request según su DTO; rechaza
+  // con 400 cualquier parámetro desconocido o valor fuera de la taxonomía.
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   // El modelo de predicción vive en memoria: se entrena antes de aceptar
   // visitas, así nadie espera el entrenamiento (y el health check del
