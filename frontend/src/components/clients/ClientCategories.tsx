@@ -20,6 +20,9 @@ export function ClientCategories({ categories, meta }: ClientCategoriesProps) {
         <Row label="Consultas / mes">
           {formatNumber(categories.monthlyInquiries)}
         </Row>
+        <Row label="Consultas / mes en peak">
+          {formatNumber(categories.peakMonthlyInquiries)}
+        </Row>
         {meta.dimensions.map((dimension) => (
           <Row key={dimension.key} label={dimension.label}>
             <ValueBadges

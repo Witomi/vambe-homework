@@ -13,7 +13,7 @@ import { ClientFilterDto } from './client-filter.dto';
 export interface FilterContext {
   /** Texto normalizado (sin tildes) para la búsqueda. */
   searchableText: (id: string) => string;
-  /** Nota A–D del cliente, o undefined si no está categorizado. */
+  /** Nota A–F del cliente, o undefined si no está categorizado. */
   gradeOf: (id: string) => string | undefined;
 }
 
@@ -67,7 +67,8 @@ export function applyFilters(
       if (!bucket || !filter.volume.includes(bucket)) return false;
     }
     for (const key of activeDimensions) {
-      if (!matchesDimension(c, key, filter[key]!)) return false;
+      const selected = filter[key] ?? [];
+      if (!matchesDimension(c, key, selected)) return false;
     }
     if (terms.length) {
       const text = `${context.searchableText(c.id)} ${normalizeText(c.categories?.summary ?? '')}`;

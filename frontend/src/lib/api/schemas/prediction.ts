@@ -17,16 +17,19 @@ export const predictionSchema = z.object({
     logLoss: z.number(),
     baselineLogLoss: z.number(),
     folds: z.number().int(),
+    l2: z.number(),
   }),
   grades: z.array(
     z.object({
       grade: gradeSchema,
       title: z.string(),
       range: z.string(),
-      action: z.string(),
       count: z.number().int(),
+      share: rate,
       closed: z.number().int(),
       closeRate: rate.nullable(),
+      openLeads: z.number().int(),
+      openInquiries: z.number(),
     }),
   ),
   buckets: z.array(

@@ -7,7 +7,7 @@ import { minReliableSample } from '../analytics/rates';
 
 /** Casi todos piden FAQ: no distingue una solución de otra. */
 const IGNORED_USE_CASES = new Set(['faq']);
-const MIN_INDUSTRIES = 4;
+export const MIN_INDUSTRIES = 4;
 const TOP = 4;
 
 /** Todos los pares (a, b) de una lista, en orden estable. */

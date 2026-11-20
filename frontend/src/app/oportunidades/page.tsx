@@ -18,7 +18,7 @@ export default async function OpportunitiesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Oportunidades"
-        description="Qué hacer con estos datos: dónde enfocarse, a quién volver a llamar, quién toma cada lead, qué resolver y qué construir."
+        description="Lo que destaca en los datos: cómo se reparten volumen y conversión, qué leads perdidos tienen probabilidad alta, qué vendedor cierra mejor cada rubro, qué baja las ventas y qué se pide en muchos rubros."
         aside={<CoverageNote meta={meta} />}
       />
       {data.baseRate === null ? (
@@ -28,13 +28,20 @@ export default async function OpportunitiesPage() {
         </p>
       ) : (
         <DetailProvider>
-          <SegmentMap quadrants={data.quadrants} baseRate={data.baseRate} />
+          <SegmentMap
+            quadrants={data.quadrants}
+            baseRate={data.baseRate}
+            rules={data.rules}
+          />
           <LeadRecovery recovery={data.recovery} baseRate={data.baseRate} />
           <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
-            <SellerAssignments assignments={data.assignments} />
+            <SellerAssignments
+              assignments={data.assignments}
+              rules={data.rules}
+            />
             <Blockers blockers={data.blockers} baseRate={data.baseRate} />
           </div>
-          <ReplicableSolutions solutions={data.solutions} />
+          <ReplicableSolutions solutions={data.solutions} rules={data.rules} />
         </DetailProvider>
       )}
     </div>

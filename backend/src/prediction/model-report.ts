@@ -1,3 +1,4 @@
+import { rateStat } from '../analytics/rates';
 import { CategorizedClient } from '../domain/client';
 import { GRADES, gradeOf, gradeRange } from '../domain/grades';
 import { ClosingModel } from './closing-model';
@@ -8,7 +9,7 @@ const BUCKET_WIDTH = 0.05;
 const TOP_FACTORS = 6;
 
 /**
- * Informe del modelo para la vista Predicción: calidad, notas A–D con su
+ * Informe del modelo para la vista Predicción: calidad, notas A–F con su
  * tasa de cierre real, distribución por probabilidad y factores principales.
  */
 export function buildModelReport(
@@ -30,31 +31,36 @@ export function buildModelReport(
         outcomes,
       ),
       folds: model.folds,
+      l2: model.l2,
     },
-    grades: summarizeGrades(probs, outcomes),
+    grades: summarizeGrades(categorized, probs),
     buckets: binByProbability(probs, outcomes, BUCKET_WIDTH),
     factors: topFactors(model.factors),
   };
 }
 
-/** Cuántos clientes hay en cada nota y cuánto cerraron realmente. */
+/**
+ * Cuántos clientes hay en cada nota, cuánto cerraron realmente y cuánto
+ * queda por recuperar (los que no cerraron y sus consultas al mes).
+ */
 function summarizeGrades(
+  categorized: readonly CategorizedClient[],
   probs: readonly number[],
-  outcomes: readonly number[],
 ): GradeSummary[] {
-  return GRADES.map(({ grade, title, action }) => {
-    const members = probs
-      .map((p, i) => ({ p, y: outcomes[i] }))
-      .filter(({ p }) => gradeOf(p) === grade);
-    const closed = members.filter((m) => m.y === 1).length;
+  return GRADES.map(({ grade, title }) => {
+    const members = categorized.filter((_, i) => gradeOf(probs[i]) === grade);
+    const open = members.filter((c) => !c.closed);
     return {
       grade,
       title,
-      action,
       range: gradeRange(grade),
-      count: members.length,
-      closed,
-      closeRate: members.length ? closed / members.length : null,
+      ...rateStat(members),
+      share: categorized.length ? members.length / categorized.length : 0,
+      openLeads: open.length,
+      openInquiries: open.reduce(
+        (sum, c) => sum + (c.categories.monthlyInquiries ?? 0),
+        0,
+      ),
     };
   });
 }

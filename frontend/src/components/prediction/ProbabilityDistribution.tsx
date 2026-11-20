@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -15,37 +16,93 @@ import type { Prediction } from '@/lib/api/types';
 import { formatNumber, formatPct } from '@/lib/format';
 import { CHART, legendLabelStyle } from '@/lib/chart-theme';
 import { Card } from '../ui/Card';
+import { Tabs } from '../ui/Tabs';
+
+type View = 'probability' | 'grade';
+
+/** Una barra: un grupo de clientes y cuántos cerraron. */
+interface Row {
+  label: string;
+  /** Título del tooltip. */
+  title: string;
+  closed: number;
+  open: number;
+  closeRate: number;
+}
+
+const VIEWS: Record<View, { subtitle: string; axis: string }> = {
+  probability: {
+    subtitle:
+      'Cada barra agrupa a los clientes a los que el modelo les asignó una probabilidad parecida.',
+    axis: 'Probabilidad de cierre estimada',
+  },
+  grade: {
+    subtitle:
+      'Cada barra es una nota, de menor (F) a mayor (A) probabilidad de cierre.',
+    axis: 'Nota',
+  },
+};
 
 const bucketLabel = (from: number) => `${Math.round(from * 100)}%`;
+const rateOf = (closed: number, open: number) =>
+  closed + open ? closed / (closed + open) : 0;
 
-/**
- * Cuántos clientes cerraron y cuántos no, según la probabilidad que les
- * asignó el modelo. Si el modelo sirve, a la derecha (más probabilidad)
- * debería haber proporcionalmente más azul.
- */
-export function ProbabilityDistribution({
-  buckets,
-  baseRate,
-}: {
-  buckets: Prediction['buckets'];
-  baseRate: number;
-}) {
+function probabilityRows(buckets: Prediction['buckets']): Row[] {
   // Solo el tramo con datos, para no mostrar barras vacías en los extremos.
   const first = buckets.findIndex((b) => b.closed + b.open > 0);
   const last = buckets.findLastIndex((b) => b.closed + b.open > 0);
-  const rows = buckets.slice(first, last + 1).map((b) => ({
+  return buckets.slice(first, last + 1).map((b) => ({
     label: bucketLabel(b.from),
-    range: `${bucketLabel(b.from)}–${bucketLabel(b.to)}`,
+    title: `Probabilidad ${bucketLabel(b.from)}–${bucketLabel(b.to)}`,
     closed: b.closed,
     open: b.open,
-    closeRate: b.closed + b.open ? b.closed / (b.closed + b.open) : 0,
+    closeRate: rateOf(b.closed, b.open),
   }));
+}
+
+function gradeRows(grades: Prediction['grades']): Row[] {
+  // De menor a mayor probabilidad, igual que la vista por probabilidad.
+  return [...grades].reverse().map((g) => ({
+    label: g.grade,
+    title: `Nota ${g.grade} · ${g.title} (${g.range})`,
+    closed: g.closed,
+    open: g.count - g.closed,
+    closeRate: rateOf(g.closed, g.count - g.closed),
+  }));
+}
+
+/**
+ * Cuántos clientes cerraron y cuántos no, agrupados por la probabilidad que
+ * les asignó el modelo o por su nota.
+ */
+export function ProbabilityDistribution({
+  buckets,
+  grades,
+  baseRate,
+}: {
+  buckets: Prediction['buckets'];
+  grades: Prediction['grades'];
+  baseRate: number;
+}) {
+  const [view, setView] = useState<View>('probability');
+  const rows =
+    view === 'probability' ? probabilityRows(buckets) : gradeRows(grades);
   const averageBucket = bucketLabel(Math.floor(baseRate * 20) / 20);
 
   return (
     <Card
-      title="Cerraron vs. no cerraron, según su probabilidad"
-      subtitle="Cada barra agrupa a los clientes a los que el modelo les asignó una probabilidad parecida. Hacia la derecha debería haber proporcionalmente más clientes que cerraron."
+      title="Cerraron vs. no cerraron"
+      subtitle={VIEWS[view].subtitle}
+      action={
+        <Tabs<View>
+          value={view}
+          onChange={setView}
+          options={[
+            { value: 'probability', label: 'Por probabilidad' },
+            { value: 'grade', label: 'Por nota' },
+          ]}
+        />
+      }
     >
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
@@ -60,7 +117,7 @@ export function ProbabilityDistribution({
               tickLine={false}
               axisLine={false}
               label={{
-                value: 'Probabilidad de cierre estimada',
+                value: VIEWS[view].axis,
                 position: 'insideBottom',
                 offset: -10,
                 fontSize: 11,
@@ -72,10 +129,10 @@ export function ProbabilityDistribution({
               cursor={{ fill: 'rgba(0,0,0,0.04)' }}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null;
-                const row = payload[0].payload as (typeof rows)[number];
+                const row = payload[0].payload as Row;
                 return (
                   <div className="border-border bg-surface rounded-lg border px-3 py-2 text-xs shadow-md">
-                    <p className="font-medium">Probabilidad {row.range}</p>
+                    <p className="font-medium">{row.title}</p>
                     <p className="text-brand-strong">
                       Cerraron: {formatNumber(row.closed)}
                     </p>
@@ -98,17 +155,19 @@ export function ProbabilityDistribution({
                 <span style={legendLabelStyle}>{value}</span>
               )}
             />
-            <ReferenceLine
-              x={averageBucket}
-              stroke={CHART.text}
-              strokeDasharray="4 3"
-              label={{
-                value: `Promedio ${formatPct(baseRate)}`,
-                position: 'top',
-                fontSize: 11,
-                fill: CHART.text,
-              }}
-            />
+            {view === 'probability' && (
+              <ReferenceLine
+                x={averageBucket}
+                stroke={CHART.text}
+                strokeDasharray="4 3"
+                label={{
+                  value: `Promedio ${formatPct(baseRate)}`,
+                  position: 'top',
+                  fontSize: 11,
+                  fill: CHART.text,
+                }}
+              />
+            )}
             <Bar
               isAnimationActive={false}
               dataKey="closed"

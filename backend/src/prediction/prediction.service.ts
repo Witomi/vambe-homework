@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { CategorizationStore } from '../data/categorization.store';
 import { ClientsRepository } from '../data/clients.repository';
+import { pointsDiff } from '../analytics/rates';
 import { CategorizedClient } from '../domain/client';
 import { ClientPrediction, gradeOf } from '../domain/grades';
 import { ClosingModel, fitClosingModel } from './closing-model';
 import { buildModelReport } from './model-report';
-import { Factor, PredictionResponse } from './prediction.types';
+import {
+  Factor,
+  PredictionResponse,
+  SellerSuggestion,
+} from './prediction.types';
 
 interface Snapshot {
   revision: number;
@@ -37,7 +42,7 @@ export class PredictionService {
     return this.current().model.probabilities.get(clientId);
   }
 
-  /** Probabilidad y nota (A–D) de un cliente, o null si no está categorizado. */
+  /** Probabilidad y nota (A–F) de un cliente, o null si no está categorizado. */
   predictionOf(clientId: string): ClientPrediction | null {
     const probability = this.probabilityOf(clientId);
     return probability === undefined
@@ -48,6 +53,36 @@ export class PredictionService {
   /** Las variables del cliente que más suben su probabilidad. */
   reasonsFor(client: CategorizedClient, max = 2): Factor[] {
     return this.current().model.explain(client, max);
+  }
+
+  /**
+   * El vendedor con el que el modelo estima la mayor probabilidad de cierre
+   * para este cliente, si no es el que lo atendió y la mejora se nota (al
+   * menos 1 punto). Compara siempre con el mismo modelo (el completo).
+   */
+  bestSellerFor(client: CategorizedClient): SellerSuggestion | null {
+    const { model } = this.current();
+    const current = model.probabilityWith(client, client.seller);
+    const best = model.sellers
+      .map((seller) => ({
+        seller,
+        probability: model.probabilityWith(client, seller),
+      }))
+      .reduce((a, b) => (b.probability > a.probability ? b : a));
+    const gainPts = pointsDiff(best.probability, current);
+    return best.seller !== client.seller && gainPts >= 1
+      ? { seller: best.seller, gainPts }
+      : null;
+  }
+
+  /**
+   * Entrena el modelo de inmediato (en vez de esperar la primera consulta)
+   * y devuelve cuánto tardó. Se llama al arrancar el servidor.
+   */
+  warmUp(): number {
+    const startedAt = Date.now();
+    this.current();
+    return Date.now() - startedAt;
   }
 
   /** Reentrena solo si cambiaron las categorizaciones. */

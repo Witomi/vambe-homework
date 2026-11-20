@@ -48,6 +48,32 @@ describe('parseItem', () => {
     expect(categories.monthlyInquiries).toBe(400);
   });
 
+  it('toda dimensión simple acepta "no especificado" u otro valor de escape', () => {
+    // Antes "Tamaño" no lo tenía: si la reunión no lo decía, la respuesta
+    // se rechazaba en cada intento y la reunión nunca se guardaba.
+    const { categories } = parseItem({
+      ...validItem,
+      businessSize: 'no_especificado',
+    });
+    expect(categories.businessSize).toBe('no_especificado');
+  });
+
+  it('separa el volumen normal del volumen en peak', () => {
+    const { categories } = parseItem({
+      ...validItem,
+      seasonality: 'con_peaks',
+      monthlyInquiries: null,
+      peakMonthlyInquiries: 1800,
+    });
+    expect(categories.seasonality).toBe('con_peaks');
+    expect(categories.monthlyInquiries).toBeNull();
+    expect(categories.peakMonthlyInquiries).toBe(1800);
+    // Si no lo informa, queda "sin peaks" y sin cifra.
+    const plain = parseItem({ ...validItem, seasonality: undefined });
+    expect(plain.categories.seasonality).toBe('sin_peaks');
+    expect(plain.categories.peakMonthlyInquiries).toBeNull();
+  });
+
   it('normaliza mayúsculas, tildes y espacios', () => {
     const { categories } = parseItem({
       ...validItem,
@@ -68,8 +94,15 @@ describe('parseItem', () => {
     expect(categories.urgency).toBe('media');
   });
 
-  it('rechaza dimensiones sin valor por defecto', () => {
-    expect(() => parseItem({ ...validItem, businessSize: 'gigante' })).toThrow(
+  it('un valor fuera de la taxonomía cae en el valor de escape', () => {
+    expect(
+      parseItem({ ...validItem, businessSize: 'gigante' }).categories
+        .businessSize,
+    ).toBe('no_especificado');
+  });
+
+  it('rechaza un elemento sin "ref" para emparejarlo', () => {
+    expect(() => parseItem({ ...validItem, ref: 'x' })).toThrow(
       LlmResponseParseError,
     );
   });
@@ -98,7 +131,7 @@ describe('parseBatchResponse', () => {
   it('omite elementos inválidos sin descartar el lote', () => {
     const text = JSON.stringify([
       validItem,
-      { ...validItem, ref: 2, businessSize: 'gigante' },
+      { ...validItem, ref: 'sin-ref' },
       { ...validItem, ref: 3 },
     ]);
     expect(parseBatchResponse(text).map((i) => i.ref)).toEqual([1, 3]);

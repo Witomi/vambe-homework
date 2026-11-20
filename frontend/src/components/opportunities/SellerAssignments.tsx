@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import type { Opportunities } from '@/lib/api/types';
+import type { Opportunities, OpportunityRules } from '@/lib/api/types';
 import { formatPct, formatPointsDiff } from '@/lib/format';
 import { assignmentDetail } from '@/lib/opportunity-details';
 import { Card } from '../ui/Card';
@@ -8,13 +8,15 @@ import { DetailButton } from './DetailDrawer';
 /** Regla de asignación: qué vendedor toma los leads de cada rubro. */
 export function SellerAssignments({
   assignments,
+  rules,
 }: {
   assignments: Opportunities['assignments'];
+  rules: OpportunityRules;
 }) {
   return (
     <Card
-      title="¿Quién toma cada lead?"
-      subtitle="Para cada rubro, el vendedor que más cierra frente al resto del equipo (al menos 5 puntos más y 8 reuniones)."
+      title="Top vendedores por industria"
+      subtitle={`Para cada rubro, el vendedor que más cierra frente al resto del equipo (al menos ${rules.minAdvantagePts} puntos más y ${rules.minSellerMeetings} reuniones).`}
     >
       {assignments.length === 0 ? (
         <p className="text-muted text-sm">

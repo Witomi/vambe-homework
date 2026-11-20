@@ -13,6 +13,10 @@ export function computeKpis(
   categorized: readonly CategorizedClient[],
 ): Kpis {
   const overall = rateStat(clients);
+  const coverage = clients.length ? categorized.length / clients.length : 0;
+  const automated = categorized
+    .filter((c) => c.closed)
+    .reduce((sum, c) => sum + (c.categories.monthlyInquiries ?? 0), 0);
   const inquiries = categorized
     .map((c) => c.categories.monthlyInquiries)
     .filter((n): n is number => n !== null);
@@ -22,11 +26,12 @@ export function computeKpis(
     closed: overall.closed,
     closeRate: overall.closeRate,
     categorized: categorized.length,
-    coverage: clients.length ? categorized.length / clients.length : 0,
+    coverage,
     categorizedCloseRate: rateStat(categorized).closeRate,
     medianMonthlyInquiries: median(inquiries),
-    automatedMonthlyInquiries: categorized
-      .filter((c) => c.closed)
-      .reduce((sum, c) => sum + (c.categories.monthlyInquiries ?? 0), 0),
+    automatedMonthlyInquiries: automated,
+    // Las reuniones se analizan en orden aleatorio, así que las analizadas
+    // representan al resto: escalar por la cobertura estima el total.
+    estimatedAutomatedMonthlyInquiries: coverage ? automated / coverage : null,
   };
 }

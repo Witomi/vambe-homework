@@ -29,12 +29,32 @@ export interface Kpis {
   /** Tasa de cierre dentro de los categorizados (base de comparación). */
   categorizedCloseRate: number | null;
   medianMonthlyInquiries: number | null;
-  /** Consultas mensuales que los clientes cerrados delegan en Vambe. */
+  /**
+   * Consultas al mes que atiende Vambe en los clientes que compraron,
+   * sumando solo las reuniones analizadas con IA.
+   */
   automatedMonthlyInquiries: number;
+  /** Lo mismo estimado para todo el segmento; null si no hay analizadas. */
+  estimatedAutomatedMonthlyInquiries: number | null;
+}
+
+/** KPIs de un mes (`YYYY-MM`). */
+export interface MonthKpis extends Kpis {
+  month: string;
+}
+
+/** Un mes frente al mes anterior y al mismo mes del año pasado. */
+export interface MonthComparison {
+  current: MonthKpis;
+  previousMonth: MonthKpis;
+  sameMonthLastYear: MonthKpis;
 }
 
 export interface MetricsResponse {
+  /** Todo el período filtrado. */
   kpis: Kpis;
+  /** Mes revisado vs. anteriores; null en modo histórico o sin reuniones. */
+  monthComparison: MonthComparison | null;
   timeline: TimelinePoint[];
   /** Sobre las reuniones analizadas con IA, ordenado por desempeño ajustado. */
   sellers: SellerPerformance[];

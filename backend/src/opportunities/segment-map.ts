@@ -1,8 +1,11 @@
+import { membersOf } from '../analytics/breakdown';
+import { findLevers } from '../analytics/levers';
+import { pointsDiff } from '../analytics/rates';
 import { median } from '../common/collections';
+import { formatPct } from '../common/format';
 import { CategorizedClient } from '../domain/client';
 import { DimensionKey } from '../domain/categories';
 import { Quadrant, QuadrantKey, Segment } from './opportunities.types';
-import { pointsDiff } from '../analytics/rates';
 import { segmentsOf } from './segments';
 
 /** Dimensiones que el equipo comercial puede atacar directamente. */
@@ -12,31 +15,21 @@ const MAP_DIMENSIONS: DimensionKey[] = [
   'businessSize',
 ];
 
-const QUADRANTS: Record<QuadrantKey, { title: string; action: string }> = {
-  protect: {
-    title: 'Proteger',
-    action:
-      'Mucho volumen y cierran bien: son el núcleo del negocio. Mantener el foco y cuidar la experiencia.',
-  },
-  grow: {
-    title: 'Invertir para captar más',
-    action:
-      'Cierran bien pero llegan pocos: más marketing o prospección aquí rinde más que en cualquier otro lado.',
-  },
-  fix: {
-    title: 'Mejorar el pitch',
-    action:
-      'Llegan muchos pero cierran poco: revisar la propuesta, la demo o el precio para este grupo.',
-  },
-  deprioritize: {
-    title: 'Despriorizar',
-    action:
-      'Pocos y cierran poco: no invertir esfuerzo extra hasta resolver lo anterior.',
-  },
-};
+/**
+ * Cada cuadrante es una regla sobre los datos: volumen (sobre o bajo la
+ * mediana de su dimensión) × conversión (sobre o bajo el promedio). El
+ * nombre describe la regla; qué hacer con cada grupo lo decide el equipo.
+ */
+const QUADRANTS: Record<QuadrantKey, { highVolume: boolean; above: boolean }> =
+  {
+    protect: { highVolume: true, above: true },
+    grow: { highVolume: false, above: true },
+    fix: { highVolume: true, above: false },
+    deprioritize: { highVolume: false, above: false },
+  };
 
 /** Diferencias menores a esto son ruido: el grupo está "en el promedio". */
-const NEUTRAL_BAND_PTS = 3;
+export const NEUTRAL_BAND_PTS = 3;
 
 /**
  * Mapa volumen × conversión. Cada grupo se compara con los de su misma
@@ -74,13 +67,26 @@ export function buildSegmentMap(
     }
   }
 
-  return (Object.keys(QUADRANTS) as QuadrantKey[]).map((key) => ({
-    key,
-    ...QUADRANTS[key],
-    // Lo más relevante primero: mayor distancia al promedio.
-    segments: buckets[key].sort(
-      (a, b) =>
-        Math.abs(b.closeRate - baseRate) - Math.abs(a.closeRate - baseRate),
-    ),
-  }));
+  return (Object.keys(QUADRANTS) as QuadrantKey[]).map((key) => {
+    const { highVolume, above } = QUADRANTS[key];
+    const side = above ? 'sobre' : 'bajo';
+    return {
+      key,
+      title: `${highVolume ? 'Muchas' : 'Pocas'} reuniones · cierran ${side} el promedio`,
+      description: `${highVolume ? 'Sobre' : 'Bajo'} la mediana de reuniones de su dimensión y ${NEUTRAL_BAND_PTS}+ pts ${side} el promedio (${formatPct(baseRate)}).`,
+      // Lo más relevante primero: mayor distancia al promedio.
+      segments: buckets[key]
+        .sort(
+          (a, b) =>
+            Math.abs(b.closeRate - baseRate) - Math.abs(a.closeRate - baseRate),
+        )
+        .map((segment) => ({
+          ...segment,
+          levers: findLevers(
+            membersOf(categorized, segment.dimension, segment.value),
+            segment.dimension,
+          ),
+        })),
+    };
+  });
 }

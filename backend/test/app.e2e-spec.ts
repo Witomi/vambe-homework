@@ -74,6 +74,30 @@ describe('API (e2e)', () => {
     expect(body.kpis.meetings).toBeGreaterThan(0);
   });
 
+  it('GET /metrics compara el mes pedido, o nada en modo histórico', async () => {
+    const month = await request(app.getHttpServer())
+      .get('/metrics')
+      .query({ period: '2024-06' })
+      .expect(200);
+    expect(
+      (month.body as { monthComparison: { current: { month: string } } })
+        .monthComparison.current.month,
+    ).toBe('2024-06');
+
+    const historic = await request(app.getHttpServer())
+      .get('/metrics')
+      .query({ period: 'historico' })
+      .expect(200);
+    expect(
+      (historic.body as { monthComparison: unknown }).monthComparison,
+    ).toBeNull();
+
+    await request(app.getHttpServer())
+      .get('/metrics')
+      .query({ period: '2024-13' })
+      .expect(400);
+  });
+
   it('GET /opportunities devuelve las cinco secciones de acción', async () => {
     const res = await request(app.getHttpServer())
       .get('/opportunities')

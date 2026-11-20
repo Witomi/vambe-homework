@@ -12,15 +12,29 @@ const segmentSchema = z.object({
   closeRate: rate,
 });
 
+/** Rasgo con el que, dentro de un grupo, se cierra más que el grupo. */
+const leverSchema = segmentSchema.extend({ groupRate: rate });
+
+const segmentWithLeversSchema = segmentSchema.extend({
+  levers: z.array(leverSchema),
+});
+
 export const opportunitiesSchema = z.object({
   baseRate: rate.nullable(),
+  /** Umbrales con los que se calcularon las secciones. */
+  rules: z.object({
+    neutralBandPts: z.number(),
+    minAdvantagePts: z.number(),
+    minSellerMeetings: z.number().int(),
+    minSolutionIndustries: z.number().int(),
+  }),
   categorized: z.number().int(),
   quadrants: z.array(
     z.object({
       key: z.enum(['protect', 'grow', 'fix', 'deprioritize']),
       title: z.string(),
-      action: z.string(),
-      segments: z.array(segmentSchema),
+      description: z.string(),
+      segments: z.array(segmentWithLeversSchema),
     }),
   ),
   solutions: z.array(
@@ -41,11 +55,16 @@ export const opportunitiesSchema = z.object({
         id: z.string(),
         name: z.string(),
         seller: z.string(),
+        suggestedSeller: z
+          .object({ seller: z.string(), gainPts: z.number() })
+          .nullable(),
         industry: z.string(),
         monthlyInquiries: z.number(),
         winScore: rate,
         grade: gradeSchema,
-        reasons: z.array(z.string()),
+        reasons: z.array(
+          z.object({ label: z.string(), oddsRatio: z.number() }),
+        ),
       }),
     ),
   }),
@@ -58,5 +77,5 @@ export const opportunitiesSchema = z.object({
       industryRate: rate,
     }),
   ),
-  blockers: z.array(segmentSchema.extend({ action: z.string() })),
+  blockers: z.array(segmentWithLeversSchema),
 });

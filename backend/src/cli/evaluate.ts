@@ -97,6 +97,9 @@ async function report(predicted: Map<string, Categories>) {
   console.log(
     `Consultas/mes dentro de ±20%: ${formatPct(result.inquiriesWithin20Pct)}`,
   );
+  console.log(
+    `Consultas/mes en peak dentro de ±20%: ${formatPct(result.peakInquiriesWithin20Pct)}`,
+  );
 }
 
 main().catch((error: unknown) => {

@@ -3,6 +3,8 @@ import { breakdownAllDimensions } from '../analytics/breakdown';
 import { rateStat } from '../analytics/rates';
 import { generateInsights } from './insights';
 import { sellerPerformance } from '../analytics/seller-performance';
+import { computeKpis } from './kpis';
+import { compareMonth, shiftMonth } from './month-comparison';
 import { timeline } from './timeline';
 
 describe('timeline', () => {
@@ -135,5 +137,92 @@ describe('sellerPerformance', () => {
     const puma = result[0];
     expect(puma.closeRate).toBeCloseTo(0.55);
     expect(puma.expectedRate).toBeCloseTo(0.4);
+  });
+});
+
+describe('compareMonth', () => {
+  it('usa el mes pedido en vez del último', () => {
+    const comparison = compareMonth(
+      [
+        makeClient({ meetingDate: '2024-03-05' }),
+        makeClient({ meetingDate: '2025-03-01' }),
+      ],
+      '2024-03',
+    )!;
+    expect(comparison.current).toMatchObject({ month: '2024-03', meetings: 1 });
+    expect(comparison.sameMonthLastYear).toMatchObject({ month: '2023-03' });
+  });
+
+  it('desplaza meses cruzando el año', () => {
+    expect(shiftMonth('2025-01', -1)).toBe('2024-12');
+    expect(shiftMonth('2025-03', -12)).toBe('2024-03');
+    expect(shiftMonth('2024-12', 1)).toBe('2025-01');
+  });
+
+  it('compara el último mes con el anterior y con el del año pasado', () => {
+    const on = (meetingDate: string, closed: boolean) =>
+      makeClient({ meetingDate, closed });
+    const comparison = compareMonth([
+      on('2024-03-05', true),
+      on('2024-03-20', false),
+      on('2025-02-10', false),
+      on('2025-03-01', true),
+      on('2025-03-15', true),
+      on('2025-03-31', false),
+    ])!;
+
+    expect(comparison.current).toMatchObject({
+      month: '2025-03',
+      meetings: 3,
+      closed: 2,
+    });
+    expect(comparison.previousMonth).toMatchObject({
+      month: '2025-02',
+      meetings: 1,
+    });
+    expect(comparison.sameMonthLastYear).toMatchObject({
+      month: '2024-03',
+      meetings: 2,
+      closeRate: 0.5,
+    });
+  });
+
+  it('informa con 0 reuniones los meses vacíos, y null si no hay segmento', () => {
+    const comparison = compareMonth([
+      makeClient({ meetingDate: '2025-03-01' }),
+    ])!;
+    expect(comparison.previousMonth).toMatchObject({
+      month: '2025-02',
+      meetings: 0,
+      closeRate: null,
+    });
+    expect(comparison.sameMonthLastYear).toMatchObject({
+      month: '2024-03',
+      meetings: 0,
+    });
+    expect(compareMonth([])).toBeNull();
+  });
+});
+
+describe('computeKpis', () => {
+  it('estima las consultas automatizadas escalando por la cobertura', () => {
+    const analyzed = [
+      makeClient({ closed: true, categories: { monthlyInquiries: 300 } }),
+      makeClient({ closed: false, categories: { monthlyInquiries: 900 } }),
+    ];
+    const pending = [
+      makeClient({ categories: null }),
+      makeClient({ categories: null }),
+    ];
+    const kpis = computeKpis([...analyzed, ...pending], analyzed);
+
+    expect(kpis.coverage).toBe(0.5);
+    expect(kpis.automatedMonthlyInquiries).toBe(300);
+    expect(kpis.estimatedAutomatedMonthlyInquiries).toBe(600);
+  });
+
+  it('sin reuniones analizadas no hay estimación', () => {
+    const kpis = computeKpis([makeClient({ categories: null })], []);
+    expect(kpis.estimatedAutomatedMonthlyInquiries).toBeNull();
   });
 });

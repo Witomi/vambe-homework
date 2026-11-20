@@ -4,7 +4,8 @@ import clsx from 'clsx';
 import { ArrowRight, ChevronRight, X } from 'lucide-react';
 import Link from 'next/link';
 import { createContext, useContext, useEffect, useState } from 'react';
-import type { Detail } from '@/lib/opportunity-details';
+import { OPPORTUNITIES_ORIGIN, type Detail } from '@/lib/opportunity-details';
+import { LeverList } from './LeverList';
 
 const DetailContext = createContext<(detail: Detail) => void>(() => {});
 
@@ -120,6 +121,18 @@ function DetailDrawer({
             <p className="bg-background rounded-lg p-3 text-sm leading-relaxed">
               {detail.description}
             </p>
+          )}
+
+          {detail.leversOf && (
+            <section>
+              <h3 className="mb-2 text-sm font-semibold">
+                Qué tenían los que sí cerraron
+              </h3>
+              <LeverList
+                segment={detail.leversOf}
+                origin={OPPORTUNITIES_ORIGIN}
+              />
+            </section>
           )}
 
           <nav aria-label="Ir al detalle" className="space-y-2">

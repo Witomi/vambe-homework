@@ -1,12 +1,10 @@
 export interface CategorizationRunOptions {
-  /** Cuántos clientes pendientes categorizar en esta corrida. */
-  limit: number;
+  /** Máximo de clientes pendientes en esta corrida; sin valor, todos. */
+  limit?: number;
   /** Transcripciones por request al LLM. */
   batchSize: number;
   /** Requests en vuelo simultáneamente. */
   concurrency: number;
-  /** Semilla de la muestra aleatoria (misma semilla = misma muestra). */
-  seed: number;
 }
 
 /** Opciones para volver a categorizar clientes específicos. */

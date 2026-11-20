@@ -26,7 +26,7 @@ export default async function SellersPage() {
         <>
           <SellerCards sellers={data.sellers} />
           <SellerIndustryTable
-            sellers={data.sellers.map((s) => s.seller)}
+            sellerStats={data.sellers}
             industries={data.industries}
             minSample={data.minSample}
           />

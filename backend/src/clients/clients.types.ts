@@ -11,7 +11,7 @@ export interface Paginated<T> {
   totalPages: number;
 }
 
-/** Probabilidad de cierre y nota A–D; null si el cliente no está categorizado. */
+/** Probabilidad de cierre y nota A–F; null si el cliente no está categorizado. */
 interface WithPrediction {
   prediction: ClientPrediction | null;
 }

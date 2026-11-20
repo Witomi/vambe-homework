@@ -4,10 +4,21 @@ import { PredictionService } from '../prediction/prediction.service';
 import { rateStat } from '../analytics/rates';
 import { findBlockers } from './blockers';
 import { findRecoverableLeads } from './lead-recovery';
-import { OpportunitiesResponse } from './opportunities.types';
-import { findReplicableSolutions } from './replicable-solutions';
-import { buildSegmentMap } from './segment-map';
-import { suggestAssignments } from './seller-assignment';
+import { MIN_SELLER_INDUSTRY_SAMPLE } from '../analytics/seller-performance';
+import { OpportunitiesResponse, OpportunityRules } from './opportunities.types';
+import {
+  MIN_INDUSTRIES,
+  findReplicableSolutions,
+} from './replicable-solutions';
+import { NEUTRAL_BAND_PTS, buildSegmentMap } from './segment-map';
+import { MIN_ADVANTAGE_PTS, suggestAssignments } from './seller-assignment';
+
+const RULES: OpportunityRules = {
+  neutralBandPts: NEUTRAL_BAND_PTS,
+  minAdvantagePts: MIN_ADVANTAGE_PTS,
+  minSellerMeetings: MIN_SELLER_INDUSTRY_SAMPLE,
+  minSolutionIndustries: MIN_INDUSTRIES,
+};
 
 /**
  * Convierte las categorías en acciones concretas para el equipo:
@@ -29,6 +40,7 @@ export class OpportunitiesService {
     if (baseRate === null) {
       return {
         baseRate,
+        rules: RULES,
         categorized: 0,
         quadrants: [],
         solutions: [],
@@ -38,13 +50,15 @@ export class OpportunitiesService {
       };
     }
 
+    const assignments = suggestAssignments(categorized);
     return {
       baseRate,
+      rules: RULES,
       categorized: categorized.length,
       quadrants: buildSegmentMap(categorized, baseRate),
       solutions: findReplicableSolutions(categorized),
       recovery: findRecoverableLeads(categorized, baseRate, this.prediction),
-      assignments: suggestAssignments(categorized),
+      assignments,
       blockers: findBlockers(categorized, baseRate),
     };
   }

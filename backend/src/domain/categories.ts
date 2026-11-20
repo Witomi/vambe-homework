@@ -63,6 +63,7 @@ export const DIMENSIONS = {
       opt('pequena', 'Pequeña'),
       opt('mediana', 'Mediana'),
       opt('grande', 'Grande'),
+      opt('no_especificado', 'No especificado'),
     ],
   },
   leadSource: {
@@ -200,6 +201,18 @@ export const DIMENSIONS = {
     hint: 'baja=FAQ simple, media=1 integración o flujos, alta=varias integraciones/idiomas/datos sensibles',
     options: [opt('baja', 'Baja'), opt('media', 'Media'), opt('alta', 'Alta')],
   },
+  seasonality: {
+    key: 'seasonality',
+    label: 'Estacionalidad',
+    description:
+      'Si el cliente menciona períodos con más consultas (temporada alta, fechas especiales, campañas, fines de semana).',
+    multi: false,
+    hint: 'con_peaks si menciona temporada alta, picos, fechas especiales, campañas o días con más demanda; sin_peaks si no',
+    options: [
+      opt('con_peaks', 'Con peaks / temporada'),
+      opt('sin_peaks', 'Sin peaks mencionados'),
+    ],
+  },
 } as const satisfies Record<string, DimensionDefinition>;
 
 export type DimensionKey = keyof typeof DIMENSIONS;
@@ -223,6 +236,8 @@ export type Categories = {
 } & {
   /** Consultas mensuales normalizadas (diarias × 30, semanales × 4,3). */
   monthlyInquiries: number | null;
+  /** Consultas al mes en los peaks, si el cliente da esa cifra. */
+  peakMonthlyInquiries: number | null;
   /** Resumen de una línea de la necesidad del cliente. */
   summary: string;
 };

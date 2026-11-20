@@ -9,6 +9,7 @@ import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
 import { Tabs } from '../ui/Tabs';
 import { BreakdownBars } from './BreakdownBars';
+import { OutcomeFilterNotice, useOutcomeFiltered } from './OutcomeFilterNotice';
 
 /** Las cuatro formas de agrupar clientes que más le sirven al equipo comercial. */
 const TABS: DimensionKey[] = [
@@ -28,6 +29,7 @@ export function DimensionExplorer({
 }) {
   const [tab, setTab] = useState<DimensionKey>('industry');
   const { searchParams, toggleParamValue } = useFilterParams();
+  const outcomeFiltered = useOutcomeFiltered();
 
   return (
     <Card
@@ -44,15 +46,19 @@ export function DimensionExplorer({
         />
       }
     >
-      <BreakdownBars
-        rows={metrics.dimensions[tab]}
-        metric="rate"
-        averageLabel="Promedio analizadas"
-        baseRate={metrics.kpis.categorizedCloseRate}
-        minSample={minReliableSample(metrics.kpis)}
-        onSelect={(value) => toggleParamValue(tab, value)}
-        selected={listParam(searchParams, tab)}
-      />
+      {outcomeFiltered ? (
+        <OutcomeFilterNotice what="qué grupos cierran más" />
+      ) : (
+        <BreakdownBars
+          rows={metrics.dimensions[tab]}
+          metric="rate"
+          averageLabel="Promedio analizadas"
+          baseRate={metrics.kpis.categorizedCloseRate}
+          minSample={minReliableSample(metrics.kpis)}
+          onSelect={(value) => toggleParamValue(tab, value)}
+          selected={listParam(searchParams, tab)}
+        />
+      )}
     </Card>
   );
 }

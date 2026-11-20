@@ -2,9 +2,15 @@ import Link from 'next/link';
 import type { ClientListItem } from '@/lib/api/types';
 import type { SearchParams } from '@/lib/filters/params';
 import { hrefWith } from '@/lib/filters/url';
-import { formatDate, formatNumber } from '@/lib/format';
+import {
+  dialablePhone,
+  formatDate,
+  formatNumber,
+  formatPhone,
+} from '@/lib/format';
 import type { Labeler } from '@/lib/labels';
 import { Badge, ClosedBadge } from '../ui/Badge';
+import { CopyText } from '../ui/CopyText';
 import { GradeBadge } from '../ui/GradeBadge';
 
 interface ClientRowProps {
@@ -37,7 +43,12 @@ export function ClientRow({ client, params, labels }: ClientRowProps) {
         >
           {client.name}
         </Link>
-        <div className="text-subtle text-xs">{client.email}</div>
+        <div className="text-subtle flex flex-col items-start text-xs">
+          <CopyText value={client.email} label="email" />
+          <CopyText value={dialablePhone(client.phone)} label="teléfono">
+            {formatPhone(client.phone)}
+          </CopyText>
+        </div>
       </td>
       <td className="px-4 py-3">{client.seller}</td>
       <td className="text-muted px-4 py-3 whitespace-nowrap">

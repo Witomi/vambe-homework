@@ -12,11 +12,13 @@ export const categoriesSchema = z.object({
   painPoint: z.string(),
   urgency: z.string(),
   complexity: z.string(),
+  seasonality: z.string(),
   useCases: z.array(z.string()),
   integrations: z.array(z.string()),
   requirements: z.array(z.string()),
   objections: z.array(z.string()),
   monthlyInquiries: z.number().nullable(),
+  peakMonthlyInquiries: z.number().nullable(),
   summary: z.string(),
 });
 

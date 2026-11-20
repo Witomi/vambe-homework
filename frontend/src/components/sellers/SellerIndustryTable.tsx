@@ -1,6 +1,10 @@
 import clsx from 'clsx';
 import Link from 'next/link';
-import type { IndustryResult, IndustryRow } from '@/lib/api/types';
+import type {
+  IndustryResult,
+  IndustryRow,
+  SellerSummary,
+} from '@/lib/api/types';
 import { clientsHref } from '@/lib/filters/url';
 import {
   formatNumber,
@@ -15,23 +19,27 @@ import { SELLERS_ORIGIN } from './SellerCards';
 const NOTABLE_PTS = 5;
 
 /**
- * Tabla vendedor × industria: la tasa de cierre de cada vendedor en cada
- * rubro, comparada con la del equipo en ese mismo rubro. Cada celda lleva
- * a las reuniones que la componen.
+ * Tabla vendedor × industria: primero el volumen de reuniones de cada
+ * vendedor y luego su tasa de cierre en cada rubro, comparada con la del
+ * equipo en ese mismo rubro. Cada celda lleva a las reuniones que la componen.
  */
 export function SellerIndustryTable({
-  sellers,
+  sellerStats,
   industries,
   minSample,
 }: {
-  sellers: string[];
+  /** En el orden de las columnas. */
+  sellerStats: SellerSummary[];
   industries: IndustryRow[];
   minSample: number;
 }) {
+  const sellers = sellerStats.map((s) => s.seller);
+  const totalMeetings = sellerStats.reduce((sum, s) => sum + s.count, 0);
+
   return (
     <Card
       title="¿Cómo le va a cada vendedor en cada industria?"
-      subtitle={`Tasa de cierre de cada vendedor en el rubro y su diferencia con el equipo en ese mismo rubro. Con menos de ${minSample} reuniones la celda va en gris: es muy poco para concluir. Haz clic en una celda para ver esas reuniones.`}
+      subtitle={`Cuántas reuniones tuvo cada vendedor y, por rubro, su tasa de cierre y su diferencia con el equipo en ese mismo rubro. Con menos de ${minSample} reuniones la celda va en gris: es muy poco para concluir. Haz clic en una celda para ver esas reuniones.`}
     >
       <div className="-mx-5 overflow-x-auto px-5">
         <table className="w-full min-w-[40rem] border-separate border-spacing-0 text-sm">
@@ -58,6 +66,36 @@ export function SellerIndustryTable({
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <th
+                scope="row"
+                className="bg-surface border-border sticky left-0 border-t py-2 pr-3 text-left font-medium"
+              >
+                Reuniones
+                <span className="text-subtle block text-xs font-normal">
+                  analizadas con IA
+                </span>
+              </th>
+              <td className="border-border border-t px-2 py-2 text-right font-semibold tabular-nums">
+                {formatNumber(totalMeetings)}
+              </td>
+              {sellerStats.map((s) => (
+                <td key={s.seller} className="border-border border-t p-1">
+                  <Link
+                    href={clientsHref({ sellers: s.seller }, SELLERS_ORIGIN)}
+                    title={`${s.seller}: ${formatNumber(s.count)} reuniones analizadas, ${formatPct(s.count / totalMeetings)} del equipo.`}
+                    className="hover:ring-brand/40 block rounded-md px-1.5 py-1 text-right tabular-nums hover:ring-1"
+                  >
+                    <span className="block font-semibold">
+                      {formatNumber(s.count)}
+                    </span>
+                    <span className="text-subtle block text-xs">
+                      {formatPct(s.count / totalMeetings)} del total
+                    </span>
+                  </Link>
+                </td>
+              ))}
+            </tr>
             {industries.map((row) => (
               <tr key={row.industry.value} className="border-border">
                 <th

@@ -1,6 +1,8 @@
 import { makeClient } from '../../test/fixtures';
 import { median } from '../common/collections';
-import { breakdownByDimension } from './breakdown';
+import { Categories } from '../domain/categories';
+import { breakdownByDimension, membersOf } from './breakdown';
+import { findLevers } from './levers';
 import { minReliableSample, pointsDiff, rateStat } from './rates';
 
 describe('analytics', () => {
@@ -69,5 +71,51 @@ describe('analytics', () => {
   it('minReliableSample nunca baja de 10', () => {
     expect(minReliableSample(100)).toBe(10);
     expect(minReliableSample(1000, 0.03)).toBe(30);
+  });
+});
+
+describe('findLevers', () => {
+  const many = (n: number, closed: number, categories: Partial<Categories>) =>
+    Array.from({ length: n }, (_, i) =>
+      makeClient({ closed: i < closed, categories }),
+    );
+
+  it('encuentra el rasgo con el que el grupo cierra más', () => {
+    const group = [
+      ...many(20, 18, { leadSource: 'referido' }),
+      ...many(80, 32, { leadSource: 'google' }),
+    ];
+    const [lever] = findLevers(group);
+    expect(lever).toMatchObject({
+      dimension: 'leadSource',
+      value: 'referido',
+      closeRate: 0.9,
+      groupRate: 0.5,
+    });
+  });
+
+  it('ignora muestras chicas, rasgos que tiene todo el grupo y la dimensión excluida', () => {
+    const group = [
+      // 3 de 3 es 100%, pero es muy poco para concluir.
+      ...many(3, 3, { leadSource: 'referido', industry: 'salud' }),
+      ...many(97, 40, { leadSource: 'google', industry: 'salud' }),
+    ];
+    expect(findLevers(group)).toEqual([]);
+
+    const split = [
+      ...many(30, 27, { industry: 'retail' }),
+      ...many(70, 28, { industry: 'salud' }),
+    ];
+    expect(findLevers(split).map((l) => l.dimension)).toContain('industry');
+    expect(findLevers(split, 'industry')).toEqual([]);
+  });
+
+  it('membersOf incluye "No lo menciona" en dimensiones de lista', () => {
+    const clients = [
+      makeClient({ categories: { objections: [] } }),
+      makeClient({ categories: { objections: ['precio'] } }),
+    ];
+    expect(membersOf(clients, 'objections', 'no_menciona')).toHaveLength(1);
+    expect(membersOf(clients, 'objections', 'precio')).toHaveLength(1);
   });
 });

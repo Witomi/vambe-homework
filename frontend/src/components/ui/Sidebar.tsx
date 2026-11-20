@@ -14,7 +14,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { filterQuery } from '@/lib/filters/params';
 
 const NAV = [
-  { href: '/', label: 'Panel', icon: LayoutDashboard },
+  { href: '/', label: 'General', icon: LayoutDashboard },
   { href: '/vendedores', label: 'Vendedores', icon: Medal },
   { href: '/oportunidades', label: 'Oportunidades', icon: Lightbulb },
   { href: '/prediccion', label: 'Predicción', icon: Gauge },

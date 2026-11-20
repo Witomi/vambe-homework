@@ -10,19 +10,26 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-/**
- * Mezcla reproducible (Fisher-Yates). Categorizar una muestra aleatoria en
- * lugar de las primeras N filas asegura que el segmento represente todo el
- * período, vendedores y rubros.
- */
-export function seededShuffle<T>(items: readonly T[], seed: number): T[] {
-  const random = mulberry32(seed);
+/** Mezcla aleatoria (Fisher-Yates), distinta en cada llamada. */
+export function shuffle<T>(
+  items: readonly T[],
+  random: () => number = Math.random,
+): T[] {
   const result = [...items];
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [result[i], result[j]] = [result[j], result[i]];
   }
   return result;
+}
+
+/**
+ * Mezcla reproducible: con la misma semilla, el mismo orden. Se usa donde
+ * el resultado debe ser estable entre ejecuciones (p. ej. las partes de la
+ * validación cruzada, para que las notas no cambien solas).
+ */
+export function seededShuffle<T>(items: readonly T[], seed: number): T[] {
+  return shuffle(items, mulberry32(seed));
 }
 
 export function chunk<T>(items: readonly T[], size: number): T[][] {

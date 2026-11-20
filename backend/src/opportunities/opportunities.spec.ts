@@ -82,7 +82,7 @@ describe('findReplicableSolutions', () => {
 });
 
 describe('findRecoverableLeads', () => {
-  it('propone los perdidos con probabilidad sobre el promedio, por volumen', () => {
+  it('propone los perdidos sobre el promedio, de mayor a menor probabilidad', () => {
     const clients = [
       makeClient({
         id: 'chico',
@@ -93,6 +93,11 @@ describe('findRecoverableLeads', () => {
         id: 'grande',
         closed: false,
         categories: { monthlyInquiries: 5000 },
+      }),
+      makeClient({
+        id: 'notaA',
+        closed: false,
+        categories: { monthlyInquiries: 50, industry: 'retail' },
       }),
       makeClient({
         id: 'improbable',
@@ -106,8 +111,9 @@ describe('findRecoverableLeads', () => {
       }),
     ];
     const probabilities: Record<string, number> = {
-      chico: 0.8,
-      grande: 0.75,
+      chico: 0.72,
+      grande: 0.71,
+      notaA: 0.8,
       improbable: 0.4,
       ganado: 0.9,
     };
@@ -116,16 +122,25 @@ describe('findRecoverableLeads', () => {
       reasonsFor: () => [
         { label: 'Integraciones: CRM', weight: 0.5, oddsRatio: 1.62 },
       ],
+      // El modelo estima que con Toro el lead de nota A ganaría 6 puntos.
+      bestSellerFor: (c: { id: string }) =>
+        c.id === 'notaA' ? { seller: 'Toro', gainPts: 6 } : null,
     };
 
     const recovery = findRecoverableLeads(clients, 0.68, scorer);
 
-    // Ni el improbable (40%) ni el que ya cerró; el de más volumen primero.
-    expect(recovery.top.map((l) => l.id)).toEqual(['grande', 'chico']);
-    expect(recovery.candidates).toBe(2);
-    expect(recovery.top[0].reasons[0]).toBe(
-      'Integraciones: CRM (chances ×1,6)',
-    );
+    // Ni el improbable (40%) ni el que ya cerró. Por probabilidad, aunque
+    // el de 80% tenga menos consultas.
+    expect(recovery.top.map((l) => l.id)).toEqual(['notaA', 'chico', 'grande']);
+    expect(recovery.candidates).toBe(3);
+    expect(recovery.top[0].suggestedSeller).toEqual({
+      seller: 'Toro',
+      gainPts: 6,
+    });
+    expect(recovery.top[1].suggestedSeller).toBeNull();
+    expect(recovery.top[1].reasons).toEqual([
+      { label: 'Integraciones: CRM', oddsRatio: 1.62 },
+    ]);
   });
 });
 
@@ -153,13 +168,21 @@ describe('suggestAssignments', () => {
 });
 
 describe('findBlockers', () => {
-  it('lista los rasgos que bajan la conversión con una acción sugerida', () => {
+  it('lista los rasgos que bajan la conversión con lo que funcionó', () => {
+    const sensitive = { requirements: ['datos_sensibles'] };
     const clients = [
-      ...group(30, 12, { requirements: ['datos_sensibles'] }),
+      // Con datos sensibles cierran 40%, pero los referidos cierran 83%.
+      ...group(12, 10, { ...sensitive, leadSource: 'referido' }),
+      ...group(18, 2, { ...sensitive, leadSource: 'google' }),
       ...group(70, 56, { requirements: [] }),
     ];
     const [blocker] = findBlockers(clients, base(clients));
     expect(blocker.value).toBe('datos_sensibles');
-    expect(blocker.action).toMatch(/seguridad/);
+    expect(blocker.levers[0]).toMatchObject({
+      dimension: 'leadSource',
+      value: 'referido',
+      count: 12,
+      groupRate: 0.4,
+    });
   });
 });

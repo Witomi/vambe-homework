@@ -1,8 +1,9 @@
+import { membersOf } from '../analytics/breakdown';
+import { findLevers } from '../analytics/levers';
+import { pointsDiff } from '../analytics/rates';
 import { CategorizedClient } from '../domain/client';
 import { DimensionKey } from '../domain/categories';
 import { Blocker } from './opportunities.types';
-import { suggestedAction } from './playbook';
-import { pointsDiff } from '../analytics/rates';
 import { segmentsOf } from './segments';
 
 /** Rasgos sobre los que Vambe puede hacer algo (producto o preventa). */
@@ -18,24 +19,29 @@ const TOP = 5;
 
 /**
  * Rasgos de la reunión que bajan la tasa de cierre, de mayor a menor
- * impacto (puntos perdidos × reuniones afectadas), con la acción sugerida.
+ * impacto (puntos perdidos × reuniones afectadas). Cada uno trae sus
+ * palancas: qué tenían, dentro del grupo, los clientes que sí compraron.
  */
 export function findBlockers(
   categorized: readonly CategorizedClient[],
   baseRate: number,
 ): Blocker[] {
   return BLOCKER_DIMENSIONS.flatMap((dimension) =>
-    segmentsOf(categorized, dimension)
-      .filter((s) => pointsDiff(s.closeRate, baseRate) <= -MIN_DROP_PTS)
-      .map((s) => ({
-        ...s,
-        action: suggestedAction(dimension, s.value, s.label),
-      })),
+    segmentsOf(categorized, dimension).filter(
+      (s) => pointsDiff(s.closeRate, baseRate) <= -MIN_DROP_PTS,
+    ),
   )
     .sort(
       (a, b) =>
         pointsDiff(a.closeRate, baseRate) * a.count -
         pointsDiff(b.closeRate, baseRate) * b.count,
     )
-    .slice(0, TOP);
+    .slice(0, TOP)
+    .map((s) => ({
+      ...s,
+      levers: findLevers(
+        membersOf(categorized, s.dimension, s.value),
+        s.dimension,
+      ),
+    }));
 }

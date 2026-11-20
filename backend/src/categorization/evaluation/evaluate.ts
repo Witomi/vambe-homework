@@ -28,6 +28,8 @@ export interface EvaluationReport {
   dimensions: DimensionScore[];
   /** Consultas/mes dentro de ±20% del valor esperado (o ambos vacíos). */
   inquiriesWithin20Pct: number;
+  /** Lo mismo para las consultas/mes en peak. */
+  peakInquiriesWithin20Pct: number;
 }
 
 /** Tolerancia para considerar correcto el volumen de consultas. */
@@ -90,6 +92,15 @@ export function evaluate(
     inquiriesWithin20Pct: ratio(
       pairs.filter((p) =>
         inquiriesMatch(p.expected.monthlyInquiries, p.actual.monthlyInquiries),
+      ).length,
+      n,
+    ),
+    peakInquiriesWithin20Pct: ratio(
+      pairs.filter((p) =>
+        inquiriesMatch(
+          p.expected.peakMonthlyInquiries ?? null,
+          p.actual.peakMonthlyInquiries ?? null,
+        ),
       ).length,
       n,
     ),

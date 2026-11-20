@@ -3,6 +3,8 @@ import { Grade } from '../domain/grades';
 /** Contrato de respuesta de `GET /api/prediction`. */
 
 export interface PredictionQuality {
+  /** Regularización elegida por validación cruzada. */
+  l2: number;
   /** Reuniones usadas (las analizadas con IA). */
   sampleSize: number;
   /** Tasa de cierre real de la muestra. */
@@ -34,17 +36,29 @@ export interface Factor {
   oddsRatio: number;
 }
 
-/** Una nota (A–D) y cómo cerraron realmente los clientes que la tienen. */
+/** Vendedor con el que el modelo estima más probabilidad de cierre. */
+export interface SellerSuggestion {
+  seller: string;
+  /** Puntos de probabilidad que ganaría el cliente con ese vendedor. */
+  gainPts: number;
+}
+
+/** Una nota (A–F) y cómo cerraron realmente los clientes que la tienen. */
 export interface GradeSummary {
   grade: Grade;
   title: string;
   /** "≥ 75%", "70%–75%"… */
   range: string;
-  action: string;
   count: number;
+  /** Proporción de los clientes analizados que tiene esta nota (0..1). */
+  share: number;
   closed: number;
   /** Tasa de cierre real de esta nota: valida que las notas significan algo. */
   closeRate: number | null;
+  /** Clientes con esta nota que no cerraron: los que se pueden recuperar. */
+  openLeads: number;
+  /** Consultas al mes que suman esos clientes sin cerrar. */
+  openInquiries: number;
 }
 
 export interface PredictionResponse {

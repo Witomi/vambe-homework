@@ -10,9 +10,10 @@ import { CoverageNote, PageHeader } from '@/components/ui/PageHeader';
 import { api } from '@/lib/api';
 import { formatNumber } from '@/lib/format';
 import { SearchParams, filterQuery } from '@/lib/filters/params';
+import { monthsBetween } from '@/lib/periods';
 
 /**
- * Panel comercial. Se lee de arriba hacia abajo:
+ * General: el panel comercial. Se lee de arriba hacia abajo:
  * 1. Cifras clave y hallazgos (la respuesta rápida).
  * 2. Qué clientes cierran más y qué piden (el detalle).
  * 3. Evolución mensual y vendedores (el contexto).
@@ -22,13 +23,16 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const query = filterQuery(await searchParams);
+  const params = await searchParams;
+  const query = filterQuery(params);
+  // El período solo afecta las cifras clave; no es un filtro del segmento.
+  if (typeof params.period === 'string') query.set('period', params.period);
   const [meta, metrics] = await Promise.all([api.meta(), api.metrics(query)]);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Panel comercial"
+        title="General"
         description="Qué clientes llegan, qué necesitan y cuáles terminan comprando."
         aside={<CoverageNote meta={meta} />}
       />
@@ -37,7 +41,16 @@ export default async function DashboardPage({
         meta={meta}
         summary={`${formatNumber(metrics.kpis.meetings)} de ${formatNumber(meta.categorization.total)} reuniones`}
       />
-      <KpiCards kpis={metrics.kpis} />
+      <KpiCards
+        kpis={metrics.kpis}
+        timeline={metrics.timeline}
+        comparison={metrics.monthComparison}
+        months={
+          meta.dateRange.from && meta.dateRange.to
+            ? monthsBetween(meta.dateRange.from, meta.dateRange.to)
+            : []
+        }
+      />
       <InsightsPanel insights={metrics.insights} />
       <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <DimensionExplorer meta={meta} metrics={metrics} />

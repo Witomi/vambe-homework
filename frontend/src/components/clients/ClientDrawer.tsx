@@ -3,8 +3,14 @@ import Link from 'next/link';
 import type { ClientDetail, Meta } from '@/lib/api/types';
 import type { SearchParams } from '@/lib/filters/params';
 import { hrefWith } from '@/lib/filters/url';
-import { formatDate, formatPct } from '@/lib/format';
+import {
+  dialablePhone,
+  formatDate,
+  formatPct,
+  formatPhone,
+} from '@/lib/format';
 import { ClosedBadge } from '../ui/Badge';
+import { CopyText } from '../ui/CopyText';
 import { GradeBadge } from '../ui/GradeBadge';
 import { ClientCategories } from './ClientCategories';
 import { DrawerEscape } from './DrawerEscape';
@@ -59,18 +65,20 @@ export function ClientDrawer({ client, meta, params }: ClientDrawerProps) {
 
         <div className="flex-1 space-y-6 overflow-y-auto p-5">
           <dl className="text-muted grid grid-cols-2 gap-3 text-sm">
-            <ContactField icon={Mail} label="Email" value={client.email} />
-            <ContactField icon={Phone} label="Teléfono" value={client.phone} />
-            <ContactField
-              icon={UserRound}
-              label="Vendedor"
-              value={client.seller}
-            />
-            <ContactField
-              icon={Calendar}
-              label="Reunión"
-              value={formatDate(client.meetingDate)}
-            />
+            <ContactField icon={Mail} label="Email">
+              <CopyText value={client.email} label="email" />
+            </ContactField>
+            <ContactField icon={Phone} label="Teléfono">
+              <CopyText value={dialablePhone(client.phone)} label="teléfono">
+                {formatPhone(client.phone)}
+              </CopyText>
+            </ContactField>
+            <ContactField icon={UserRound} label="Vendedor">
+              {client.seller}
+            </ContactField>
+            <ContactField icon={Calendar} label="Reunión">
+              {formatDate(client.meetingDate)}
+            </ContactField>
           </dl>
 
           {client.prediction && (
@@ -131,11 +139,11 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function ContactField({
   icon: Icon,
   label,
-  value,
+  children,
 }: {
   icon: typeof Mail;
   label: string;
-  value: string;
+  children: React.ReactNode;
 }) {
   return (
     <div className="min-w-0">
@@ -143,7 +151,7 @@ function ContactField({
         <Icon className="size-3" aria-hidden />
         {label}
       </dt>
-      <dd className="text-foreground truncate">{value}</dd>
+      <dd className="text-foreground min-w-0">{children}</dd>
     </div>
   );
 }

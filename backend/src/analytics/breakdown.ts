@@ -17,6 +17,28 @@ export interface BreakdownRow extends RateStat {
 }
 
 /**
+ * Valores de una dimensión para un cliente. En dimensiones de lista, una
+ * lista vacía cuenta como "No lo menciona".
+ */
+export function valuesOf(
+  client: CategorizedClient,
+  key: DimensionKey,
+): string[] {
+  const value = client.categories[key];
+  if (!Array.isArray(value)) return [value];
+  return value.length ? value : [NOT_MENTIONED.value];
+}
+
+/** Los clientes que tienen un valor de una dimensión (p. ej. industria = salud). */
+export function membersOf(
+  categorized: readonly CategorizedClient[],
+  key: DimensionKey,
+  value: string,
+): CategorizedClient[] {
+  return categorized.filter((c) => valuesOf(c, key).includes(value));
+}
+
+/**
  * Tasa de cierre por cada valor de una dimensión. En dimensiones de lista
  * un cliente cuenta en cada valor que mencionó, o en "No lo menciona".
  */
@@ -24,12 +46,7 @@ export function breakdownByDimension(
   categorized: readonly CategorizedClient[],
   key: DimensionKey,
 ): BreakdownRow[] {
-  const groups = groupBy(categorized, (c) => {
-    const value = c.categories[key];
-    if (!Array.isArray(value)) return [value];
-    // Lista vacía = el cliente no mencionó nada de esta dimensión.
-    return value.length ? value : [NOT_MENTIONED.value];
-  });
+  const groups = groupBy(categorized, (c) => valuesOf(c, key));
 
   return displayOptions(key)
     .map((option) => {

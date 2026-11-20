@@ -1,10 +1,14 @@
 import type { Opportunities } from '@/lib/api/types';
 import { formatNumber, formatPct, formatPointsDiff } from '@/lib/format';
-import { segmentDetail } from '@/lib/opportunity-details';
+import { OPPORTUNITIES_ORIGIN, segmentDetail } from '@/lib/opportunity-details';
 import { Card } from '../ui/Card';
 import { DetailButton } from './DetailDrawer';
+import { LeverList } from './LeverList';
 
-/** Rasgos que bajan la tasa de cierre, con la acción para cada uno. */
+/**
+ * Rasgos que bajan la tasa de cierre y, para cada uno, qué tenían los
+ * clientes con ese rasgo que sí compraron.
+ */
 export function Blockers({
   blockers,
   baseRate,
@@ -15,7 +19,7 @@ export function Blockers({
   return (
     <Card
       title="¿Qué está frenando las ventas?"
-      subtitle="Lo que piden o plantean los clientes que cierran menos que el promedio, ordenado por impacto (puntos perdidos × reuniones)."
+      subtitle="Lo que piden o plantean los clientes que cierran menos que el promedio, ordenado por impacto (puntos perdidos × reuniones). Debajo de cada uno, con qué rasgos sí se cerró dentro de ese grupo."
     >
       {blockers.length === 0 ? (
         <p className="text-muted text-sm">
@@ -30,7 +34,7 @@ export function Blockers({
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <DetailButton
-                  detail={segmentDetail(b, baseRate, `Acción: ${b.action}`)}
+                  detail={segmentDetail(b, baseRate)}
                   className="hover:text-brand text-sm font-medium"
                 >
                   <span className="text-subtle font-normal">
@@ -48,10 +52,9 @@ export function Blockers({
                   </span>
                 </span>
               </div>
-              <p className="text-muted mt-1.5 text-sm">
-                <span className="text-foreground font-medium">Acción:</span>{' '}
-                {b.action}
-              </p>
+              <div className="mt-2">
+                <LeverList segment={b} origin={OPPORTUNITIES_ORIGIN} />
+              </div>
             </li>
           ))}
         </ol>

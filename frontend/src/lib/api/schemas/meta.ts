@@ -14,7 +14,7 @@ export const dimensionSchema = z.object({
 export const metaSchema = z.object({
   dimensions: z.array(dimensionSchema),
   volumeBuckets: z.array(optionSchema),
-  /** Notas A–D para filtrar por probabilidad de cierre. */
+  /** Notas A–F para filtrar por probabilidad de cierre. */
   grades: z.array(optionSchema),
   /** Valor de "no mencionó nada" en dimensiones de lista. */
   notMentioned: optionSchema,

@@ -1,5 +1,9 @@
 import clsx from 'clsx';
-import type { Opportunities, Quadrant } from '@/lib/api/types';
+import type {
+  Opportunities,
+  OpportunityRules,
+  Quadrant,
+} from '@/lib/api/types';
 import { formatNumber, formatPct, formatPointsDiff } from '@/lib/format';
 import { segmentDetail } from '@/lib/opportunity-details';
 import { Card } from '../ui/Card';
@@ -15,19 +19,22 @@ const STYLE: Record<Quadrant['key'], string> = {
 
 /**
  * Mapa volumen × conversión: cada grupo de clientes cae en uno de cuatro
- * cuadrantes, y cada cuadrante trae la acción que corresponde.
+ * cuadrantes según una regla sobre los datos. Al abrir un grupo se ven sus
+ * palancas: qué tenían los que sí cerraron.
  */
 export function SegmentMap({
   quadrants,
   baseRate,
+  rules,
 }: {
   quadrants: Opportunities['quadrants'];
   baseRate: number;
+  rules: OpportunityRules;
 }) {
   return (
     <Card
       title="¿Dónde poner el esfuerzo?"
-      subtitle={`Cada rubro, canal y tamaño de empresa según cuántos clientes trae y si cierra sobre o bajo el promedio (${formatPct(baseRate)}). Se omiten los que están a menos de 3 puntos del promedio. Haz clic en uno para ver el detalle.`}
+      subtitle={`Cada rubro, canal y tamaño de empresa según cuántos clientes trae y si cierra sobre o bajo el promedio (${formatPct(baseRate)}). Se omiten los que están a menos de ${rules.neutralBandPts} puntos del promedio. Haz clic en uno para ver el detalle.`}
     >
       <div className="grid gap-3 md:grid-cols-2">
         {quadrants.map((quadrant) => (
@@ -57,7 +64,7 @@ function QuadrantCard({
       )}
     >
       <h3 className="text-sm font-semibold">{quadrant.title}</h3>
-      <p className="text-muted mt-1 text-sm">{quadrant.action}</p>
+      <p className="text-muted mt-1 text-sm">{quadrant.description}</p>
       {quadrant.segments.length === 0 ? (
         <p className="text-subtle mt-3 text-xs">
           Ningún grupo en este cuadrante.
@@ -67,7 +74,7 @@ function QuadrantCard({
           {quadrant.segments.map((segment) => (
             <li key={`${segment.dimension}-${segment.value}`}>
               <DetailButton
-                detail={segmentDetail(segment, baseRate, quadrant.action)}
+                detail={segmentDetail(segment, baseRate)}
                 className="border-border bg-surface hover:border-brand/50 inline-flex items-center gap-1.5 rounded-full border py-1 pr-1.5 pl-2 text-xs"
               >
                 <span className="text-subtle">{segment.dimensionLabel}:</span>

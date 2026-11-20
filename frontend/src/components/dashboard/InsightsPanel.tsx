@@ -3,8 +3,10 @@
 import clsx from 'clsx';
 import { ArrowRight, TrendingDown, TrendingUp } from 'lucide-react';
 import type { Insight } from '@/lib/api/types';
+import { countActiveFilters } from '@/lib/filters/params';
 import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
+import { OutcomeFilterNotice, useOutcomeFiltered } from './OutcomeFilterNotice';
 
 const TONE = {
   positive: {
@@ -21,14 +23,28 @@ const TONE = {
 
 /** Los segmentos que más suben y más bajan la tasa de cierre. */
 export function InsightsPanel({ insights }: { insights: Insight[] }) {
-  const { setParam } = useFilterParams();
+  const { searchParams, setParam } = useFilterParams();
+  const filtered = countActiveFilters(searchParams) > 0;
+  const outcomeFiltered = useOutcomeFiltered();
 
   return (
     <Card
       title="Lo más importante"
-      subtitle="Los grupos de clientes que más se alejan del promedio. Haz clic en uno para ver solo ese grupo."
+      subtitle={
+        <>
+          Los grupos de clientes que más se alejan del promedio. Haz clic en uno
+          para ver solo ese grupo.
+          <span className="text-subtle mt-1 block">
+            Calculado sobre todo el período
+            {filtered ? ', con los filtros aplicados' : ''}. El período de las
+            cifras clave no lo cambia.
+          </span>
+        </>
+      }
     >
-      {insights.length === 0 ? (
+      {outcomeFiltered ? (
+        <OutcomeFilterNotice what="los hallazgos" />
+      ) : insights.length === 0 ? (
         <p className="text-muted text-sm">
           No hay suficientes reuniones en esta selección para sacar
           conclusiones.

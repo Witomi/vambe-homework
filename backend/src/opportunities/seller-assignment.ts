@@ -6,7 +6,7 @@ import { SellerAssignment } from './opportunities.types';
 import { segmentsOf } from './segments';
 
 /** Solo se recomienda si el vendedor supera al equipo por al menos esto. */
-const MIN_ADVANTAGE_PTS = 5;
+export const MIN_ADVANTAGE_PTS = 5;
 const TOP_INDUSTRIES = 8;
 
 /**

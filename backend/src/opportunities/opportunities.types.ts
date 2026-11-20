@@ -1,4 +1,8 @@
+import { Lever } from '../analytics/levers';
 import { DimensionKey } from '../domain/categories';
+import { SellerSuggestion } from '../prediction/prediction.types';
+
+export type { Lever };
 
 /** Contrato de respuesta de `GET /api/opportunities`. */
 
@@ -12,14 +16,20 @@ export interface Segment {
   closeRate: number;
 }
 
+/** Un grupo con los rasgos de los que, dentro de él, sí cerraron. */
+export interface SegmentWithLevers extends Segment {
+  levers: Lever[];
+}
+
 export type QuadrantKey = 'protect' | 'grow' | 'fix' | 'deprioritize';
 
-/** Cuadrante del mapa volumen × conversión, con la acción sugerida. */
+/** Cuadrante del mapa volumen × conversión: nombre y regla salen de los datos. */
 export interface Quadrant {
   key: QuadrantKey;
   title: string;
-  action: string;
-  segments: Segment[];
+  /** Qué tienen en común sus grupos, con las cifras del corte. */
+  description: string;
+  segments: SegmentWithLevers[];
 }
 
 /** Combinación de necesidades que se repite en varias industrias. */
@@ -35,18 +45,29 @@ export interface ReplicableSolution {
 }
 
 /** Lead perdido que se parece a los que sí cierran. */
+/** Un rasgo del lead que sube su probabilidad de cierre. */
+export interface LeadReason {
+  /** "Industria: E-commerce", "Consultas/mes (más volumen)"… */
+  label: string;
+  /** Cuántas veces multiplica las chances de cierre. */
+  oddsRatio: number;
+}
+
 export interface RecoverableLead {
   id: string;
   name: string;
+  /** Vendedor que atendió la reunión original. */
   seller: string;
+  /** Vendedor con el que el modelo estima más probabilidad, si no es el original. */
+  suggestedSeller: SellerSuggestion | null;
   industry: string;
   monthlyInquiries: number;
   /** Probabilidad estimada de cierre (0..1). */
   winScore: number;
-  /** Nota A–D según esa probabilidad. */
+  /** Nota A–F según esa probabilidad. */
   grade: string;
   /** Rasgos del perfil que más suben su probabilidad. */
-  reasons: string[];
+  reasons: LeadReason[];
 }
 
 export interface LeadRecovery {
@@ -67,13 +88,27 @@ export interface SellerAssignment {
   industryRate: number;
 }
 
-/** Rasgo que baja la conversión, con la acción sugerida para resolverlo. */
-export interface Blocker extends Segment {
-  action: string;
+/** Rasgo que baja la conversión, con lo que tenían los que cerraron igual. */
+export type Blocker = SegmentWithLevers;
+
+/**
+ * Umbrales con los que se calcularon las secciones. Se envían para que la
+ * interfaz los explique sin repetirlos (y sin quedar desactualizada).
+ */
+export interface OpportunityRules {
+  /** El mapa omite los grupos a menos de esto del promedio. */
+  neutralBandPts: number;
+  /** Ventaja mínima de un vendedor sobre el equipo para recomendarlo. */
+  minAdvantagePts: number;
+  /** Reuniones mínimas de un vendedor en el rubro. */
+  minSellerMeetings: number;
+  /** Industrias distintas para que una solución cuente como replicable. */
+  minSolutionIndustries: number;
 }
 
 export interface OpportunitiesResponse {
   baseRate: number | null;
+  rules: OpportunityRules;
   categorized: number;
   quadrants: Quadrant[];
   solutions: ReplicableSolution[];

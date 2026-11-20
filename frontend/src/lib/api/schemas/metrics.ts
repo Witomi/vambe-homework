@@ -23,18 +23,37 @@ export const insightSchema = z.object({
   filter: z.object({ key: z.string(), value: z.string() }).optional(),
 });
 
+const kpisSchema = z.object({
+  meetings: z.number().int(),
+  closed: z.number().int(),
+  closeRate: rate.nullable(),
+  categorized: z.number().int(),
+  coverage: rate,
+  categorizedCloseRate: rate.nullable(),
+  medianMonthlyInquiries: z.number().nullable(),
+  automatedMonthlyInquiries: z.number(),
+  estimatedAutomatedMonthlyInquiries: z.number().nullable(),
+});
+
+const monthKpisSchema = kpisSchema.extend({ month: z.string() });
+
 export const metricsSchema = z.object({
-  kpis: z.object({
-    meetings: z.number().int(),
-    closed: z.number().int(),
-    closeRate: rate.nullable(),
-    categorized: z.number().int(),
-    coverage: rate,
-    categorizedCloseRate: rate.nullable(),
-    medianMonthlyInquiries: z.number().nullable(),
-    automatedMonthlyInquiries: z.number(),
-  }),
-  timeline: z.array(rateStatSchema.extend({ month: z.string() })),
+  /** Todo el período filtrado. */
+  kpis: kpisSchema,
+  /** Mes revisado vs. mes anterior y mismo mes del año pasado; null en modo histórico. */
+  monthComparison: z
+    .object({
+      current: monthKpisSchema,
+      previousMonth: monthKpisSchema,
+      sameMonthLastYear: monthKpisSchema,
+    })
+    .nullable(),
+  timeline: z.array(
+    rateStatSchema.extend({
+      month: z.string(),
+      estimatedNewAutomatedInquiries: z.number().nullable(),
+    }),
+  ),
   sellers: z.array(
     z.object({
       seller: z.string(),

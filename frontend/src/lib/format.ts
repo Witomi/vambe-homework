@@ -42,6 +42,17 @@ export const formatPointsDiff = (rate: number, base: number) => {
   return `${sign}${Math.abs(pts)} pts`;
 };
 
+/**
+ * Cambio relativo entre dos cantidades: (270, 407) → "−34%".
+ * Null si no hay base con qué comparar.
+ */
+export const formatChange = (current: number, previous: number) => {
+  if (previous === 0) return null;
+  const pct = Math.round(((current - previous) / previous) * 100);
+  const sign = pct > 0 ? '+' : pct < 0 ? '−' : '±';
+  return `${sign}${Math.abs(pct)}%`;
+};
+
 const MONTHS = [
   'ene',
   'feb',
@@ -62,6 +73,22 @@ export const formatMonth = (ym: string) => {
   const [y, m] = ym.split('-');
   return `${MONTHS[Number(m) - 1]} ${y.slice(2)}`;
 };
+
+/** "2025-03" → "mar 2025" */
+export const formatMonthYear = (ym: string) => {
+  const [y, m] = ym.split('-');
+  return `${MONTHS[Number(m) - 1]} ${y}`;
+};
+
+/** Celular chileno sin formato: "56976545678" → "+56 9 7654 5678". */
+export const formatPhone = (raw: string) => {
+  const match = /^56(9)(\d{4})(\d{4})$/.exec(raw);
+  return match ? `+56 ${match[1]} ${match[2]} ${match[3]}` : raw;
+};
+
+/** Teléfono listo para marcar o pegar: "56976545678" → "+56976545678". */
+export const dialablePhone = (raw: string) =>
+  /^\d+$/.test(raw) ? `+${raw}` : raw;
 
 /** "2024-03-15" → "15 mar 2024" */
 export const formatDate = (iso: string) => {

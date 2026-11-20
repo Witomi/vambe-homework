@@ -8,7 +8,7 @@ import {
   CategorizationRunSummary,
   RecategorizeOptions,
 } from './categorization.types';
-import { chunk, seededShuffle } from '../common/sampling';
+import { chunk, shuffle } from '../common/sampling';
 
 /** Intentos por transcripción antes de darla por fallida. */
 const MAX_ATTEMPTS = 3;
@@ -37,16 +37,16 @@ export class CategorizationService {
   ) {}
 
   /** Clientes sin categorizar, en orden aleatorio reproducible. */
-  pendingClients(seed: number): RawClient[] {
+  pendingClients(): RawClient[] {
     const pending = this.repository
       .findRaw()
       .filter((c) => !this.store.has(c.id));
-    return seededShuffle(pending, seed);
+    return shuffle(pending);
   }
 
-  /** Categoriza una muestra de clientes que aún no tienen categorías. */
+  /** Categoriza los clientes que aún no tienen categorías (todos, o hasta `limit`). */
   run(options: CategorizationRunOptions): Promise<CategorizationRunSummary> {
-    const targets = this.pendingClients(options.seed).slice(0, options.limit);
+    const targets = this.pendingClients().slice(0, options.limit);
     return this.process(targets, options);
   }
 

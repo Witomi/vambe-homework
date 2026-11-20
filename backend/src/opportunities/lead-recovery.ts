@@ -1,8 +1,7 @@
 import { CategorizedClient } from '../domain/client';
-import { formatOdds } from '../common/format';
 import { optionLabel } from '../domain/categories';
 import { gradeOf } from '../domain/grades';
-import { Factor } from '../prediction/prediction.types';
+import { Factor, SellerSuggestion } from '../prediction/prediction.types';
 import { LeadRecovery } from './opportunities.types';
 
 const TOP = 10;
@@ -11,12 +10,16 @@ const TOP = 10;
 export interface LeadScorer {
   probabilityOf(clientId: string): number | undefined;
   reasonsFor(client: CategorizedClient, max?: number): Factor[];
+  bestSellerFor(client: CategorizedClient): SellerSuggestion | null;
 }
 
 /**
  * Leads perdidos que vale la pena volver a contactar: los que el modelo de
- * regresión logística estima sobre el promedio, empezando por los de mayor
- * volumen de consultas (más valor para Vambe).
+ * regresión logística estima sobre el promedio. Van de mayor a menor
+ * probabilidad de cierre; a igual probabilidad, primero el de más consultas.
+ *
+ * Si con otro vendedor el modelo estima más probabilidad para ese lead,
+ * se sugiere que lo retome él, con los puntos que ganaría.
  */
 export function findRecoverableLeads(
   categorized: readonly CategorizedClient[],
@@ -33,13 +36,14 @@ export function findRecoverableLeads(
           id: client.id,
           name: client.name,
           seller: client.seller,
+          suggestedSeller: scorer.bestSellerFor(client),
           industry: optionLabel('industry', client.categories.industry),
           monthlyInquiries: client.categories.monthlyInquiries!,
           winScore,
           grade: gradeOf(winScore),
           reasons: scorer
             .reasonsFor(client, 2)
-            .map((f) => `${f.label} (chances ${formatOdds(f.oddsRatio)})`),
+            .map(({ label, oddsRatio }) => ({ label, oddsRatio })),
         },
       ];
     });
@@ -48,7 +52,10 @@ export function findRecoverableLeads(
     candidates: scored.length,
     monthlyInquiries: scored.reduce((sum, l) => sum + l.monthlyInquiries, 0),
     top: [...scored]
-      .sort((a, b) => b.monthlyInquiries - a.monthlyInquiries)
+      .sort(
+        (a, b) =>
+          b.winScore - a.winScore || b.monthlyInquiries - a.monthlyInquiries,
+      )
       .slice(0, TOP),
   };
 }

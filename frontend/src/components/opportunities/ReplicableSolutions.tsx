@@ -1,4 +1,4 @@
-import type { Opportunities } from '@/lib/api/types';
+import type { Opportunities, OpportunityRules } from '@/lib/api/types';
 import { formatCompact, formatNumber, formatPct } from '@/lib/format';
 import { Card } from '../ui/Card';
 
@@ -7,13 +7,15 @@ const VISIBLE_INDUSTRIES = 5;
 /** Combinaciones de necesidades que se repiten en muchos rubros. */
 export function ReplicableSolutions({
   solutions,
+  rules,
 }: {
   solutions: Opportunities['solutions'];
+  rules: OpportunityRules;
 }) {
   return (
     <Card
       title="¿Qué solución construir una vez y vender en muchos rubros?"
-      subtitle="Combinaciones de funciones que piden clientes de 4 o más industrias distintas. Candidatas a una plantilla lista para usar."
+      subtitle={`Combinaciones de funciones que piden clientes de ${rules.minSolutionIndustries} o más industrias distintas.`}
     >
       {solutions.length === 0 ? (
         <p className="text-muted text-sm">

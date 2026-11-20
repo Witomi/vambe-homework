@@ -13,7 +13,9 @@ export const baseCategories: Categories = {
   objections: [],
   urgency: 'media',
   complexity: 'media',
+  seasonality: 'sin_peaks',
   monthlyInquiries: 300,
+  peakMonthlyInquiries: null,
   summary: 'Clínica que quiere automatizar agendamiento',
 };
 

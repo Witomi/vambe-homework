@@ -54,7 +54,7 @@ export class ClientFilterDto {
   @IsISO8601({ strict: true })
   to?: string;
 
-  /** Nota A–D según la probabilidad de cierre estimada. */
+  /** Nota A–F según la probabilidad de cierre estimada. */
   @DimensionFilter([...GRADE_VALUES])
   grade?: string[];
 
@@ -93,4 +93,7 @@ export class ClientFilterDto {
 
   @DimensionFilter(filterValues('complexity'))
   complexity?: string[];
+
+  @DimensionFilter(filterValues('seasonality'))
+  seasonality?: string[];
 }

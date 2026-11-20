@@ -1,7 +1,8 @@
 /**
  * CLI de categorización.
  *
- *   npm run categorize -- --limit 500 --batch 10 --concurrency 2 --seed 42
+ *   npm run categorize                              # todas las pendientes
+ *   npm run categorize -- --limit 500              # solo 500 (p. ej. para probar)
  *   npm run categorize -- --ids a1b2c3,d4e5f6     # recategoriza clientes específicos
  *
  * Es reanudable: solo procesa clientes que aún no tienen categorización,
@@ -15,10 +16,9 @@ import { CategorizationService } from '../categorization/categorization.service'
 function readOptions() {
   const { values } = parseArgs({
     options: {
-      limit: { type: 'string', default: '500' },
+      limit: { type: 'string' },
       batch: { type: 'string', default: '10' },
-      concurrency: { type: 'string', default: '2' },
-      seed: { type: 'string', default: '42' },
+      concurrency: { type: 'string', default: '5' },
       ids: { type: 'string' },
     },
   });
@@ -30,10 +30,9 @@ function readOptions() {
     return n;
   };
   return {
-    limit: toInt('limit', values.limit),
+    limit: values.limit ? toInt('limit', values.limit) : undefined,
     batchSize: toInt('batch', values.batch),
     concurrency: toInt('concurrency', values.concurrency),
-    seed: toInt('seed', values.seed),
     ids: values.ids
       ?.split(',')
       .map((id) => id.trim())

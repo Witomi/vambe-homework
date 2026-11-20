@@ -19,6 +19,7 @@ export interface ParsedItem {
 const FALLBACKS: Partial<Record<SingleDimensionKey, string>> = {
   urgency: 'media',
   complexity: 'media',
+  seasonality: 'sin_peaks',
 };
 
 /** "Servicios Profesionales" -> "servicios_profesionales" */
@@ -103,6 +104,7 @@ export function parseItem(raw: unknown): ParsedItem {
     categories[key] = resolveMulti(key, obj[key]);
   }
   categories.monthlyInquiries = resolveInquiries(obj.monthlyInquiries);
+  categories.peakMonthlyInquiries = resolveInquiries(obj.peakMonthlyInquiries);
   categories.summary =
     typeof obj.summary === 'string' ? obj.summary.trim().slice(0, 200) : '';
 

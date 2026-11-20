@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  dialablePhone,
+  formatChange,
   formatDate,
   formatMonth,
+  formatMonthYear,
   formatOdds,
   formatPct,
+  formatPhone,
   formatPointsDiff,
 } from './format';
 
@@ -23,6 +27,20 @@ describe('format', () => {
     expect(formatPointsDiff(0.694, 0.676)).toBe('+1 pts');
     // 67,4% vs. 67,6%: ambos se ven como 67% y 68% → −1, no ±0.
     expect(formatPointsDiff(0.674, 0.676)).toBe('−1 pts');
+  });
+
+  it('cambio relativo entre meses', () => {
+    expect(formatChange(270, 407)).toBe('−34%');
+    expect(formatChange(110, 100)).toBe('+10%');
+    expect(formatChange(100, 100)).toBe('±0%');
+    expect(formatChange(5, 0)).toBeNull();
+    expect(formatMonthYear('2025-03')).toBe('mar 2025');
+  });
+
+  it('teléfonos chilenos legibles y listos para marcar', () => {
+    expect(formatPhone('56976545678')).toBe('+56 9 7654 5678');
+    expect(formatPhone('12345')).toBe('12345');
+    expect(dialablePhone('56976545678')).toBe('+56976545678');
   });
 
   it('razones de chances con coma decimal', () => {

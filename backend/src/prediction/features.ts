@@ -14,6 +14,7 @@ const CATEGORICAL: DimensionKey[] = [
   'integrations',
   'requirements',
   'objections',
+  'seasonality',
 ];
 
 export interface Feature {
@@ -24,8 +25,11 @@ export interface Feature {
 }
 
 /**
- * Define las variables del modelo a partir de la taxonomía.
+ * Define las variables del modelo a partir de la taxonomía y los datos.
  * - Una variable 0/1 por cada valor de cada dimensión ("one-hot").
+ * - El vendedor que atendió y la combinación vendedor × industria (hay
+ *   vendedores que cierran mucho mejor ciertos rubros). Los vendedores
+ *   salen de los datos, no de una lista fija.
  * - El volumen de consultas en escala logarítmica y estandarizado, más un
  *   indicador de "no lo mencionó".
  */
@@ -46,6 +50,19 @@ export function buildFeatures(
     })),
   );
 
+  const sellers = [...new Set(categorized.map((c) => c.seller))].sort();
+  const bySeller: Feature[] = sellers.flatMap((seller) => [
+    {
+      label: `Vendedor: ${seller}`,
+      value: (c: CategorizedClient) => (c.seller === seller ? 1 : 0),
+    },
+    ...DIMENSIONS.industry.options.map((industry) => ({
+      label: `${seller} en ${industry.label}`,
+      value: (c: CategorizedClient) =>
+        c.seller === seller && c.categories.industry === industry.value ? 1 : 0,
+    })),
+  ]);
+
   const logVolume = (c: CategorizedClient) =>
     Math.log1p(c.categories.monthlyInquiries ?? 0);
   const known = categorized.filter(
@@ -61,6 +78,7 @@ export function buildFeatures(
 
   return [
     ...oneHot,
+    ...bySeller,
     {
       label: 'Consultas/mes (más volumen)',
       value: (c) =>

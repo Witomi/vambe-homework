@@ -21,7 +21,7 @@ interface ActiveFiltersBannerProps {
 }
 
 /**
- * Banner fijo arriba que deja claro qué filtro se está aplicando, cuánto
+ * Banner que deja claro qué filtro se está aplicando, cuánto
  * representa y cómo quitarlo. Solo aparece cuando hay filtros activos.
  */
 export function ActiveFiltersBanner({
@@ -49,7 +49,7 @@ export function ActiveFiltersBanner({
   return (
     <div
       role="status"
-      className="border-brand/30 bg-brand-soft sticky top-2 z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-4 py-3 shadow-sm"
+      className="border-brand/30 bg-brand-soft flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-4 py-3"
     >
       {origin && (
         <Link

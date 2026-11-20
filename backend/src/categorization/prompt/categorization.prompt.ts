@@ -31,6 +31,7 @@ Categoriza CADA transcripción según estas dimensiones, usando EXCLUSIVAMENTE l
 
 ${DIMENSION_SPEC}
 - "monthlyInquiries": número entero de consultas por MES (convierte: diarias×30, semanales×4; si da un rango usa el promedio)
+- "peakMonthlyInquiries": número entero de consultas por MES durante los peaks (temporada alta, campañas, fechas especiales), con la misma conversión; null si no da una cifra para el peak
 - "summary": resumen en español de máximo 15 palabras de lo que necesita el cliente
 
 Reglas para "monthlyInquiries":
@@ -38,6 +39,10 @@ Reglas para "monthlyInquiries":
 - NO la derives de pedidos, órdenes, entregas, estudiantes, pacientes, seguidores ni clientes.
 - Si solo dice "miles", "muchas" o "constantemente", sin cifra, usa null. Nunca inventes una cifra.
 - Usa el volumen NORMAL. No extrapoles cifras de picos, temporada alta, campañas, lanzamientos, fechas especiales ni cifras por hora: si además da una cifra normal, usa esa; si solo da la del pico, usa null.
+
+Reglas para los peaks:
+- "seasonality" es "con_peaks" si menciona períodos con más consultas (temporada alta, picos, fechas especiales, campañas, fines de semana), aunque no dé cifras.
+- La cifra del peak va en "peakMonthlyInquiries", nunca en "monthlyInquiries". Ej.: "60 consultas diarias en temporada alta" → monthlyInquiries: null, peakMonthlyInquiries: 1800.
 
 Reglas para "urgency":
 - alta: dice que el volumen es insostenible, que pierde clientes/ventas, que el equipo está saturado o que lo necesita ya.
@@ -51,7 +56,7 @@ Reglas generales:
 - Usa "otro" o "no_especificado" solo si ninguna opción encaja.
 
 Ejemplo de un elemento de salida:
-{"ref":1,"industry":"salud","businessSize":"mediana","leadSource":"referido","inquiryChannel":"telefono","painPoint":"consultas_repetitivas","useCases":["agendamiento","faq"],"integrations":["agenda"],"requirements":["datos_sensibles"],"objections":[],"urgency":"media","complexity":"media","monthlyInquiries":400,"summary":"Clínica dental que quiere automatizar agendamiento y confirmar citas"}
+{"ref":1,"industry":"salud","businessSize":"mediana","leadSource":"referido","inquiryChannel":"telefono","painPoint":"consultas_repetitivas","useCases":["agendamiento","faq"],"integrations":["agenda"],"requirements":["datos_sensibles"],"objections":[],"urgency":"media","complexity":"media","seasonality":"sin_peaks","monthlyInquiries":400,"peakMonthlyInquiries":null,"summary":"Clínica dental que quiere automatizar agendamiento y confirmar citas"}
 
 Transcripciones:
 ${JSON.stringify(input)}`;

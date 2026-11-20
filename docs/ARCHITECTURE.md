@@ -19,7 +19,7 @@ flowchart LR
   end
   LLM <--> Google[(Google AI Studio<br/>Gemma 4)]
   Clients & Metrics & Meta --> Next[Next.js<br/>Server Components]
-  Next --> UI[Panel · Clientes]
+  Next --> UI[General · Vendedores · Oportunidades · Predicción · Clientes]
 ```
 
 El flujo se divide en dos momentos:
@@ -61,7 +61,7 @@ Gemma no soporta *JSON mode* en esta API, así que `response-parser.ts`:
 - **Rate limiter compartido** entre los workers concurrentes. Ante un 429 se pausan todos según el `retryDelay` que indica la API.
 - **Reintentos con backoff** ante 503/504 (frecuentes en el free tier), alternando con un **modelo de respaldo**.
 - **Reanudable e idempotente**: solo procesa clientes sin categorizar y persiste después de cada lote con escritura atómica (archivo temporal + rename).
-- **Muestra aleatoria reproducible** (`--seed`): se categorizan 1.000 clientes elegidos al azar en vez de las primeras 1.000 filas, para que el segmento represente todo el período, vendedores y rubros.
+- **Orden aleatorio:** los pendientes se procesan al azar y no en el orden del CSV. Así, si la corrida se corta a medias, lo analizado sigue representando todo el período, los vendedores y los rubros, y las estimaciones del panel (que escalan lo analizado al total) siguen siendo válidas.
 - Se guarda el **modelo que respondió** en cada registro, para trazabilidad.
 
 ### 5. Iteración del prompt guiada por los datos
@@ -122,10 +122,10 @@ El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un pa
 
 | Bloque | Pregunta | Cómo se calcula |
 | --- | --- | --- |
-| **Mapa de segmentos** | ¿Dónde pongo el esfuerzo? | Cada rubro, canal y tamaño se clasifica por volumen (sobre o bajo la mediana de su dimensión) y conversión (±3 puntos del promedio; lo que queda dentro es ruido y se omite). Resultado: *proteger*, *invertir para captar más*, *mejorar el pitch* o *despriorizar*. |
+| **Mapa de segmentos** | ¿Dónde pongo el esfuerzo? | Cada rubro, canal y tamaño se clasifica por volumen (sobre o bajo la mediana de su dimensión) y conversión (±3 puntos del promedio; lo que queda dentro es ruido y se omite). Cada cuadrante se nombra por su regla (p. ej. «Muchas reuniones · cierran bajo el promedio»), sin recomendaciones escritas a mano. |
 | **Leads recuperables** | ¿A quién vuelvo a llamar? | Leads perdidos a los que la regresión logística (ver Predicción) les da una probabilidad de cierre sobre el promedio, empezando por los de más consultas al mes (más valor para Vambe). Cada uno muestra las dos variables que más le suben la probabilidad. |
-| **Asignación sugerida** | ¿Qué vendedor toma cada lead? | Para cada rubro frecuente, el vendedor que más cierra frente al equipo (al menos +5 puntos y 8 reuniones). |
-| **Frenos a resolver** | ¿Qué baja las ventas? | Requisitos, objeciones, integraciones y casos de uso que cierran bajo el promedio, ordenados por impacto (puntos perdidos × reuniones). Cada uno trae una acción de un *playbook* (`playbook.ts`) que el equipo comercial puede editar sin tocar la lógica. |
+| **Top vendedores por industria** | ¿Qué vendedor cierra mejor cada rubro? | Para cada rubro frecuente, el vendedor que más cierra frente al equipo (al menos +5 puntos y 8 reuniones). |
+| **Frenos a resolver** | ¿Qué baja las ventas? | Requisitos, objeciones, integraciones y casos de uso que cierran bajo el promedio, ordenados por impacto (puntos perdidos × reuniones). Cada uno trae sus **palancas** (`analytics/levers.ts`): dentro del grupo con ese freno, los rasgos con los que sí se cerró (al menos +5 pts sobre el grupo, con 10+ reuniones y el 10% del grupo). Ningún consejo está escrito a mano: todo sale de los datos. |
 | **Soluciones replicables** | ¿Qué construyo una vez y vendo en muchos rubros? | Pares de casos de uso (sin contar FAQ, que piden casi todos) presentes en 4 o más industrias distintas. Son candidatos a plantillas verticales. |
 
 ## Vendedores
@@ -139,13 +139,14 @@ El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un pa
 
 `backend/src/prediction/` estima la probabilidad de que cada cliente compre a partir de lo que extrajo el LLM.
 
-- **Variables:** una variable 0/1 por cada valor de cada dimensión (rubro, canal, tamaño, dolor, urgencia, complejidad, canal de consultas, casos de uso, integraciones, requisitos, objeciones), más el volumen de consultas en escala logarítmica.
-- **Modelo:** regresión logística con regularización L2, implementada sin dependencias (`logistic-regression.ts`). La regularización se aplica como paso proximal, que es numéricamente estable.
+- **Variables:** una variable 0/1 por cada valor de cada dimensión (rubro, canal, tamaño, dolor, urgencia, complejidad, canal de consultas, casos de uso, integraciones, requisitos, objeciones), el **vendedor** y la combinación **vendedor × industria** (hay vendedores que cierran mucho mejor ciertos rubros; los vendedores salen de los datos), más el volumen de consultas en escala logarítmica.
+- **Modelo:** regresión logística con regularización L2, implementada sin dependencias (`logistic-regression.ts`) y entrenada con el método de Newton (IRLS): converge al óptimo exacto en ~10 pasos y, recorriendo solo las variables distintas de 0 de cada fila, entrena 10.000 reuniones en menos de un segundo.
+- **Cuándo se entrena:** en memoria, al arrancar el servidor (`main.ts`, antes de aceptar visitas) y de nuevo solo si cambian las categorizaciones. No llama al LLM: usa las categorías ya guardadas en `categorizations.json`.
 - **Validación cruzada de 5 partes:** cada cliente recibe la probabilidad de un modelo que no lo vio al entrenar, así que las métricas no están infladas.
-- **Elección de la regularización:** probé l2 entre 1 y 400. Con l2 = 30 el log loss es mínimo (0,618 vs. 0,629 de no usar modelo). Con menos regularización sobreajusta y predice extremos que la realidad no respalda.
-- **Resultado honesto:** AUC de 0,59. Hay señal real pero débil: lo que el cliente cuenta explica solo parte de si compra. Sirve para priorizar, no para asegurar cierres, y así se comunica en la UI.
-- **Notas A–D:** cada cliente recibe una nota según su probabilidad (A ≥ 75%, B 70–75%, C 62–70%, D < 62%), definida en `prediction/grades.ts` con una acción sugerida por nota. Los cortes se eligieron sobre la distribución real para que la tasa de cierre baje de forma consistente: A cierra 76%, B 74%, C 65% y D 60%. Las notas se pueden filtrar y ordenar en *Clientes* (`?grade=A&sortBy=probability`).
-- **Uso:** la pestaña *Predicción* muestra la calidad, la tabla de notas, la distribución de cerrados vs. no cerrados por probabilidad, la calibración y los factores (razones de chances). *Oportunidades* usa estas probabilidades para elegir los leads a recuperar, y explica cada uno con las variables que más suben su probabilidad.
+- **Elección de la regularización:** no hay un valor fijo. En cada entrenamiento se prueban l2 ∈ {3, 10, 30, 100} con la misma validación cruzada y se usa el de menor log loss. Con más datos suele ganar uno menor (con ~7.000 reuniones, l2 = 10).
+- **Resultado:** la UI muestra el AUC y la mejora sobre no usar modelo calculados en cada entrenamiento (con ~7.000 reuniones, AUC ≈ 0,63). Agregar vendedor y vendedor × industria sumó ~0,01 de AUC; otras variables probadas (mes, señales del texto) no aportaron o no sirven para clientes nuevos.
+- **Notas A–F:** cada cliente recibe una nota según su probabilidad (A ≥ 85%, B 80–85%, C 75–80%, D 70–75%, E 65–70%, F < 65%), definida en `domain/grades.ts`. Los cortes son fijos y no cuantiles a propósito: así la tabla muestra qué porcentaje de clientes cae en cada nota, cuánto cerró realmente y cuántos leads sin cerrar (y consultas al mes) quedan en ella. Las notas se pueden filtrar y ordenar en *Clientes* (`?grade=A&sortBy=probability`).
+- **Uso:** la pestaña *Predicción* muestra la tabla de notas, la distribución de cerrados vs. no cerrados por probabilidad y los factores (razones de chances). *Oportunidades* usa estas probabilidades para elegir los leads a recuperar, y explica cada uno con las variables que más suben su probabilidad. Como el modelo conoce al vendedor, simula la probabilidad del lead con cada vendedor y sugiere el que más la sube (con los puntos que ganaría).
 
 ## Medición de precisión
 
@@ -165,11 +166,12 @@ backend/src
 ├── domain/                       modelo de negocio, sin dependencias de Nest
 │   ├── categories.ts             dimensiones, valores permitidos, etiquetas (optionLabel), "No lo menciona", isActionable
 │   ├── client.ts                 RawClient, Client, CategorizedClient (+ isCategorized)
-│   └── grades.ts                 notas A–D: cortes, rangos, acción sugerida
+│   └── grades.ts                 notas A–F: cortes y rangos
 ├── common/                       utilidades genéricas: texto, formato es-CL, colecciones, muestreo reproducible, async
 ├── analytics/                    cálculos puros compartidos por varios módulos
 │   ├── rates.ts                  rateStat, pointsDiff, minReliableSample
-│   ├── breakdown.ts              tasa de cierre por valor de cada dimensión
+│   ├── breakdown.ts              tasa de cierre por valor de cada dimensión (+ membersOf)
+│   ├── levers.ts                 palancas: qué tenían los que sí cerraron dentro de un grupo
 │   └── seller-performance.ts     desempeño por vendedor ajustado por cartera
 ├── data/                         persistencia
 │   ├── csv-loader.ts             CSV → RawClient[]
@@ -179,7 +181,7 @@ backend/src
 ├── filters/                      segmento de clientes compartido por tabla y métricas
 ├── clients/                      GET /api/clients[/:id]: orden, mapeo y paginación
 ├── metrics/                      GET /api/metrics: kpis, timeline, insights, vendedores ajustados
-├── opportunities/                GET /api/opportunities: un archivo puro por bloque + playbook.ts
+├── opportunities/                GET /api/opportunities: un archivo puro por bloque
 ├── sellers/                      GET /api/sellers: tarjetas por vendedor y tabla vendedor × industria
 ├── prediction/                   GET /api/prediction
 │   ├── features.ts               variables del modelo a partir de la taxonomía
@@ -234,7 +236,7 @@ frontend/src
     ├── dashboard/                KPIs, hallazgos, gráficos y desgloses
     ├── sellers/                  tarjetas por vendedor y tabla vendedor × industria
     ├── opportunities/            mapa de segmentos, leads recuperables, asignación, frenos, soluciones
-    ├── prediction/               calidad del modelo, distribución, calibración y factores
+    ├── prediction/               notas A–F, distribución y factores
     ├── clients/                  tabla (ClientRow, SortableHeader), Pagination, ClientDrawer
     └── ui/                       Card, Badge, Tabs, Sidebar, PageHeader
 ```
@@ -253,7 +255,8 @@ Los tipos del frontend se derivan de sus esquemas Zod, no de una copia manual, a
 
 ## Limitaciones y próximos pasos
 
-- **Cobertura**: se categorizó una muestra de 1.000 de 10.000 reuniones (10%) por la cuota del free tier. El pipeline soporta procesar el resto con `npm run categorize -- --limit 9000`.
-- **Evaluación de calidad**: la herramienta `npm run evaluate` está lista y la plantilla de 50 casos generada; falta etiquetarlos a mano para tener el número de precisión.
+- **Cobertura**: las 10.000 reuniones están categorizadas (~3 horas con el free tier de Gemma, 5 lotes de 10 en paralelo). Nuevas reuniones se procesan con `npm run categorize`, que solo toma las pendientes.
+- **Evaluación de calidad**: 24 de 50 casos revisados a mano (resultados en el README). Faltan los 26 restantes, incluidos los 8 con estacionalidad. Hallazgos para iterar el prompt: el LLM omite «Catálogo» y «Pedidos» en casos de uso, confunde urgencia médica con urgencia comercial y a veces no aplica «datos sensibles → complejidad alta». También falta en la taxonomía un dolor del tipo «canales dispersos», y la recategorización por palabras clave dejó fuera algunos casos con estacionalidad (p. ej. «períodos de baja tasa de interés»).
+- **Carga de CSV desde la app** (propuesta): subir reuniones nuevas desde el frontend, ver cuántas ya están analizadas (los IDs se derivan del contenido, así que no se repiten), categorizar solo las nuevas en segundo plano con barra de avance y reentrenar el modelo. Requiere persistencia real (Postgres en vez del JSON, porque el disco del hosting gratis se borra al reiniciar), un código de acceso para proteger la cuota del LLM y un máximo de filas por archivo.
 - **Categorización online**: un endpoint o cola (BullMQ) para categorizar reuniones nuevas a medida que llegan.
 - **Persistencia**: migrar a Postgres si el volumen crece o si se necesita escritura concurrente.

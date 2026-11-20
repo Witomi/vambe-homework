@@ -1,6 +1,8 @@
 'use client';
 
 import clsx from 'clsx';
+import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import type { Metrics } from '@/lib/api/types';
 import { listParam } from '@/lib/filters/params';
 import {
@@ -12,6 +14,7 @@ import {
 import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
 import { BarTrack } from './BarTrack';
+import { OutcomeFilterNotice, useOutcomeFiltered } from './OutcomeFilterNotice';
 
 /**
  * Desempeño por vendedor ajustado por cartera: la barra es lo que cerró y
@@ -21,13 +24,25 @@ import { BarTrack } from './BarTrack';
 export function SellerPerformance({ metrics }: { metrics: Metrics }) {
   const { searchParams, toggleParamValue } = useFilterParams();
   const selected = listParam(searchParams, 'sellers');
+  const outcomeFiltered = useOutcomeFiltered();
 
   return (
     <Card
       title="¿Cómo le va a cada vendedor?"
       subtitle="Lo que cerró cada uno frente a lo esperado según los rubros de sus leads. Así se mide su desempeño y no la suerte en la asignación."
+      action={
+        <Link
+          href="/vendedores"
+          className="border-border text-brand-strong hover:bg-brand-soft flex h-8 items-center gap-1 rounded-lg border px-2.5 text-sm font-medium whitespace-nowrap transition-colors"
+        >
+          Ver detalle
+          <ArrowRight className="size-3.5" aria-hidden />
+        </Link>
+      }
     >
-      {metrics.sellers.length === 0 ? (
+      {outcomeFiltered ? (
+        <OutcomeFilterNotice what="el desempeño de cada vendedor" />
+      ) : metrics.sellers.length === 0 ? (
         <p className="text-muted text-sm">Sin reuniones analizadas.</p>
       ) : (
         <ul className="grid grid-cols-[fit-content(7rem)_minmax(4rem,1fr)_auto] gap-y-1">
@@ -77,29 +92,31 @@ export function SellerPerformance({ metrics }: { metrics: Metrics }) {
           })}
         </ul>
       )}
-      <p className="text-subtle mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        <span className="flex items-center gap-1.5">
-          <i
-            className="border-foreground/50 inline-block h-3 border-l border-dashed"
-            aria-hidden
-          />
-          Esperado según su cartera
-        </span>
-        <span className="flex items-center gap-1.5">
-          <i
-            className="bg-positive inline-block size-2 rounded-sm"
-            aria-hidden
-          />
-          Sobre lo esperado
-        </span>
-        <span className="flex items-center gap-1.5">
-          <i
-            className="bg-negative inline-block size-2 rounded-sm"
-            aria-hidden
-          />
-          Bajo lo esperado
-        </span>
-      </p>
+      {!outcomeFiltered && (
+        <p className="text-subtle mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          <span className="flex items-center gap-1.5">
+            <i
+              className="border-foreground/50 inline-block h-3 border-l border-dashed"
+              aria-hidden
+            />
+            Esperado según su cartera
+          </span>
+          <span className="flex items-center gap-1.5">
+            <i
+              className="bg-positive inline-block size-2 rounded-sm"
+              aria-hidden
+            />
+            Sobre lo esperado
+          </span>
+          <span className="flex items-center gap-1.5">
+            <i
+              className="bg-negative inline-block size-2 rounded-sm"
+              aria-hidden
+            />
+            Bajo lo esperado
+          </span>
+        </p>
+      )}
     </Card>
   );
 }

@@ -52,7 +52,7 @@ function setup(llm: LlmProvider) {
   };
 }
 
-const options = { limit: 5, batchSize: 5, concurrency: 1, seed: 1 };
+const options = { limit: 5, batchSize: 5, concurrency: 1 };
 
 describe('CategorizationService', () => {
   beforeAll(() => {

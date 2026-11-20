@@ -1,43 +1,23 @@
 import { formatPct } from '../common/format';
 
 /**
- * Notas de cliente (A–D) según su probabilidad de cierre estimada.
+ * Notas de cliente (A–F) según su probabilidad de cierre estimada.
  *
- * Los cortes se eligieron sobre la distribución real de probabilidades
- * (validación cruzada) para que cada nota agrupe una porción útil de
- * clientes y la tasa de cierre real baje de forma consistente de A a D.
- * La tabla de notas en /api/prediction muestra esa verificación.
+ * Los cortes van de 5 en 5 puntos desde 65% hacia arriba; la nota más baja
+ * (F) agrupa todo lo que queda bajo 65%.
+ * No son cuantiles a propósito: así la proporción de clientes en cada nota
+ * cambia con los datos y dice algo. La tabla de notas en /api/prediction
+ * muestra cuánto cierra realmente cada una.
  * Es un concepto de dominio: lo usan clientes, filtros, oportunidades y meta.
  */
 
 export const GRADES = [
-  {
-    grade: 'A',
-    min: 0.75,
-    title: 'Muy probable',
-    action:
-      'Prioridad máxima: contactar primero y asignar al mejor vendedor del rubro.',
-  },
-  {
-    grade: 'B',
-    min: 0.7,
-    title: 'Probable',
-    action: 'Seguimiento activo: agendar demo y enviar propuesta pronto.',
-  },
-  {
-    grade: 'C',
-    min: 0.62,
-    title: 'Incierto',
-    action:
-      'Nutrir: compartir casos de éxito de su rubro y resolver objeciones.',
-  },
-  {
-    grade: 'D',
-    min: 0,
-    title: 'Poco probable',
-    action:
-      'Baja prioridad: seguimiento automatizado hasta que muestre interés.',
-  },
+  { grade: 'A', min: 0.85, title: 'Muy alta' },
+  { grade: 'B', min: 0.8, title: 'Alta' },
+  { grade: 'C', min: 0.75, title: 'Media alta' },
+  { grade: 'D', min: 0.7, title: 'Media' },
+  { grade: 'E', min: 0.65, title: 'Baja' },
+  { grade: 'F', min: 0, title: 'Muy baja' },
 ] as const;
 
 export type Grade = (typeof GRADES)[number]['grade'];
