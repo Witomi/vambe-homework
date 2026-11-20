@@ -183,7 +183,7 @@ Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `
 | Urgencia | 92% |
 | Casos de uso | 78% |
 
-**Por qué casos de uso queda más abajo:** es una lista (3 o 4 funciones por cliente) y solo cuenta como acierto si coincide completa; basta una función de más o de menos para fallar, aunque en promedio el modelo acierta ~9 de cada 10 funciones. Además, algunas tienen fronteras difusas incluso para una persona (preguntas frecuentes vs. catálogo, agendamiento vs. reservas), y muchas veces la transcripción describe las consultas que recibe el negocio sin decir qué debe hacer el bot. Los errores más repetidos son omitir *catálogo* o *pedidos* y agregar *calificación de leads* sin que se pida.
+**Por qué casos de uso queda más abajo:** es una lista (2,7 funciones por cliente en promedio) y solo cuenta como acierto si coincide completa. El modelo encuentra el 93% de las funciones que corresponden y el 94% de las que agrega son correctas, pero basta una de más o de menos para fallar el caso: 13 de los 100 resultados fallan por una sola función. Además, algunas tienen fronteras difusas incluso para una persona (preguntas frecuentes vs. catálogo, agendamiento vs. reservas), y muchas veces la transcripción describe las consultas que recibe el negocio sin decir qué debe hacer el bot. Los errores más repetidos son omitir *catálogo* o *pedidos* y agregar *calificación de leads* sin que se pida.
 
 *Limitaciones:* la muestra es chica (cada caso mueve 2–4 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos.
 
