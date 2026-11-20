@@ -25,10 +25,16 @@ flowchart LR
 
 ## Arquitectura
 
-**Backend (NestJS).** Cada módulo sigue la misma forma: `*.controller.ts` define la ruta (sin lógica), `*.service.ts` coordina y la lógica vive en funciones puras con su test. Las capas base no dependen de ningún módulo de funcionalidad, y entre módulos las dependencias van en una sola dirección:
+**Backend (NestJS).** Cada módulo sigue la misma forma: `*.controller.ts` define la ruta (sin lógica), `*.service.ts` coordina y la lógica vive en funciones puras con su test.
+
+Las **capas base** son el código compartido que no conoce a ningún módulo de funcionalidad: los módulos las usan a ellas, nunca al revés. Así la lógica común (por ejemplo, la tasa de cierre o el ajuste por cartera, que usan tres vistas) no se duplica y no hay dependencias circulares. Las flechas indican «importa de»:
 
 ```
-capas base:  domain ← common ← analytics ← data
+capas base:  common              (utilidades genéricas; no importa nada)
+             domain    ─► common (el negocio: clientes, dimensiones, notas, reglas)
+             analytics ─► domain, common (cálculos compartidos por varias vistas)
+             data      ─► domain, common (acceso a los datos)
+
 módulos:     metrics ─► filters ─► prediction
              clients ─► filters, prediction
              opportunities ─► prediction
