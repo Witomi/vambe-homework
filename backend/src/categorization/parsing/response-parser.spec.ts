@@ -17,7 +17,6 @@ const validItem = {
   requirements: [],
   objections: [],
   urgency: 'alta',
-  complexity: 'media',
   monthlyInquiries: 400,
   summary: 'Clínica que quiere automatizar citas',
 };
@@ -72,6 +71,24 @@ describe('parseItem', () => {
     const plain = parseItem({ ...validItem, seasonality: undefined });
     expect(plain.categories.seasonality).toBe('sin_peaks');
     expect(plain.categories.peakMonthlyInquiries).toBeNull();
+  });
+
+  it('calcula la complejidad en código e ignora la del LLM', () => {
+    const { categories } = parseItem({ ...validItem, complexity: 'baja' });
+    // agendamiento + 1 integración → media
+    expect(categories.complexity).toBe('media');
+  });
+
+  it('más de 5.000 consultas al mes es volumen alto si no hay un dolor más prioritario', () => {
+    const high = { ...validItem, monthlyInquiries: 7500 };
+    expect(parseItem(high).categories.painPoint).toBe('volumen_alto');
+    // Pérdida de ventas tiene más prioridad que el volumen.
+    expect(
+      parseItem({ ...high, painPoint: 'perdida_ventas' }).categories.painPoint,
+    ).toBe('perdida_ventas');
+    expect(parseItem(validItem).categories.painPoint).toBe(
+      'consultas_repetitivas',
+    );
   });
 
   it('normaliza mayúsculas, tildes y espacios', () => {

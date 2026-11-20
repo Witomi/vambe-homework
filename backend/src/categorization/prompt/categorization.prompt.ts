@@ -1,4 +1,8 @@
-import { DIMENSIONS, DIMENSION_KEYS } from '../../domain/categories';
+import {
+  DIMENSIONS,
+  DIMENSION_KEYS,
+  DimensionDefinition,
+} from '../../domain/categories';
 
 export interface PromptItem {
   /** Identificador corto dentro del lote (1..n) para emparejar respuestas. */
@@ -6,12 +10,18 @@ export interface PromptItem {
   transcript: string;
 }
 
+/** Dimensiones que responde el LLM (las derivadas se calculan en código). */
+const PROMPT_DIMENSION_KEYS = DIMENSION_KEYS.filter(
+  (key) => !('derived' in DIMENSIONS[key]),
+);
+
 function describeDimensions(): string {
-  return DIMENSION_KEYS.map((key) => {
-    const d = DIMENSIONS[key];
+  return PROMPT_DIMENSION_KEYS.map((key) => {
+    const d: DimensionDefinition = DIMENSIONS[key];
     const values = d.options.map((o) => o.value).join(' | ');
     const shape = d.multi ? `lista de [${values}]` : values;
-    return `- "${key}" (${d.hint}): ${shape}`;
+    const criteria = (d.criteria ?? []).map((c) => `\n    · ${c}`).join('');
+    return `- "${key}" (${d.hint}): ${shape}${criteria}`;
   }).join('\n');
 }
 
@@ -36,27 +46,23 @@ ${DIMENSION_SPEC}
 
 Reglas para "monthlyInquiries":
 - Usa SOLO una cifra explícita de consultas, mensajes, llamadas o chats que recibe el negocio.
-- NO la derives de pedidos, órdenes, entregas, estudiantes, pacientes, seguidores ni clientes.
+- NO la derives de pedidos, órdenes, reservas, entregas, estudiantes, pacientes, seguidores ni clientes ("200 órdenes semanales" → null).
 - Si solo dice "miles", "muchas" o "constantemente", sin cifra, usa null. Nunca inventes una cifra.
-- Usa el volumen NORMAL. No extrapoles cifras de picos, temporada alta, campañas, lanzamientos, fechas especiales ni cifras por hora: si además da una cifra normal, usa esa; si solo da la del pico, usa null.
+- Usa el volumen NORMAL. No extrapoles cifras de picos, temporada alta, campañas, lanzamientos, fechas especiales ni cifras por hora: si además da una cifra normal, usa esa; si solo da la del pico, usa null ("200 consultas por semana durante el período de inscripción" → monthlyInquiries: null, peakMonthlyInquiries: 800).
 
 Reglas para los peaks:
 - "seasonality" es "con_peaks" si menciona períodos con más consultas (temporada alta, picos, fechas especiales, campañas, fines de semana), aunque no dé cifras.
 - La cifra del peak va en "peakMonthlyInquiries", nunca en "monthlyInquiries". Ej.: "60 consultas diarias en temporada alta" → monthlyInquiries: null, peakMonthlyInquiries: 1800.
-
-Reglas para "urgency":
-- alta: dice que el volumen es insostenible, que pierde clientes/ventas, que el equipo está saturado o que lo necesita ya.
-- baja: está explorando, evaluando o comparando opciones sin apuro.
-- media: en cualquier otro caso.
 
 Reglas generales:
 - Responde SOLO con un arreglo JSON válido, sin texto adicional ni bloques de código.
 - Un objeto por transcripción, con el campo "ref" igual al de la entrada.
 - Las dimensiones de tipo lista pueden ser [] si no aplica.
 - Usa "otro" o "no_especificado" solo si ninguna opción encaja.
+- Básate SOLO en lo que dice la transcripción; no supongas datos que no menciona.
 
 Ejemplo de un elemento de salida:
-{"ref":1,"industry":"salud","businessSize":"mediana","leadSource":"referido","inquiryChannel":"telefono","painPoint":"consultas_repetitivas","useCases":["agendamiento","faq"],"integrations":["agenda"],"requirements":["datos_sensibles"],"objections":[],"urgency":"media","complexity":"media","seasonality":"sin_peaks","monthlyInquiries":400,"peakMonthlyInquiries":null,"summary":"Clínica dental que quiere automatizar agendamiento y confirmar citas"}
+{"ref":1,"industry":"salud","businessSize":"mediana","leadSource":"referido","inquiryChannel":"telefono","painPoint":"consultas_repetitivas","useCases":["agendamiento","faq"],"integrations":["agenda"],"requirements":["datos_sensibles"],"objections":[],"urgency":"media","seasonality":"sin_peaks","monthlyInquiries":400,"peakMonthlyInquiries":null,"summary":"Clínica dental que quiere automatizar agendamiento y confirmar citas"}
 
 Transcripciones:
 ${JSON.stringify(input)}`;

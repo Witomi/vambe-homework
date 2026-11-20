@@ -6,6 +6,7 @@ import {
   SingleDimensionKey,
   optionValues,
 } from '../../domain/categories';
+import { deriveComplexity } from '../../domain/complexity';
 import { normalizeText } from '../../common/text';
 
 export class LlmResponseParseError extends Error {}
@@ -18,7 +19,6 @@ export interface ParsedItem {
 /** Valor por defecto cuando el LLM entrega algo fuera de la taxonomía. */
 const FALLBACKS: Partial<Record<SingleDimensionKey, string>> = {
   urgency: 'media',
-  complexity: 'media',
   seasonality: 'sin_peaks',
 };
 
@@ -61,6 +61,29 @@ function resolveInquiries(raw: unknown): number | null {
   return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
 }
 
+/** Más consultas que esto al mes cuenta como volumen alto (≈170 al día). */
+export const HIGH_VOLUME_MONTHLY = 5000;
+
+/** Dolores con menor prioridad que "volumen alto" en los criterios. */
+const BELOW_HIGH_VOLUME = [
+  'fuera_de_horario',
+  'tiempo_respuesta',
+  'experiencia_cliente',
+  'consultas_repetitivas',
+  'otro',
+];
+
+/**
+ * Aplica en código la regla de volumen de los criterios: el LLM no siempre
+ * convierte "250 consultas diarias" a mensual antes de comparar.
+ */
+function applyVolumeRule(painPoint: string, monthly: number | null): string {
+  const high = monthly !== null && monthly > HIGH_VOLUME_MONTHLY;
+  return high && BELOW_HIGH_VOLUME.includes(painPoint)
+    ? 'volumen_alto'
+    : painPoint;
+}
+
 /**
  * Extrae el JSON de la respuesta del modelo. Los modelos abiertos a veces
  * agregan bloques ```json o texto alrededor, así que se busca el primer
@@ -98,6 +121,7 @@ export function parseItem(raw: unknown): ParsedItem {
 
   const categories: Record<string, unknown> = {};
   for (const key of SINGLE_DIMENSION_KEYS) {
+    if ('derived' in DIMENSIONS[key]) continue;
     categories[key] = resolveSingle(key, obj[key]);
   }
   for (const key of MULTI_DIMENSION_KEYS) {
@@ -105,6 +129,16 @@ export function parseItem(raw: unknown): ParsedItem {
   }
   categories.monthlyInquiries = resolveInquiries(obj.monthlyInquiries);
   categories.peakMonthlyInquiries = resolveInquiries(obj.peakMonthlyInquiries);
+  categories.painPoint = applyVolumeRule(
+    categories.painPoint as string,
+    categories.monthlyInquiries as number | null,
+  );
+  categories.complexity = deriveComplexity(
+    categories as Pick<
+      Categories,
+      'integrations' | 'requirements' | 'useCases'
+    >,
+  );
   categories.summary =
     typeof obj.summary === 'string' ? obj.summary.trim().slice(0, 200) : '';
 

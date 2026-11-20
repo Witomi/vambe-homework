@@ -5,15 +5,16 @@
     "reviewed": true,
     "expected": {
       "industry": "inmobiliaria",
-      "businessSize": "micro",
+      "businessSize": "pequena",
       "leadSource": "comunidad",
       "inquiryChannel": "multicanal",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
-        "faq",
-        "agendamiento"
+        "agendamiento",
+        "catalogo",
+        "faq"
       ],
       "integrations": [],
       "requirements": [],
@@ -27,13 +28,13 @@
   {
     "id": "efda611dbc19",
     "transcript": "Dirijo un restaurante boutique en Lastarria con reservas cada noche y grupos privados. Las consultas sobre disponibilidad de mesas, menú del día, alergias y peticiones especiales llegan por WhatsApp, Instagram y llamadas. Escuché hablar de Vambe en una feria de tecnología para gastronómicos en el centro de Santiago. Gestionamos alrededor de 60 consultas diarias en temporada alta. Lo que necesito es un chatbot que entienda solicitudes especiales de clientes VIP, pueda confirmar reservas sin perder el tono personal de nuestro servicio, e integre con nuestro sistema de mesas.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "gastronomia",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "evento",
       "inquiryChannel": "multicanal",
-      "painPoint": "experiencia_cliente",
+      "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
@@ -49,17 +50,17 @@
       "objections": [],
       "monthlyInquiries": null,
       "summary": "Restaurante boutique busca automatizar reservas y consultas manteniendo tono personal y sofisticado.",
-      "seasonality": "sin_peaks",
-      "peakMonthlyInquiries": null
+      "seasonality": "con_peaks",
+      "peakMonthlyInquiries": 1800
     }
   },
   {
     "id": "9646b6aa5eeb",
     "transcript": "Dirijo un salón de belleza con servicios de peluquería, manicura, pedicura y tratamientos faciales. Clientes contactan para agendar citas, consultar sobre servicios, precios, promociones y disponibilidad. Manejamos alrededor de 400 consultas semanales con picos en fines de semana. Conocí a Vambe a través de una peluquera amiga. Necesito un bot que reserve citas automáticamente mostrando slots disponibles, presente servicios y precios, informe sobre promociones semanales, mande recordatorios de cita y que maneje cambios y cancelaciones con política justa.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "bienestar",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "referido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
@@ -70,14 +71,12 @@
         "faq",
         "recordatorios"
       ],
-      "integrations": [
-        "agenda"
-      ],
+      "integrations": [],
       "requirements": [],
       "objections": [],
       "monthlyInquiries": 1600,
       "summary": "Salón de belleza busca automatizar agenda de citas y recordatorios.",
-      "seasonality": "sin_peaks",
+      "seasonality": "con_peaks",
       "peakMonthlyInquiries": null
     }
   },
@@ -87,7 +86,7 @@
     "reviewed": true,
     "expected": {
       "industry": "retail",
-      "businessSize": "micro",
+      "businessSize": "no_especificado",
       "leadSource": "contenido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
@@ -95,13 +94,14 @@
       "complexity": "media",
       "useCases": [
         "catalogo",
+        "faq",
         "pedidos"
       ],
       "integrations": [
-        "inventario",
-        "ecommerce"
+        "inventario"
       ],
       "requirements": [
+        "personalizacion",
         "tono_marca"
       ],
       "objections": [],
@@ -117,16 +117,16 @@
     "reviewed": true,
     "expected": {
       "industry": "educacion",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "contenido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "faq",
         "calificacion_leads",
-        "pagos"
+        "cotizaciones",
+        "faq"
       ],
       "integrations": [],
       "requirements": [],
@@ -143,16 +143,17 @@
     "reviewed": true,
     "expected": {
       "industry": "otro",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "contenido",
       "inquiryChannel": "telefono",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "faq",
         "cotizaciones",
-        "recordatorios"
+        "faq",
+        "recordatorios",
+        "soporte"
       ],
       "integrations": [
         "otro"
@@ -171,16 +172,17 @@
     "reviewed": true,
     "expected": {
       "industry": "salud",
-      "businessSize": "mediana",
+      "businessSize": "no_especificado",
       "leadSource": "contenido",
       "inquiryChannel": "no_especificado",
-      "painPoint": "otro",
+      "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
-        "faq",
+        "agendamiento",
         "cotizaciones",
-        "agendamiento"
+        "faq",
+        "soporte"
       ],
       "integrations": [],
       "requirements": [],
@@ -199,23 +201,20 @@
       "industry": "salud",
       "businessSize": "mediana",
       "leadSource": "contenido",
-      "inquiryChannel": "telefono",
+      "inquiryChannel": "multicanal",
       "painPoint": "volumen_alto",
       "urgency": "alta",
-      "complexity": "media",
+      "complexity": "alta",
       "useCases": [
         "agendamiento",
-        "reservas",
-        "recordatorios",
-        "faq"
+        "faq",
+        "recordatorios"
       ],
-      "integrations": [
-        "agenda"
-      ],
+      "integrations": [],
       "requirements": [
+        "datos_sensibles",
         "derivacion_humano",
-        "tono_marca",
-        "datos_sensibles"
+        "tono_marca"
       ],
       "objections": [],
       "monthlyInquiries": 7500,
@@ -230,15 +229,16 @@
     "reviewed": true,
     "expected": {
       "industry": "educacion",
-      "businessSize": "mediana",
+      "businessSize": "no_especificado",
       "leadSource": "linkedin",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "faq",
-        "agendamiento"
+        "agendamiento",
+        "calificacion_leads",
+        "faq"
       ],
       "integrations": [],
       "requirements": [
@@ -257,7 +257,7 @@
     "reviewed": true,
     "expected": {
       "industry": "salud",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "referido",
       "inquiryChannel": "whatsapp",
       "painPoint": "fuera_de_horario",
@@ -286,17 +286,16 @@
     "reviewed": true,
     "expected": {
       "industry": "otro",
-      "businessSize": "mediana",
+      "businessSize": "no_especificado",
       "leadSource": "contenido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "alta",
+      "complexity": "media",
       "useCases": [
-        "faq",
         "cotizaciones",
-        "pedidos",
-        "catalogo"
+        "faq",
+        "pedidos"
       ],
       "integrations": [
         "erp"
@@ -315,7 +314,7 @@
     "reviewed": true,
     "expected": {
       "industry": "ecommerce",
-      "businessSize": "grande",
+      "businessSize": "no_especificado",
       "leadSource": "comunidad",
       "inquiryChannel": "web",
       "painPoint": "crecimiento",
@@ -323,7 +322,6 @@
       "complexity": "media",
       "useCases": [
         "faq",
-        "pedidos",
         "soporte"
       ],
       "integrations": [],
@@ -350,10 +348,8 @@
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "faq",
-        "soporte",
         "catalogo",
-        "pedidos"
+        "faq"
       ],
       "integrations": [
         "inventario"
@@ -371,17 +367,18 @@
   {
     "id": "58bf63b1ef09",
     "transcript": "Somos una plataforma de e-commerce especializada en moda sostenible y nuestro crecimiento ha sido exponencial en el último año. Tenemos picos de consultas durante campañas de marketing que generan hasta 500 interacciones diarias. Descubrimos Vambe en LinkedIn cuando buscábamos soluciones de automatización. Necesitamos un chatbot multiidioma que maneje consultas sobre envíos, tallas, devoluciones y que se integre con nuestra plataforma Shopify. Además, requiere personalización de tono para reflejar nuestra identidad de marca eco-friendly.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "ecommerce",
-      "businessSize": "mediana",
+      "businessSize": "no_especificado",
       "leadSource": "linkedin",
       "inquiryChannel": "no_especificado",
       "painPoint": "crecimiento",
       "urgency": "media",
-      "complexity": "media",
+      "complexity": "alta",
       "useCases": [
-        "faq"
+        "faq",
+        "soporte"
       ],
       "integrations": [
         "ecommerce"
@@ -391,10 +388,10 @@
         "tono_marca"
       ],
       "objections": [],
-      "monthlyInquiries": 15000,
+      "monthlyInquiries": null,
       "summary": "E-commerce de moda sostenible busca chatbot multiidioma integrado con Shopify y tono personalizado.",
-      "seasonality": "sin_peaks",
-      "peakMonthlyInquiries": null
+      "seasonality": "con_peaks",
+      "peakMonthlyInquiries": 15000
     }
   },
   {
@@ -403,16 +400,15 @@
     "reviewed": true,
     "expected": {
       "industry": "ecommerce",
-      "businessSize": "grande",
+      "businessSize": "no_especificado",
       "leadSource": "google",
       "inquiryChannel": "multicanal",
       "painPoint": "crecimiento",
       "urgency": "media",
       "complexity": "alta",
       "useCases": [
-        "faq",
         "catalogo",
-        "pedidos",
+        "faq",
         "soporte"
       ],
       "integrations": [],
@@ -433,7 +429,7 @@
     "expected": {
       "industry": "salud",
       "businessSize": "pequena",
-      "leadSource": "referido",
+      "leadSource": "linkedin",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
@@ -460,16 +456,16 @@
     "reviewed": true,
     "expected": {
       "industry": "educacion",
-      "businessSize": "mediana",
+      "businessSize": "no_especificado",
       "leadSource": "comunidad",
       "inquiryChannel": "no_especificado",
-      "painPoint": "fuera_de_horario",
+      "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "alta",
       "useCases": [
+        "cotizaciones",
         "faq",
-        "agendamiento",
-        "calificacion_leads"
+        "recordatorios"
       ],
       "integrations": [
         "otro"
@@ -499,17 +495,16 @@
       "urgency": "media",
       "complexity": "alta",
       "useCases": [
-        "faq",
-        "catalogo",
         "agendamiento",
-        "calificacion_leads"
+        "calificacion_leads",
+        "catalogo",
+        "faq"
       ],
       "integrations": [
         "otro"
       ],
       "requirements": [
-        "multiidioma",
-        "personalizacion"
+        "multiidioma"
       ],
       "objections": [],
       "monthlyInquiries": 2800,
@@ -521,30 +516,28 @@
   {
     "id": "97904390c542",
     "transcript": "Tengo una empresa de servicios de catering para eventos empresariales y matrimonios. Los clientes consultan sobre menús disponibles, capacidades de asistentes, precios, opciones dietéticas especiales y diseño de eventos. Encontré Vambe en un portal de catering chileno. Necesitamos un bot que presente menús temáticos, cotice según cantidad de asistentes, responda sobre opciones vegetarianas y veganas, maneje depósitos para reserva, y sugiera servicios complementarios como música o decoración. Queremos que tenga tono sofisticado. Recibimos aproximadamente 300 consultas por mes, con picos en épocas de matrimonios.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
-      "industry": "eventos_entretenimiento",
-      "businessSize": "pequena",
+      "industry": "gastronomia",
+      "businessSize": "no_especificado",
       "leadSource": "otro",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "faq",
         "cotizaciones",
+        "faq",
         "pagos"
       ],
-      "integrations": [
-        "pagos"
-      ],
+      "integrations": [],
       "requirements": [
         "tono_marca"
       ],
       "objections": [],
       "monthlyInquiries": 300,
       "summary": "Empresa de catering requiere bot para presentar menús, cotizar y recibir depósitos.",
-      "seasonality": "sin_peaks",
+      "seasonality": "con_peaks",
       "peakMonthlyInquiries": null
     }
   },
@@ -557,14 +550,13 @@
       "businessSize": "grande",
       "leadSource": "referido",
       "inquiryChannel": "no_especificado",
-      "painPoint": "consultas_repetitivas",
+      "painPoint": "volumen_alto",
       "urgency": "media",
-      "complexity": "alta",
+      "complexity": "media",
       "useCases": [
-        "faq",
-        "cotizaciones",
+        "calificacion_leads",
         "catalogo",
-        "calificacion_leads"
+        "faq"
       ],
       "integrations": [
         "inventario"
@@ -586,16 +578,16 @@
     "reviewed": true,
     "expected": {
       "industry": "servicios_profesionales",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "linkedin",
       "inquiryChannel": "no_especificado",
-      "painPoint": "otro",
+      "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "faq",
         "agendamiento",
-        "calificacion_leads"
+        "calificacion_leads",
+        "faq"
       ],
       "integrations": [
         "crm"
@@ -623,13 +615,11 @@
       "urgency": "alta",
       "complexity": "alta",
       "useCases": [
-        "faq",
         "agendamiento",
+        "faq",
         "recordatorios"
       ],
-      "integrations": [
-        "agenda"
-      ],
+      "integrations": [],
       "requirements": [
         "datos_sensibles"
       ],
@@ -649,12 +639,12 @@
       "businessSize": "grande",
       "leadSource": "contenido",
       "inquiryChannel": "multicanal",
-      "painPoint": "otro",
+      "painPoint": "crecimiento",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "reservas",
-        "faq"
+        "faq",
+        "reservas"
       ],
       "integrations": [
         "reservas"
@@ -683,8 +673,7 @@
       "complexity": "media",
       "useCases": [
         "faq",
-        "soporte",
-        "catalogo"
+        "soporte"
       ],
       "integrations": [
         "crm"
@@ -705,7 +694,7 @@
     "reviewed": true,
     "expected": {
       "industry": "logistica",
-      "businessSize": "grande",
+      "businessSize": "mediana",
       "leadSource": "contenido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
@@ -729,17 +718,18 @@
   {
     "id": "fe3f26ba6c37",
     "transcript": "Trabajo en una inmobiliaria que vende propiedades residenciales en el sector de La Florida. Recibimos decenas de llamadas diarias de personas interesadas en vistas, financiamiento e información de proyectos. Escuché sobre Vambe en una conferencia de bienes raíces que asistí en julio. Necesito un chatbot que pueda agendar automaticamente citas para visitas, responder preguntas sobre ubicación, características de las propiedades, y entregar información preliminar de créditos hipotecarios. Requiero integración con nuestro calendario de disponibilidad. Manejamos aproximadamente 250 consultas por día durante la temporada alta.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "inmobiliaria",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "evento",
       "inquiryChannel": "telefono",
-      "painPoint": "volumen_alto",
-      "urgency": "alta",
+      "painPoint": "consultas_repetitivas",
+      "urgency": "media",
       "complexity": "media",
       "useCases": [
         "agendamiento",
+        "catalogo",
         "faq"
       ],
       "integrations": [
@@ -747,36 +737,36 @@
       ],
       "requirements": [],
       "objections": [],
-      "monthlyInquiries": 7500,
+      "monthlyInquiries": null,
       "summary": "Inmobiliaria con alto volumen de llamadas busca automatizar agendamiento de visitas.",
-      "seasonality": "sin_peaks",
-      "peakMonthlyInquiries": null
+      "seasonality": "con_peaks",
+      "peakMonthlyInquiries": 7500
     }
   },
   {
     "id": "5b05c2e01996",
     "transcript": "Somos una empresa de capacitación corporativa con programas en liderazgo, comunicación y soft skills. Recibimos consultas de empresas sobre cursos disponibles, fechas, inversión y metodología. Descubrí Vambe en LinkedIn mientras buscaba automatización de ventas. Necesitamos un asistente que describe programas, estime inversión según número de participantes, maneje agendar sesiones de demostración y responda sobre certificaciones otorgadas. El volumen varía bastante dependiendo de la época del año, entre 40 y 150 consultas semanales.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "educacion",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "linkedin",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "faq",
+        "agendamiento",
         "cotizaciones",
-        "agendamiento"
+        "faq"
       ],
       "integrations": [],
       "requirements": [],
       "objections": [],
-      "monthlyInquiries": 95,
+      "monthlyInquiries": 380,
       "summary": "Capacitación corporativa busca automatizar consultas sobre cursos, costos y agendamiento.",
-      "seasonality": "sin_peaks",
-      "peakMonthlyInquiries": null
+      "seasonality": "con_peaks",
+      "peakMonthlyInquiries": 600
     }
   },
   {
@@ -785,7 +775,7 @@
     "reviewed": true,
     "expected": {
       "industry": "otro",
-      "businessSize": "mediana",
+      "businessSize": "grande",
       "leadSource": "referido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
@@ -812,7 +802,7 @@
     "reviewed": true,
     "expected": {
       "industry": "turismo",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "comunidad",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
@@ -825,9 +815,9 @@
       ],
       "integrations": [],
       "requirements": [
+        "derivacion_humano",
         "multiidioma",
-        "tono_marca",
-        "derivacion_humano"
+        "tono_marca"
       ],
       "objections": [],
       "monthlyInquiries": null,
@@ -842,16 +832,15 @@
     "reviewed": true,
     "expected": {
       "industry": "educacion",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "referido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
-        "faq",
         "agendamiento",
-        "catalogo"
+        "faq"
       ],
       "integrations": [],
       "requirements": [],
@@ -865,19 +854,18 @@
   {
     "id": "2398615c474b",
     "transcript": "Dirijo un centro de estética integral que ofrece servicios de estética facial, corporal, depilación y maquillaje permanente. Recibimos alrededor de 350 consultas mensuales sobre tratamientos disponibles, precios de paquetes, sesiones necesarias para resultados y disponibilidad de horarios. Un cliente satisfecho me recomendó Vambe. Lo que buscamos es un chatbot que describa todos nuestros tratamientos, responda preguntas sobre resultados esperados, agende citas en tiempo real, y se integre con nuestro sistema de reservas. Es crucial que el bot sea profesional pero accesible, y que pueda sugerir paquetes complementarios que maximicen los resultados.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "bienestar",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "referido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "faq",
         "agendamiento",
-        "reservas"
+        "faq"
       ],
       "integrations": [
         "reservas"
@@ -895,23 +883,24 @@
   {
     "id": "3b87561de50c",
     "transcript": "Dirijo una ONG enfocada en educación para niños con discapacidad. Recibimos muchas consultas de padres sobre programas, costos e inscripciones. Encontré Vambe a través de búsqueda en Google. El desafío es que necesitamos automatizar consultas pero mantener el tono empático y personalizado. Requerimos que el bot pueda manejar derivaciones sensibles a nuestro equipo psicosocial. También es importante que sea accesible para personas con discapacidad visual. Aproximadamente 80 consultas por semana.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "ong_publico",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "google",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "faq",
-        "agendamiento"
+        "cotizaciones",
+        "faq"
       ],
       "integrations": [],
       "requirements": [
-        "tono_marca",
-        "derivacion_humano"
+        "derivacion_humano",
+        "personalizacion",
+        "tono_marca"
       ],
       "objections": [],
       "monthlyInquiries": 320,
@@ -923,24 +912,22 @@
   {
     "id": "1438f30c0106",
     "transcript": "Dirijo una clínica veterinaria en Ñuñoa con especialidades variadas. Los dueños de mascotas consultan sobre síntomas, citas disponibles, costos de procedimientos y emergencias. Un colega veterinario me sugirió revisar Vambe. Necesitamos un bot que recopile síntomas preliminares, que agende citas, que informe sobre nuestros servicios de emergencia 24 horas, y que maneje recordatorios de vacunación. Recibimos aproximadamente 250 consultas diarias.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "salud",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "referido",
       "inquiryChannel": "no_especificado",
       "painPoint": "volumen_alto",
-      "urgency": "alta",
+      "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "calificacion_leads",
         "agendamiento",
+        "faq",
         "recordatorios"
       ],
       "integrations": [],
-      "requirements": [
-        "disponibilidad_24_7"
-      ],
+      "requirements": [],
       "objections": [],
       "monthlyInquiries": 7500,
       "summary": "Veterinaria con alta demanda busca triaje de síntomas, agendamiento y recordatorios.",
@@ -951,15 +938,15 @@
   {
     "id": "6257f60d806d",
     "transcript": "Somos una cooperativa agrícola con 500 asociados. Recibimos entre 200 y 300 consultas mensuales sobre procesos de cosecha, precios de productos, canales de venta y capacitación. Enterarme de Vambe fue en una feria agrícola. El chatbot debe informar sobre precios vigentes, requisitos de calidad, fechas de cosecha, canales de distribución. Integración con sistema de precios es importante. El tono debe ser técnico pero accesible para productores. Disponibilidad 24/7. Queremos que reduzca consultas repetitivas. Debe escalar a especialistas agrícolas para consultas técnicas complejas. Multi-idioma para migrantes.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "otro",
-      "businessSize": "mediana",
+      "businessSize": "no_especificado",
       "leadSource": "evento",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "media",
+      "complexity": "alta",
       "useCases": [
         "faq"
       ],
@@ -967,9 +954,9 @@
         "otro"
       ],
       "requirements": [
+        "derivacion_humano",
         "disponibilidad_24_7",
         "multiidioma",
-        "derivacion_humano",
         "tono_marca"
       ],
       "objections": [],
@@ -982,22 +969,24 @@
   {
     "id": "f4c9f1ac4bd4",
     "transcript": "Soy dueño de una agencia de publicidad digital especializada en SEM y social media. Procesamos aproximadamente 120 consultas mensuales de potenciales clientes sobre servicios, metodología y casos de éxito. Descubrí Vambe en LinkedIn a través de un anuncio segmentado. Necesitamos un bot que presente nuestros servicios, muestre casos de éxito, responda sobre metodología, presente presupuestos estimados y derive clientes interesados a nuestro equipo de cuentas para propuestas customizadas.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "servicios_profesionales",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "linkedin",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
-        "faq",
+        "calificacion_leads",
         "cotizaciones",
-        "calificacion_leads"
+        "faq"
       ],
       "integrations": [],
-      "requirements": [],
+      "requirements": [
+        "derivacion_humano"
+      ],
       "objections": [],
       "monthlyInquiries": 120,
       "summary": "Agencia de publicidad busca presentar servicios, casos de éxito y derivar leads calificados.",
@@ -1008,19 +997,18 @@
   {
     "id": "1cf6b77d7048",
     "transcript": "Somos una empresa de publicidad y marketing digital que atiende a empresas de diversos sectores. Los clientes constantemente preguntan sobre servicios disponibles, portafolio de trabajos, precios de paquetes y disponibilidad de recursos. Vi a Vambe en una conferencia de marketing. El objetivo es tener un chatbot que presente servicios, muestre portafolio, explique precios y coordine reuniones de asesoría inicial. Esperamos manejar aproximadamente 2200 interacciones mensuales de prospectos y clientes.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "servicios_profesionales",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "evento",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
-        "faq",
-        "catalogo",
-        "agendamiento"
+        "agendamiento",
+        "faq"
       ],
       "integrations": [],
       "requirements": [],
@@ -1034,7 +1022,7 @@
   {
     "id": "64842b60d895",
     "transcript": "Administro una agencia de publicidad y diseño gráfico con 5 diseñadores. Recibimos alrededor de 40 cotizaciones mensuales para proyectos de branding, diseño web, campañas digitales y material impreso. Un cliente me recomendó Vambe. Necesitamos un chatbot que explique servicios creativos ofrecidos, califique proyectos según complejidad, agende briefings iniciales y presente nuestro portafolio. Debe mantener un tono creativo e innovador. La capacidad de mostrar proyectos anteriores es importante. También queremos que el bot pueda responder sobre procesos de diseño y plazos típicos de proyectos.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "servicios_profesionales",
       "businessSize": "pequena",
@@ -1042,11 +1030,11 @@
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
-        "faq",
+        "agendamiento",
         "calificacion_leads",
-        "agendamiento"
+        "faq"
       ],
       "integrations": [],
       "requirements": [
@@ -1062,19 +1050,20 @@
   {
     "id": "412bf0f3e23e",
     "transcript": "Soy coordinadora de eventos en una empresa que organiza conferencias y seminarios. Nuestros clientes potenciales constantemente consultan sobre fechas, salones disponibles, capacidad, servicios incluidos. Encontré a Vambe en un webinar sobre event tech. Lo que necesitamos es un chatbot que muestre disponibilidad de espacios, responda sobre servicios incluidos, agende visitas y que pueda proporcionar propuestas iniciales. Recibimos alrededor de 120 consultas mensuales.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "eventos_entretenimiento",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "contenido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
-        "faq",
         "agendamiento",
-        "cotizaciones"
+        "catalogo",
+        "cotizaciones",
+        "faq"
       ],
       "integrations": [],
       "requirements": [],
@@ -1088,19 +1077,20 @@
   {
     "id": "755f39669a6c",
     "transcript": "Operamos una cadena de joyerías con seis locales en la zona central. Recibimos alrededor de 200 consultas semanales sobre piezas disponibles, materiales, certificaciones de diamantes, opciones de personalización, y servicios de reparación. Encontré a Vambe a través de un colega minorista. Lo que necesitamos es un bot que muestre catálogos con imágenes de alta calidad, proporcione información sobre quilataje y certificaciones, agende citas para personalizaciones, maneje servicios de mantención y reparación, y que respire lujo y profesionalismo en su tono.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "retail",
-      "businessSize": "mediana",
+      "businessSize": "grande",
       "leadSource": "referido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
+        "agendamiento",
         "catalogo",
         "faq",
-        "agendamiento"
+        "soporte"
       ],
       "integrations": [],
       "requirements": [
@@ -1116,19 +1106,19 @@
   {
     "id": "2252deb1a59d",
     "transcript": "Administro una empresa de catering que ofrece servicios para eventos corporativos y privados. Recibimos alrededor de 100 consultas mensuales sobre menús, capacidades y presupuestos. Vi un anuncio de Vambe en Facebook hace poco. Buscamos un chatbot que pueda mostrar opciones de menú según tipo de evento y número de personas. El sistema debe proporcionar presupuestos estimados e información sobre extras como decoración y personal de servicio. También es importante que pueda recibir solicitudes de degustación y agendar reuniones con chef de forma automática.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "gastronomia",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "redes_sociales",
       "inquiryChannel": "no_especificado",
-      "painPoint": "volumen_alto",
+      "painPoint": "consultas_repetitivas",
       "urgency": "media",
       "complexity": "media",
       "useCases": [
-        "catalogo",
+        "agendamiento",
         "cotizaciones",
-        "agendamiento"
+        "faq"
       ],
       "integrations": [],
       "requirements": [],
@@ -1142,17 +1132,18 @@
   {
     "id": "72f97b55130c",
     "transcript": "Administro una fábrica de chocolate artesanal con venta mayorista y minorista. Recibimos consultas sobre productos, sabores, pedidos personalizados, precios y entregas, alrededor de 250 consultas mensuales. Un distribuidor me recomendó a Vambe para mejorar atención. Buscamos un chatbot que describa productos con detalles sensoriales, que maneje pedidos personalizados, que integre horneado bajo demanda y que hable con pasión sobre calidad de ingredientes. La diferenciación es artesanal, no industrial.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "gastronomia",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "referido",
       "inquiryChannel": "no_especificado",
-      "painPoint": "consultas_repetitivas",
+      "painPoint": "experiencia_cliente",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
         "catalogo",
+        "faq",
         "pedidos"
       ],
       "integrations": [],
@@ -1169,23 +1160,21 @@
   {
     "id": "77900946b6ac",
     "transcript": "Somos una empresa de servicios profesionales en asesoría fiscal y contable. Nuestros clientes pymes constantemente consultan sobre requisitos, trámites, costos de servicios. Enterré de Vambe en LinkedIn a través de un artículo sobre automatización en servicios profesionales. Lo que necesitamos es un chatbot que responda preguntas sobre servicios, agende consultas iniciales gratuitas y que proporcione información sobre documentación requerida. Estimamos alrededor de 200 consultas mensuales.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "servicios_profesionales",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "linkedin",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
-        "faq",
-        "agendamiento"
+        "agendamiento",
+        "faq"
       ],
       "integrations": [],
-      "requirements": [
-        "tono_marca"
-      ],
+      "requirements": [],
       "objections": [],
       "monthlyInquiries": 200,
       "summary": "Asesoría fiscal busca automatizar respuestas sobre servicios y agendamiento de consultas gratuitas.",
@@ -1196,10 +1185,10 @@
   {
     "id": "77b507846024",
     "transcript": "Somos una distribuidora de insumos agrícolas que sirve a productores en la zona central. Procesamos alrededor de 300 pedidos y consultas semanales sobre disponibilidad de semillas, fertilizantes, precios y condiciones de pago. Conocí a Vambe en una conferencia de la Sociedad Nacional de Agricultura. Necesitamos un chatbot que proporcione información de productos, calcule dosis recomendadas basadas en cultivos, y maneje consultas sobre épocas de siembra. La integración con nuestro inventario es esencial. También queremos que pueda reservar productos en picos de demanda.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
-      "industry": "logistica",
-      "businessSize": "mediana",
+      "industry": "otro",
+      "businessSize": "no_especificado",
       "leadSource": "evento",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
@@ -1207,8 +1196,8 @@
       "complexity": "media",
       "useCases": [
         "catalogo",
-        "pedidos",
-        "reservas"
+        "faq",
+        "pedidos"
       ],
       "integrations": [
         "inventario"
@@ -1217,42 +1206,42 @@
       "objections": [],
       "monthlyInquiries": 1200,
       "summary": "Distribuidora agrícola requiere chatbot con integración de inventario y gestión de pedidos.",
-      "seasonality": "sin_peaks",
+      "seasonality": "con_peaks",
       "peakMonthlyInquiries": null
     }
   },
   {
     "id": "2583222ca47a",
     "transcript": "Somos una academia de idiomas en Las Condes con 300 estudiantes activos. Recibimos consultas permanentes sobre cursos disponibles, horarios, niveles de inglés, francés y alemán, y procesos de inscripción. Un director amigo mencionó que Vambe le había ayudado con volumen similar de consultas en su institución educativa. Necesitamos un chatbot que describa cursos, confirme horarios, realice evaluaciones de nivel preliminares y guíe a estudiantes por el proceso de inscripción. También es importante que pueda responder en inglés y francés para postulantes internacionales. Recibimos aproximadamente 200 consultas por semana durante período de inscripción.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "educacion",
-      "businessSize": "pequena",
+      "businessSize": "no_especificado",
       "leadSource": "referido",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "media",
+      "complexity": "alta",
       "useCases": [
-        "faq",
-        "agendamiento",
-        "calificacion_leads"
+        "calificacion_leads",
+        "cotizaciones",
+        "faq"
       ],
       "integrations": [],
       "requirements": [
         "multiidioma"
       ],
       "objections": [],
-      "monthlyInquiries": 800,
+      "monthlyInquiries": null,
       "summary": "Academia de idiomas requiere bot multilingüe para información de cursos y evaluaciones.",
-      "seasonality": "sin_peaks",
-      "peakMonthlyInquiries": null
+      "seasonality": "con_peaks",
+      "peakMonthlyInquiries": 800
     }
   },
   {
     "id": "785dc930638d",
     "transcript": "Somos una clínica dental con tres sedes en la región metropolitana. Atendemos a unos 1500 pacientes activos y recibimos alrededor de 250 consultas semanales sobre disponibilidad de horas, servicios, precios y cuidados post-operatorios. Conocí Vambe en una feria de tecnología médica en Santiago. Necesitamos que el bot confirme citas automáticamente, eduque sobre higiene dental, resuelva dudas sobre tratamientos y que sepa cuándo escalar a dentistas. La personalización del tono amable pero profesional es importante para nuestra marca.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "salud",
       "businessSize": "mediana",
@@ -1280,19 +1269,19 @@
   {
     "id": "c961970fd270",
     "transcript": "Dirijo una empresa que ofrece servicios de logística y almacenamiento para e-commerce. Nuestros clientes son vendedores online que nos confían sus inventarios. Reciben consultas sobre capacidades de almacenaje, costos mensionales, servicios de picking and packing, integración con plataformas de venta, seguimiento de inventario y estados de envíos. Aproximadamente 50 consultas mensuales de empresarios e-commerce. Conocí Vambe en una feria de e-commerce. Lo que necesito es un chatbot que explique nuestros servicios de forma clara, que maneje consultas sobre capacidades y precios, que sea capaz de consultar niveles de inventario de clientes registrados, que responda sobre integraciones soportadas y que agende demostraciones de plataforma.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "logistica",
-      "businessSize": "mediana",
+      "businessSize": "no_especificado",
       "leadSource": "evento",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "alta",
+      "complexity": "media",
       "useCases": [
-        "faq",
         "agendamiento",
-        "soporte"
+        "faq",
+        "pedidos"
       ],
       "integrations": [
         "inventario"
@@ -1308,19 +1297,19 @@
   {
     "id": "dfff1b9630ba",
     "transcript": "Administro una plataforma de educación online con tres mil estudiantes activos. Manejamos entre mil y dos mil consultas mensuales sobre acceso a cursos, problemas técnicos, validación de certificados y pagos. Encontré a Vambe a través de un artículo en LinkedIn sobre automatización educativa. Estamos en crecimiento acelerado y no podemos escalar el equipo de soporte al ritmo que lo necesitamos. Requerimos un chatbot que resuelva problemas técnicos comunes, valide información de pago y responda preguntas sobre contenido de cursos. La integración con nuestro LMS es fundamental, y también necesitamos capacidad multiidioma dado que algunos estudiantes son de Latinoamérica.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "educacion",
-      "businessSize": "mediana",
+      "businessSize": "no_especificado",
       "leadSource": "linkedin",
       "inquiryChannel": "no_especificado",
       "painPoint": "crecimiento",
-      "urgency": "alta",
+      "urgency": "media",
       "complexity": "alta",
       "useCases": [
-        "soporte",
+        "faq",
         "pagos",
-        "faq"
+        "soporte"
       ],
       "integrations": [
         "otro"
@@ -1338,10 +1327,10 @@
   {
     "id": "2ffb30db6a1b",
     "transcript": "Dirijo una veterinaria con dos sucursales en la zona oriente. Manejamos alrededor de 150 consultas por semana sobre horarios de atención, urgencias, vacunación y problemas de mascotas. Los clientes a menudo llaman fuera de horario con emergencias y queremos que un bot les dé orientación básica. Conocí Vambe a través de un artículo en una revista de negocios especializada en pequeñas empresas. Necesitamos que el chatbot pueda reconocer síntomas comunes, sugerir cuándo es urgencia versus consulta programada, y mantener un registro de mascotas registradas.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "salud",
-      "businessSize": "pequena",
+      "businessSize": "mediana",
       "leadSource": "contenido",
       "inquiryChannel": "telefono",
       "painPoint": "fuera_de_horario",
@@ -1364,18 +1353,18 @@
   {
     "id": "49db0830db36",
     "transcript": "Administro una distribuidora de alimentos para restaurantes, hoteles y caterings. Procesamos alrededor de 200 órdenes semanales de diferentes tipos de productos alimentarios. Descubrí Vambe en una feria de gastronomía y alimentos. Necesitamos un bot que maneje órdenes frecuentes de clientes establecidos, que proporcione catálogos actualizados con precios, que consulte disponibilidad de productos frescos, que integre con nuestro ERP de inventario, y que facilite entregas en horarios específicos.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
-      "industry": "logistica",
-      "businessSize": "mediana",
+      "industry": "gastronomia",
+      "businessSize": "no_especificado",
       "leadSource": "evento",
       "inquiryChannel": "no_especificado",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "media",
+      "complexity": "alta",
       "useCases": [
-        "pedidos",
-        "catalogo"
+        "catalogo",
+        "pedidos"
       ],
       "integrations": [
         "erp",
@@ -1383,7 +1372,7 @@
       ],
       "requirements": [],
       "objections": [],
-      "monthlyInquiries": 800,
+      "monthlyInquiries": null,
       "summary": "Distribuidora de alimentos busca automatizar pedidos, catálogos e integración con ERP.",
       "seasonality": "sin_peaks",
       "peakMonthlyInquiries": null
@@ -1392,21 +1381,23 @@
   {
     "id": "1a0c020a3695",
     "transcript": "Opero una red de gimnasios con cinco sucursales en la región metropolitana. Recibimos alrededor de 120 consultas mensuales sobre membresías, horarios de clases, entrenadores personales y consultas sobre nutrición. Descubrí Vambe mediante un anuncio en Google cuando buscaba soluciones de automatización. La mayor parte de nuestras consultas son sobre promociones y horarios de funcionamiento, que se repiten constantemente. Necesito un chatbot que responda sobre tipos de membresía disponibles, horarios y ubicaciones de nuestras sucursales, promociones actuales, e información sobre nuestros entrenadores. También sería útil que pueda registrar interés en pruebas gratuitas y derivar esos datos a nuestros asesores comerciales. La plataforma debe funcionar principalmente vía WhatsApp porque es donde nuestros clientes potenciales prefieren comunicarse.",
-    "reviewed": false,
+    "reviewed": true,
     "expected": {
       "industry": "bienestar",
-      "businessSize": "mediana",
+      "businessSize": "grande",
       "leadSource": "google",
       "inquiryChannel": "whatsapp",
       "painPoint": "consultas_repetitivas",
       "urgency": "media",
-      "complexity": "baja",
+      "complexity": "media",
       "useCases": [
-        "faq",
-        "calificacion_leads"
+        "calificacion_leads",
+        "faq"
       ],
       "integrations": [],
-      "requirements": [],
+      "requirements": [
+        "derivacion_humano"
+      ],
       "objections": [],
       "monthlyInquiries": 120,
       "summary": "Red de gimnasios requiere automatizar consultas sobre membresías, horarios y captación de interesados.",

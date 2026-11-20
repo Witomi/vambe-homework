@@ -72,6 +72,8 @@ En una segunda revisión encontré que el modelo **extrapolaba cifras de picos**
 
 Efecto colateral observado: al recategorizar, ~19% de las dimensiones simples de esos 86 clientes cambiaron de valor, aunque la temperatura es baja (0,1). Es una medida útil de la estabilidad del modelo: en casos ambiguos (p. ej. urgencia media vs. alta) su respuesta no es determinista.
 
+En una tercera iteración, guiada por los evals, reemplacé las descripciones de una línea por **criterios explícitos por valor** (`criteria` en `domain/categories.ts`), escritos como reglas observables y con orden de prioridad cuando varias aplican. Por ejemplo, para el tamaño: primero la cantidad de locales, después la de empleados y después cómo se describe el negocio; sin pistas, `no_especificado`, sin deducirlo del rubro ni del volumen. Los mismos criterios sirven para etiquetar el gold, así que el modelo y quien etiqueta aplican la misma definición. Las reglas fijas dejaron de pedírsele al LLM y se calculan en código: la **complejidad** (a partir de integraciones, requisitos y casos de uso, en `domain/complexity.ts`) y el dolor **volumen alto** cuando hay más de 5.000 consultas al mes (en el parser). Además de subir la precisión, las respuestas se volvieron más estables: en varias corridas seguidas el modelo dio exactamente lo mismo.
+
 ### 6. Datos en memoria + JSON versionado, sin base de datos
 
 Con 10.000 filas, filtrar y agregar en memoria toma pocos milisegundos. Una base de datos agregaría infraestructura sin beneficio a esta escala. El acceso a datos está aislado en `ClientsRepository` y `CategorizationStore`, así que migrar a Postgres o SQLite solo implica reimplementar esas dos clases.
@@ -98,7 +100,7 @@ Semántica: OR dentro de una dimensión (salud **o** educación), AND entre dime
 | **Requisitos clave** | múltiple | Capacidades exigidas: 24/7, multiidioma, derivación a humano, datos sensibles |
 | **Objeciones** | múltiple | Frenos explícitos en la reunión (precio, comparando alternativas…) |
 | **Urgencia** | simple | Priorizar el seguimiento de leads |
-| **Complejidad técnica** | simple | Estimar el esfuerzo de onboarding e implementación |
+| **Complejidad técnica** | simple (calculada) | Estimar el esfuerzo de implementación. No la responde el LLM: alta = 2+ integraciones, varios idiomas o datos sensibles; media = 1 integración o algún flujo transaccional; baja = solo informar |
 | **Consultas / mes** | número | Volumen normalizado (diarias × 30, semanales × 4) para dimensionar el valor |
 | **Resumen** | texto | Lectura rápida de la necesidad en la tabla |
 
@@ -150,7 +152,9 @@ El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un pa
 
 ## Medición de precisión
 
-`npm run evaluate` compara las categorías del LLM con un *gold standard* etiquetado a mano (`data/evaluation/gold.json`): acierto exacto por dimensión, solapamiento (Jaccard) en dimensiones de lista y volumen de consultas dentro de ±20%. Solo cuentan los casos marcados como revisados por una persona.
+`npm run evaluate` compara las categorías del LLM con un *gold standard* etiquetado a mano (`data/evaluation/gold.json`): acierto exacto por dimensión, solapamiento (Jaccard) en dimensiones de lista y volumen de consultas dentro de ±20%. Solo cuentan los casos marcados como revisados.
+
+Los criterios se ajustaron mirando 24 de los 50 casos; los otros 26 se etiquetaron después aplicando solo los criterios escritos y sirvieron como **prueba independiente**, para descartar reglas que solo funcionaran en los casos usados para escribirlas. Los resultados están en el README.
 
 ## Estructura del código
 
@@ -256,7 +260,7 @@ Los tipos del frontend se derivan de sus esquemas Zod, no de una copia manual, a
 ## Limitaciones y próximos pasos
 
 - **Cobertura**: las 10.000 reuniones están categorizadas (~3 horas con el free tier de Gemma, 5 lotes de 10 en paralelo). Nuevas reuniones se procesan con `npm run categorize`, que solo toma las pendientes.
-- **Evaluación de calidad**: 24 de 50 casos revisados a mano (resultados en el README). Faltan los 26 restantes, incluidos los 8 con estacionalidad. Hallazgos para iterar el prompt: el LLM omite «Catálogo» y «Pedidos» en casos de uso, confunde urgencia médica con urgencia comercial y a veces no aplica «datos sensibles → complejidad alta». También falta en la taxonomía un dolor del tipo «canales dispersos», y la recategorización por palabras clave dejó fuera algunos casos con estacionalidad (p. ej. «períodos de baja tasa de interés»).
+- **Evaluación de calidad**: los 50 casos están etiquetados (resultados en el README). El acierto promedio por caso es 96%; lo más débil son los casos de uso (78% exacto, 90% de solapamiento) y la urgencia, que el modelo sube cuando el volumen es grande. Las 10.000 reuniones del repo se categorizaron con el prompt anterior; para que reflejen los criterios nuevos hay que recategorizarlas (~3 horas de cuota gratuita). Una muestra más grande y etiquetada por personas del equipo comercial daría una medición más confiable.
 - **Carga de CSV desde la app** (propuesta): subir reuniones nuevas desde el frontend, ver cuántas ya están analizadas (los IDs se derivan del contenido, así que no se repiten), categorizar solo las nuevas en segundo plano con barra de avance y reentrenar el modelo. Requiere persistencia real (Postgres en vez del JSON, porque el disco del hosting gratis se borra al reiniciar), un código de acceso para proteger la cuota del LLM y un máximo de filas por archivo.
 - **Categorización online**: un endpoint o cola (BullMQ) para categorizar reuniones nuevas a medida que llegan.
 - **Persistencia**: migrar a Postgres si el volumen crece o si se necesita escritura concurrente.
