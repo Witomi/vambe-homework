@@ -57,7 +57,7 @@ export const DIMENSIONS = {
     description:
       'Escala estimada del negocio (sucursales, equipo, alcance geográfico).',
     multi: false,
-    hint: 'micro=independiente o emprendimiento, pequena=1 local/equipo chico, mediana=varias sedes o equipo mediano, grande=cadena/multi-ciudad/multi-país',
+    hint: 'micro=emprendimiento, negocio independiente o de una persona, o que se describe como muy pequeño; pequena=un local o sede con equipo chico; mediana=2 a 4 locales o sedes, o un equipo de varias decenas de personas; grande=cadena de 5 o más locales, presencia en varias ciudades o países, o alcance nacional',
     options: [
       opt('micro', 'Micro'),
       opt('pequena', 'Pequeña'),

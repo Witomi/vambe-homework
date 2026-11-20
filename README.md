@@ -76,30 +76,35 @@ El reporte muestra el acierto exacto por dimensión, el solapamiento en las de l
 
 ### Resultados actuales (24 de 50 casos revisados a mano)
 
-| Dimensión | Acierto exacto | Solapamiento |
-| --- | --- | --- |
-| Industria | 96% | — |
-| Tamaño | 92% | — |
-| Canal de adquisición | 88% | — |
-| Canal de consultas | 100% | — |
-| Dolor principal | 83% | — |
-| Urgencia | 88% | — |
-| Complejidad técnica | 92% | — |
-| Estacionalidad | 96% | — |
-| Casos de uso | 54% | 83% |
-| Integraciones | 88% | 88% |
-| Requisitos clave | 92% | 94% |
-| Objeciones | 100% | 100% |
-| Consultas/mes (±20%) | 100% | — |
-| Consultas/mes en peak (±20%) | 100% | — |
+Promedio de **3 corridas nuevas** del LLM a temperatura 0 sobre esos 24 casos (no la corrida que se usó como punto de partida para etiquetar, que coincide con las etiquetas por construcción y daba números inflados). La columna «Prompt anterior» es el promedio de 2 corridas antes de precisar los criterios de tamaño.
+
+| Dimensión | Acierto exacto | Solapamiento | Prompt anterior |
+| --- | --- | --- | --- |
+| Estacionalidad | 100% | — | 100% |
+| Objeciones | 100% | 100% | 100% |
+| Urgencia | 97% | — | 94% |
+| Canal de consultas | 96% | — | 96% |
+| Industria | 95% | — | 90% |
+| Canal de adquisición | 85% | — | 88% |
+| Requisitos clave | 78% | 84% | 88% |
+| Integraciones | 76% | 76% | 81% |
+| Dolor principal | 75% | — | 73% |
+| **Tamaño** | **69%** | — | **54%** |
+| Complejidad técnica | 66% | — | 71% |
+| Casos de uso | 41% | 74% | 35% |
+| Consultas/mes (±20%) | 100% | — | 100% |
+| Consultas/mes en peak (±20%) | 100% | — | 100% |
 
 Cómo leerlo:
 
-- Las dimensiones de un solo valor aciertan entre 83% y 100%. Los errores típicos fueron confundir la urgencia médica del negocio con urgencia por contratar, y no aplicar reglas explícitas (p. ej. «datos sensibles → complejidad alta», «webinar → contenido»).
-- **Casos de uso** es lo más débil en acierto exacto (54%) porque basta omitir una función para fallar; el solapamiento (83%) muestra que el LLM detecta la mayoría. Lo que más omite es «Catálogo / Info de productos» y «Pedidos / Seguimiento».
-- Los volúmenes de consultas se extraen bien (100% dentro de ±20%), incluida la separación entre volumen normal y en peak.
+- **Confiables** (≥ 95%): estacionalidad, objeciones, urgencia, canal de consultas, industria y volúmenes de consultas.
+- **Tamaño** mejoró de 54% a 69% al reemplazar criterios vagos («varias sedes», «equipo mediano») por señales concretas: cantidad de locales, alcance geográfico y tamaño del equipo. Sigue siendo ambiguo cuando la reunión no da esas pistas.
+- **Ruido entre corridas:** aun a temperatura 0, Gemma cambia de respuesta en algunos casos, y las dimensiones que el cambio no tocaba (requisitos, integraciones, complejidad) se movieron ±5–10 puntos. Diferencias menores a ~10 puntos no son concluyentes con 24 casos.
+- **Casos de uso** es lo más débil: el LLM tiende a omitir funciones (sobre todo «Catálogo», «Pedidos» y «Soporte»). Un primer intento de corregirlo con definiciones en el prompt empeoró el resultado y se revirtió.
 
-Limitaciones: son 24 casos (la muestra es chica y cada error mueve ~4 puntos); los 8 casos con estacionalidad quedaron sin revisar, y durante la revisión un asistente de IA sugirió correcciones que la persona aceptó o rechazó caso a caso.
+Para comparar cambios de prompt de forma justa: usar temperatura 0 (`LLM_TEMPERATURE=0`), correr cada versión 2–3 veces y comparar promedios.
+
+Limitaciones: son 24 casos (cada error mueve ~4 puntos); los 8 casos con estacionalidad quedaron sin revisar, y durante la revisión un asistente de IA sugirió correcciones que la persona aceptó o rechazó caso a caso. Las 10.000 reuniones del repo se categorizaron con el prompt anterior; el criterio nuevo de tamaño aplica a las que se categoricen desde ahora.
 
 ## Scripts
 
@@ -128,6 +133,7 @@ Limitaciones: son 24 casos (la muestra es chica y cada error mueve ~4 puntos); l
 | `LLM_MODEL` / `LLM_FALLBACK_MODEL` | `gemma-4-26b-a4b-it` / `gemma-4-31b-it` | Modelo principal y de respaldo |
 | `LLM_THINKING_LEVEL` | `minimal` | `minimal` reduce la latencia ~10× |
 | `LLM_RPM` | `25` | Límite de requests por minuto |
+| `LLM_TEMPERATURE` | `0.1` | Temperatura del LLM (usar `0` para evaluar) |
 
 **frontend/.env.local**
 
