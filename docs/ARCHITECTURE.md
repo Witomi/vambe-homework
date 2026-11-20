@@ -183,7 +183,7 @@ Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `
 | Urgencia | 92% |
 | Casos de uso | 78% |
 
-Los 24 casos usados para ajustar los criterios y los 26 de prueba dan resultados parejos (96% y 97% por caso), así que los criterios no quedaron hechos a la medida de los casos con que se escribieron. Los errores que quedan son reglas escritas que Gemma no siempre sigue: sube la urgencia cuando el volumen es grande y omite o agrega algún caso de uso suelto. Más ajustes al prompt arreglaban unos casos y rompían otros. Probar el `31b` como principal, una transcripción por request o el razonamiento activado no mejoró la precisión y multiplicó el tiempo.
+**Por qué casos de uso queda más abajo:** es una lista (3 o 4 funciones por cliente) y solo cuenta como acierto si coincide completa; basta una función de más o de menos para fallar, aunque en promedio el modelo acierta ~9 de cada 10 funciones. Además, algunas tienen fronteras difusas incluso para una persona (preguntas frecuentes vs. catálogo, agendamiento vs. reservas), y muchas veces la transcripción describe las consultas que recibe el negocio sin decir qué debe hacer el bot. Los errores más repetidos son omitir *catálogo* o *pedidos* y agregar *calificación de leads* sin que se pida.
 
 *Limitaciones:* la muestra es chica (cada caso mueve 2–4 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos.
 
