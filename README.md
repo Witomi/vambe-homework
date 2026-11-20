@@ -103,18 +103,15 @@ El reporte muestra el acierto exacto por dimensión, el solapamiento en las de l
 
 El acierto actual (96% de las dimensiones correctas por caso, sobre 50 casos) y el detalle por dimensión están en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#resultados-actuales).
 
-## Scripts
+## Tests y calidad de código
 
 | Dónde | Comando | Qué hace |
 | --- | --- | --- |
-| raíz | `npm run dev` | Levanta backend y frontend en paralelo |
-| raíz | `npm run build` | Compila ambos |
 | raíz | `npm test` | Corre todos los tests (backend unitarios + e2e y frontend) |
 | backend | `npm test` | Tests unitarios (parser, filtros, agregaciones, servicio de categorización) |
-| frontend | `npm test` | Tests de la lógica pura (filtros ↔ URL, chips, formato, esquemas Zod) |
 | backend | `npm run test:e2e` | Tests de la API contra el CSV real |
-| backend | `npm run categorize` | Categoriza clientes con Gemma |
-| backend | `npm run evaluate` | Mide la precisión del LLM contra etiquetas de referencia (ver abajo) |
+| frontend | `npm test` | Tests de la lógica pura (filtros ↔ URL, chips, formato, esquemas Zod) |
+| raíz | `npm run build` | Compila backend y frontend |
 | ambos | `npm run lint` / `npm run format` | ESLint / Prettier |
 
 ## Variables de entorno
