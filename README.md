@@ -1,5 +1,9 @@
 # Vambe Insights
 
+**Demo:** https://vambe-homework.vercel.app
+
+> El backend usa el plan gratuito de Render, que apaga el servidor tras 15 minutos sin visitas. Un monitor lo consulta cada 5 minutos para mantenerlo encendido; si aun así la primera carga tarda o muestra un error, espera ~1 minuto mientras arranca y recarga la página.
+
 Panel comercial que toma las transcripciones de reuniones de venta de Vambe, las **categoriza automáticamente con un LLM (Gemma 4)** y muestra métricas para responder preguntas como:
 
 - ¿Qué rubros y canales de adquisición cierran más y cuáles menos?

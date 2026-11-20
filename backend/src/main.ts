@@ -11,7 +11,11 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
   app.enableCors({
-    origin: config.get('FRONTEND_URL', { infer: true }).split(','),
+    // Sin la "/" final: el navegador envía el origen sin ella.
+    origin: config
+      .get('FRONTEND_URL', { infer: true })
+      .split(',')
+      .map((origin) => origin.trim().replace(/\/$/, '')),
   });
   // Valida y tipa los parámetros de cada request según su DTO; rechaza
   // con 400 cualquier parámetro desconocido o valor fuera de la taxonomía.
