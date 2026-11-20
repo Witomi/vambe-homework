@@ -99,7 +99,7 @@ npm run evaluate                # reporta el acierto por dimensión y el promedi
 npm run evaluate -- --cases     # agrega el acierto de cada caso y qué campos fallaron
 ```
 
-El reporte muestra el acierto exacto por dimensión, el solapamiento en las de lista y cuántas veces el volumen de consultas queda dentro de ±20%. La plantilla trae pre-cargada la respuesta del modelo para acelerar la revisión; conviene leer la transcripción antes de mirarla, para no sesgarse.
+El reporte muestra el acierto exacto por dimensión; en las dimensiones de lista (como casos de uso), también qué parte de la lista acertó aunque no sea completa (solapamiento), y cuántas veces el volumen de consultas queda dentro de ±20%. La plantilla trae pre-cargada la respuesta del modelo para acelerar la revisión; conviene leer la transcripción antes de mirarla, para no sesgarse.
 
 El acierto actual (96% de las dimensiones correctas por caso, sobre 50 casos) y el detalle por dimensión están en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#precisión-del-llm).
 

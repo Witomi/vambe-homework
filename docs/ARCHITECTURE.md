@@ -179,7 +179,7 @@ Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `
 | Dolor principal | 94% | 96% | 95% | 88% |
 | Requisitos clave | 94% | 94% | 94% | 77% |
 | Urgencia | 83% | 100% | 92% | 94% |
-| Casos de uso (solapamiento 90%) | 79% | 77% | 78% | 38% |
+| Casos de uso | 79% | 77% | 78% | 38% |
 | Consultas/mes (±20%) | 100% | 92% | 96% | 100% |
 | Consultas/mes en peak (±20%) | 100% | 100% | 100% | 100% |
 
