@@ -1,17 +1,11 @@
 'use client';
 
 import clsx from 'clsx';
-import {
-  Gauge,
-  LayoutDashboard,
-  Lightbulb,
-  Medal,
-  Sparkles,
-  Users,
-} from 'lucide-react';
+import { Gauge, LayoutDashboard, Lightbulb, Medal, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { filterQuery } from '@/lib/filters/params';
+import { VambeIsotype, VambeWordmark } from './VambeLogo';
 
 const NAV = [
   { href: '/', label: 'General', icon: LayoutDashboard },
@@ -30,12 +24,10 @@ export function Sidebar() {
   return (
     <aside className="border-border bg-surface flex shrink-0 items-center gap-6 border-b px-4 py-3 md:sticky md:top-0 md:h-screen md:w-56 md:flex-col md:items-stretch md:border-r md:border-b-0 md:px-4 md:py-6">
       <Link href="/" className="flex items-center gap-2 md:px-2">
-        <span className="bg-brand grid size-8 place-items-center rounded-lg text-white">
-          <Sparkles className="size-4" aria-hidden />
-        </span>
+        <VambeIsotype className="size-8 shrink-0" />
         <span className="leading-tight">
-          <span className="block text-sm font-semibold">Vambe</span>
-          <span className="text-subtle block text-xs">
+          <VambeWordmark className="text-foreground block h-4 w-auto" />
+          <span className="text-subtle mt-1 block text-xs">
             Insights comerciales
           </span>
         </span>
