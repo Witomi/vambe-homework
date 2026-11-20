@@ -3,7 +3,7 @@ import { CategorizationStore } from '../data/categorization.store';
 import { ClientsRepository } from '../data/clients.repository';
 import { pointsDiff } from '../analytics/rates';
 import { CategorizedClient } from '../domain/client';
-import { ClientPrediction, gradeOf } from '../domain/grades';
+import { ClientPrediction, gradeOf } from './grades';
 import { ClosingModel, fitClosingModel } from './closing-model';
 import { buildModelReport } from './model-report';
 import {

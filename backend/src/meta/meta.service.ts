@@ -8,7 +8,7 @@ import {
 import { VOLUME_BUCKETS } from '../domain/volume';
 import { CategorizationStore } from '../data/categorization.store';
 import { ClientsRepository } from '../data/clients.repository';
-import { GRADES, gradeRange } from '../domain/grades';
+import { GRADES, gradeRange } from '../prediction/grades';
 import { DimensionMeta, MetaResponse } from './meta.types';
 
 /** Expone la taxonomía y las opciones de filtro para construir la UI. */

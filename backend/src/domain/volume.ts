@@ -1,6 +1,6 @@
 /**
  * Desde cuántas consultas al mes un cliente es de volumen "muy alto" (≈170
- * al día). Es el mismo umbral del dolor "volumen alto" (ver `derived-rules.ts`).
+ * al día). Es el mismo umbral del dolor "volumen alto" (ver `categorization/derived-rules.ts`).
  */
 export const HIGH_VOLUME_MONTHLY = 5000;
 

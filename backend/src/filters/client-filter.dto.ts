@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { filterValues } from '../domain/categories';
 import { VOLUME_BUCKETS } from '../domain/volume';
-import { GRADE_VALUES } from '../domain/grades';
+import { GRADE_VALUES } from '../prediction/grades';
 import { toBoolean, toList } from './query-transforms';
 
 /** Decorador para filtros de dimensión: lista de valores permitidos. */

@@ -1,6 +1,6 @@
 import { rateStat } from '../analytics/rates';
 import { CategorizedClient } from '../domain/client';
-import { GRADES, gradeOf, gradeRange } from '../domain/grades';
+import { GRADES, gradeOf, gradeRange } from './grades';
 import { ClosingModel } from './closing-model';
 import { auc, binByProbability, logLoss } from './evaluation';
 import { Factor, GradeSummary, PredictionResponse } from './prediction.types';

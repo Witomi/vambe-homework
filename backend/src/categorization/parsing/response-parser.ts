@@ -7,7 +7,7 @@ import {
   isDerived,
   optionValues,
 } from '../../domain/categories';
-import { applyDerivedRules } from '../../domain/derived-rules';
+import { applyDerivedRules } from '../derived-rules';
 import { normalizeText } from '../../utils/text';
 
 export class LlmResponseParseError extends Error {}

@@ -1,5 +1,5 @@
 import { auc, binByProbability, logLoss } from './evaluation';
-import { gradeOf, gradeRange } from '../domain/grades';
+import { gradeOf, gradeRange } from './grades';
 import { fitClosingModel } from './closing-model';
 import { predict, train } from './logistic-regression';
 import { makeClient } from '../../test/fixtures';

@@ -1,5 +1,5 @@
 import { Client } from '../domain/client';
-import { ClientPrediction } from '../domain/grades';
+import { ClientPrediction } from '../prediction/grades';
 import { ClientListItem } from './clients.types';
 
 const EXCERPT_LENGTH = 160;

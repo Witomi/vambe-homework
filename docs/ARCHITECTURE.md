@@ -27,30 +27,31 @@ flowchart LR
 
 **Backend (NestJS).** Cada módulo sigue la misma forma: `*.controller.ts` define la ruta (sin lógica), `*.service.ts` coordina y la lógica vive en funciones puras con su test.
 
-Las **capas base** son el código compartido que no conoce a ningún módulo de funcionalidad: los módulos las usan a ellas, nunca al revés. Así la lógica común (por ejemplo, la tasa de cierre o el ajuste por cartera, que usan tres vistas) no se duplica y no hay dependencias circulares. Las flechas indican «importa de»:
+Las **capas base** son el código compartido que no conoce a ningún módulo de funcionalidad: los módulos las usan a ellas, nunca al revés. Lo que usa un solo módulo vive dentro de ese módulo (por ejemplo, las reglas derivadas en `categorization/` y las notas A–F en `prediction/`). Así la lógica común (por ejemplo, la tasa de cierre o el ajuste por cartera, que usan tres vistas) no se duplica y no hay dependencias circulares. Las flechas indican «importa de»:
 
 ```
 capas base:  utils               (utilidades genéricas; no importa nada)
-             domain    ─► utils  (el negocio: clientes, dimensiones, notas, reglas)
+             domain    ─► utils  (vocabulario del negocio: clientes, dimensiones, volumen)
              analytics ─► domain, utils (cálculos compartidos por varias vistas)
              data      ─► domain, utils (acceso a los datos)
 
 módulos:     metrics ─► filters ─► prediction
              clients ─► filters, prediction
-             opportunities ─► prediction
-             sellers, meta, health, categorization: solo capas base
+             opportunities, meta ─► prediction
+             sellers, health, categorization: solo capas base
 ```
 
 ```
 backend/src
-├── domain/          el negocio sin Nest: dimensiones (dimensions.ts), tipos (categories.ts, client.ts),
-│                    reglas derivadas (derived-rules.ts), volumen (volume.ts) y notas A–F (grades.ts)
+├── domain/          lo que usa todo el backend: dimensiones (dimensions.ts), tipos (categories.ts,
+│                    client.ts) y rangos de volumen (volume.ts)
 ├── utils/           utilidades genéricas: texto, formato, colecciones, muestreo, límite de requests
 ├── analytics/       cálculos compartidos: tasas, desglose por dimensión, rasgos ganadores, desempeño por vendedor
 ├── data/            CSV + categorizaciones en memoria (ClientsRepository, CategorizationStore)
-├── categorization/  pipeline del LLM: prompt/, llm/ (proveedor Gemma + cuota), parsing/, evaluation/
+├── categorization/  pipeline del LLM: prompt/, llm/ (Gemma + cuota), parsing/, reglas derivadas, evaluation/
 ├── filters/         el segmento filtrado, compartido por la tabla y las métricas
-├── metrics/ · sellers/ · opportunities/ · prediction/ · clients/ · meta/ · health/   un módulo por endpoint
+├── prediction/      modelo de cierre y notas A–F (grades.ts)
+├── metrics/ · sellers/ · opportunities/ · clients/ · meta/ · health/   un módulo por endpoint
 └── cli/             npm run categorize y npm run evaluate
 ```
 
@@ -75,7 +76,7 @@ frontend/src
 El LLM elige entre valores predefinidos, así «Clínica dental» y «Consulta odontológica» caen ambas en `salud` y se pueden agregar. Cada valor tiene reglas observables con prioridad cuando varias aplican. Por ejemplo, el tamaño se decide primero por la cantidad de locales, después por la de empleados y después por cómo se describe el negocio, y sin pistas queda «No especificado» en vez de adivinarse. Los mismos criterios se usan para etiquetar los evals, así el modelo y quien etiqueta aplican la misma definición. *Descartado:* etiquetas libres (no se pueden comparar) y descripciones de una línea (el modelo las interpretaba distinto en cada corrida).
 
 ### 3. Reglas fijas en código, no en el LLM
-La **complejidad técnica** (alta con 2+ integraciones, varios idiomas o datos sensibles; media con 1 integración o algún flujo transaccional; baja si solo informa) y el dolor **volumen alto** (más de 5.000 consultas al mes) se calculan en `domain/derived-rules.ts` a partir de lo que el LLM extrajo. Pedírselas al modelo daba resultados inconsistentes: la complejidad pasó de 63% a 100% de acierto.
+La **complejidad técnica** (alta con 2+ integraciones, varios idiomas o datos sensibles; media con 1 integración o algún flujo transaccional; baja si solo informa) y el dolor **volumen alto** (más de 5.000 consultas al mes) se calculan en `categorization/derived-rules.ts` a partir de lo que el LLM extrajo. Pedírselas al modelo daba resultados inconsistentes: la complejidad pasó de 63% a 100% de acierto.
 
 ### 4. Validación defensiva de la respuesta del LLM
 Gemma no tiene *JSON mode* en esta API, así que `response-parser.ts` extrae el JSON aunque venga con texto alrededor, normaliza tildes y mayúsculas, reemplaza valores inexistentes por «Otro» o un valor neutro, interpreta cifras como «1.500» y descarta solo los elementos inválidos, no el lote completo.

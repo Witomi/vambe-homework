@@ -1,6 +1,6 @@
 import { CategorizedClient } from '../domain/client';
 import { optionLabel } from '../domain/categories';
-import { gradeOf } from '../domain/grades';
+import { gradeOf } from '../prediction/grades';
 import { Factor, SellerSuggestion } from '../prediction/prediction.types';
 import { LeadRecovery } from './opportunities.types';
 

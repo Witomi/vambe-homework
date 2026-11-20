@@ -1,4 +1,4 @@
-import { Grade } from '../domain/grades';
+import { Grade } from './grades';
 
 /** Contrato de respuesta de `GET /api/prediction`. */
 

@@ -5,8 +5,8 @@
  * requisitos, casos de uso, volumen). Pedírselas al modelo daba resultados
  * inconsistentes; calcularlas aquí garantiza que se apliquen siempre igual.
  */
-import { Categories } from './categories';
-import { HIGH_VOLUME_MONTHLY } from './volume';
+import { Categories } from '../domain/categories';
+import { HIGH_VOLUME_MONTHLY } from '../domain/volume';
 
 type ComplexityInput = Pick<
   Categories,
