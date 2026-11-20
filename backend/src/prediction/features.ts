@@ -39,10 +39,12 @@ export function buildFeatures(
   const oneHot: Feature[] = CATEGORICAL.flatMap((key) =>
     DIMENSIONS[key].options.map((option) => ({
       label: `${DIMENSIONS[key].label}: ${option.label}`,
-      value: (c: CategorizedClient) => {
-        const v = c.categories[key];
+      value: (client: CategorizedClient) => {
+        const value = client.categories[key];
         return (
-          Array.isArray(v) ? v.includes(option.value) : v === option.value
+          Array.isArray(value)
+            ? value.includes(option.value)
+            : value === option.value
         )
           ? 1
           : 0;
@@ -50,29 +52,35 @@ export function buildFeatures(
     })),
   );
 
-  const sellers = [...new Set(categorized.map((c) => c.seller))].sort();
+  const sellers = [
+    ...new Set(categorized.map((client) => client.seller)),
+  ].sort();
   const bySeller: Feature[] = sellers.flatMap((seller) => [
     {
       label: `Vendedor: ${seller}`,
-      value: (c: CategorizedClient) => (c.seller === seller ? 1 : 0),
+      value: (client: CategorizedClient) => (client.seller === seller ? 1 : 0),
     },
     ...DIMENSIONS.industry.options.map((industry) => ({
       label: `${seller} en ${industry.label}`,
-      value: (c: CategorizedClient) =>
-        c.seller === seller && c.categories.industry === industry.value ? 1 : 0,
+      value: (client: CategorizedClient) =>
+        client.seller === seller &&
+        client.categories.industry === industry.value
+          ? 1
+          : 0,
     })),
   ]);
 
-  const logVolume = (c: CategorizedClient) =>
-    Math.log1p(c.categories.monthlyInquiries ?? 0);
+  const logVolume = (client: CategorizedClient) =>
+    Math.log1p(client.categories.monthlyInquiries ?? 0);
   const known = categorized.filter(
-    (c) => c.categories.monthlyInquiries !== null,
+    (client) => client.categories.monthlyInquiries !== null,
   );
   const mean =
-    known.reduce((s, c) => s + logVolume(c), 0) / (known.length || 1);
+    known.reduce((sum, client) => sum + logVolume(client), 0) /
+    (known.length || 1);
   const std =
     Math.sqrt(
-      known.reduce((s, c) => s + (logVolume(c) - mean) ** 2, 0) /
+      known.reduce((sum, client) => sum + (logVolume(client) - mean) ** 2, 0) /
         (known.length || 1),
     ) || 1;
 
@@ -81,14 +89,14 @@ export function buildFeatures(
     ...bySeller,
     {
       label: 'Consultas/mes (más volumen)',
-      value: (c) =>
-        c.categories.monthlyInquiries === null
+      value: (client) =>
+        client.categories.monthlyInquiries === null
           ? 0
-          : (logVolume(c) - mean) / std,
+          : (logVolume(client) - mean) / std,
     },
     {
       label: 'Consultas/mes: no lo menciona',
-      value: (c) => (c.categories.monthlyInquiries === null ? 1 : 0),
+      value: (client) => (client.categories.monthlyInquiries === null ? 1 : 0),
     },
   ];
 }
@@ -97,5 +105,5 @@ export function toVector(
   client: CategorizedClient,
   features: readonly Feature[],
 ) {
-  return features.map((f) => f.value(client));
+  return features.map((feature) => feature.value(client));
 }

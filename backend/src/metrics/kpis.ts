@@ -15,11 +15,14 @@ export function computeKpis(
   const overall = rateStat(clients);
   const coverage = clients.length ? categorized.length / clients.length : 0;
   const automated = categorized
-    .filter((c) => c.closed)
-    .reduce((sum, c) => sum + (c.categories.monthlyInquiries ?? 0), 0);
+    .filter((client) => client.closed)
+    .reduce(
+      (sum, client) => sum + (client.categories.monthlyInquiries ?? 0),
+      0,
+    );
   const inquiries = categorized
-    .map((c) => c.categories.monthlyInquiries)
-    .filter((n): n is number => n !== null);
+    .map((client) => client.categories.monthlyInquiries)
+    .filter((inquiries): inquiries is number => inquiries !== null);
 
   return {
     meetings: overall.count,

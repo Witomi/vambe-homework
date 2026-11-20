@@ -28,7 +28,9 @@ describe('timeline', () => {
   ];
 
   it('timeline por mes en orden cronológico', () => {
-    expect(timeline(clients).map((t) => [t.month, t.count])).toEqual([
+    expect(
+      timeline(clients).map((point) => [point.month, point.count]),
+    ).toEqual([
       ['2024-01', 2],
       ['2024-02', 1],
     ]);
@@ -38,12 +40,15 @@ describe('timeline', () => {
 describe('generateInsights', () => {
   it('detecta segmentos sobre y bajo el promedio con muestra suficiente', () => {
     const clients = [
-      ...Array.from({ length: 30 }, (_, i) =>
-        makeClient({ closed: i < 27, categories: { leadSource: 'referido' } }),
-      ),
-      ...Array.from({ length: 30 }, (_, i) =>
+      ...Array.from({ length: 30 }, (_, index) =>
         makeClient({
-          closed: i < 9,
+          closed: index < 27,
+          categories: { leadSource: 'referido' },
+        }),
+      ),
+      ...Array.from({ length: 30 }, (_, index) =>
+        makeClient({
+          closed: index < 9,
           categories: { leadSource: 'redes_sociales' },
         }),
       ),
@@ -55,8 +60,8 @@ describe('generateInsights', () => {
       dimensions,
     });
 
-    const positive = insights.find((i) => i.tone === 'positive');
-    const negative = insights.find((i) => i.tone === 'negative');
+    const positive = insights.find((insight) => insight.tone === 'positive');
+    const negative = insights.find((insight) => insight.tone === 'negative');
     expect(positive?.filter).toEqual({ key: 'leadSource', value: 'referido' });
     expect(negative?.filter).toEqual({
       key: 'leadSource',
@@ -85,8 +90,8 @@ describe('generateInsights', () => {
       ['contenido', 39, 24],
     ];
     const clients = groups.flatMap(([leadSource, count, closed]) =>
-      Array.from({ length: count }, (_, i) =>
-        makeClient({ closed: i < closed, categories: { leadSource } }),
+      Array.from({ length: count }, (_, index) =>
+        makeClient({ closed: index < closed, categories: { leadSource } }),
       ),
     );
 
@@ -111,9 +116,14 @@ describe('generateInsights', () => {
 
 describe('sellerPerformance', () => {
   /** `n` clientes de un vendedor en un rubro, de los cuales `closed` cerraron. */
-  const leads = (seller: string, industry: string, n: number, closed: number) =>
-    Array.from({ length: n }, (_, i) =>
-      makeClient({ seller, closed: i < closed, categories: { industry } }),
+  const leads = (
+    seller: string,
+    industry: string,
+    count: number,
+    closed: number,
+  ) =>
+    Array.from({ length: count }, (_, index) =>
+      makeClient({ seller, closed: index < closed, categories: { industry } }),
     );
 
   it('ajusta por cartera: compara con lo esperado en los rubros de cada vendedor', () => {
@@ -128,7 +138,7 @@ describe('sellerPerformance', () => {
     const result = sellerPerformance(clients);
 
     // Por tasa cruda Puma (55%) quedaría tercero; ajustado, es el mejor.
-    expect(result.map((s) => s.seller)).toEqual([
+    expect(result.map((performance) => performance.seller)).toEqual([
       'Puma',
       'Toro',
       'Zorro',
@@ -160,15 +170,15 @@ describe('compareMonth', () => {
   });
 
   it('compara el último mes con el anterior y con el del año pasado', () => {
-    const on = (meetingDate: string, closed: boolean) =>
+    const clientOn = (meetingDate: string, closed: boolean) =>
       makeClient({ meetingDate, closed });
     const comparison = compareMonth([
-      on('2024-03-05', true),
-      on('2024-03-20', false),
-      on('2025-02-10', false),
-      on('2025-03-01', true),
-      on('2025-03-15', true),
-      on('2025-03-31', false),
+      clientOn('2024-03-05', true),
+      clientOn('2024-03-20', false),
+      clientOn('2025-02-10', false),
+      clientOn('2025-03-01', true),
+      clientOn('2025-03-15', true),
+      clientOn('2025-03-31', false),
     ])!;
 
     expect(comparison.current).toMatchObject({

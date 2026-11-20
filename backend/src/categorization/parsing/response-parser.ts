@@ -38,7 +38,7 @@ function resolveSingle(key: SingleDimensionKey, raw: unknown): string {
 
   const fallback =
     FALLBACKS[key] ??
-    allowed.find((v) => v === 'otro' || v === 'no_especificado');
+    allowed.find((value) => value === 'otro' || value === 'no_especificado');
   if (fallback) return fallback;
 
   throw new LlmResponseParseError(
@@ -50,7 +50,9 @@ function resolveMulti(key: MultiDimensionKey, raw: unknown): string[] {
   if (raw === null || raw === undefined) return [];
   const list = Array.isArray(raw) ? raw : [raw];
   const allowed = optionValues(key);
-  const tokens = list.map(normalizeToken).filter((t) => allowed.includes(t));
+  const tokens = list
+    .map(normalizeToken)
+    .filter((token) => allowed.includes(token));
   return [...new Set(tokens)];
 }
 
@@ -58,8 +60,8 @@ function resolveInquiries(raw: unknown): number | null {
   if (raw === null || raw === undefined || raw === '') return null;
   if (typeof raw !== 'number' && typeof raw !== 'string') return null;
   // En español "1.500" son mil quinientos: se descartan separadores.
-  const n = typeof raw === 'number' ? raw : Number(raw.replace(/\D/g, ''));
-  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  const amount = typeof raw === 'number' ? raw : Number(raw.replace(/\D/g, ''));
+  return Number.isFinite(amount) && amount > 0 ? Math.round(amount) : null;
 }
 
 /**
@@ -79,9 +81,9 @@ export function extractJson(text: string): unknown {
     }
     try {
       return JSON.parse(cleaned.slice(start, end + 1));
-    } catch (e) {
+    } catch (error) {
       throw new LlmResponseParseError(
-        `JSON malformado: ${(e as Error).message}`,
+        `JSON malformado: ${(error as Error).message}`,
       );
     }
   }
@@ -91,23 +93,27 @@ export function parseItem(raw: unknown): ParsedItem {
   if (typeof raw !== 'object' || raw === null) {
     throw new LlmResponseParseError('Elemento no es un objeto');
   }
-  const obj = raw as Record<string, unknown>;
-  const ref = Number(obj.ref);
+  const fields = raw as Record<string, unknown>;
+  const ref = Number(fields.ref);
   if (!Number.isInteger(ref)) {
     throw new LlmResponseParseError('Elemento sin "ref" válido');
   }
 
   const categories: Record<string, unknown> = {};
   for (const key of SINGLE_DIMENSION_KEYS) {
-    if (!isDerived(key)) categories[key] = resolveSingle(key, obj[key]);
+    if (!isDerived(key)) categories[key] = resolveSingle(key, fields[key]);
   }
   for (const key of MULTI_DIMENSION_KEYS) {
-    categories[key] = resolveMulti(key, obj[key]);
+    categories[key] = resolveMulti(key, fields[key]);
   }
-  categories.monthlyInquiries = resolveInquiries(obj.monthlyInquiries);
-  categories.peakMonthlyInquiries = resolveInquiries(obj.peakMonthlyInquiries);
+  categories.monthlyInquiries = resolveInquiries(fields.monthlyInquiries);
+  categories.peakMonthlyInquiries = resolveInquiries(
+    fields.peakMonthlyInquiries,
+  );
   categories.summary =
-    typeof obj.summary === 'string' ? obj.summary.trim().slice(0, 200) : '';
+    typeof fields.summary === 'string'
+      ? fields.summary.trim().slice(0, 200)
+      : '';
 
   return {
     ref,

@@ -32,25 +32,31 @@ describe('API (e2e)', () => {
   });
 
   it('GET /meta expone la taxonomía y los vendedores', async () => {
-    const res = await request(app.getHttpServer()).get('/meta').expect(200);
-    const body = res.body as {
+    const response = await request(app.getHttpServer())
+      .get('/meta')
+      .expect(200);
+    const body = response.body as {
       dimensions: { key: string }[];
       sellers: string[];
       categorization: { total: number };
     };
-    expect(body.dimensions.map((d) => d.key)).toContain('industry');
+    expect(body.dimensions.map((dimension) => dimension.key)).toContain(
+      'industry',
+    );
     expect(body.sellers.length).toBeGreaterThan(0);
     expect(body.categorization.total).toBeGreaterThan(0);
   });
 
   it('GET /clients pagina y combina filtros', async () => {
-    const res = await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .get('/clients')
       .query({ sellers: 'Puma', closed: 'true', pageSize: 5 })
       .expect(200);
-    const body = res.body as ClientsBody;
+    const body = response.body as ClientsBody;
     expect(body.items).toHaveLength(5);
-    expect(body.items.every((c) => c.seller === 'Puma' && c.closed)).toBe(true);
+    expect(
+      body.items.every((client) => client.seller === 'Puma' && client.closed),
+    ).toBe(true);
   });
 
   it('GET /clients rechaza valores fuera de la taxonomía', () => {
@@ -65,11 +71,13 @@ describe('API (e2e)', () => {
   });
 
   it('GET /metrics respeta los filtros', async () => {
-    const res = await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .get('/metrics')
       .query({ closed: 'false' })
       .expect(200);
-    const body = res.body as { kpis: { closed: number; meetings: number } };
+    const body = response.body as {
+      kpis: { closed: number; meetings: number };
+    };
     expect(body.kpis.closed).toBe(0);
     expect(body.kpis.meetings).toBeGreaterThan(0);
   });
@@ -99,10 +107,10 @@ describe('API (e2e)', () => {
   });
 
   it('GET /opportunities devuelve las cinco secciones de acción', async () => {
-    const res = await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .get('/opportunities')
       .expect(200);
-    const body = res.body as Record<string, unknown>;
+    const body = response.body as Record<string, unknown>;
     expect(Object.keys(body)).toEqual(
       expect.arrayContaining([
         'quadrants',
@@ -115,8 +123,10 @@ describe('API (e2e)', () => {
   });
 
   it('GET /sellers devuelve la tabla vendedor × industria', async () => {
-    const res = await request(app.getHttpServer()).get('/sellers').expect(200);
-    const body = res.body as {
+    const response = await request(app.getHttpServer())
+      .get('/sellers')
+      .expect(200);
+    const body = response.body as {
       sellers: { seller: string }[];
       industries: { sellers: unknown[] }[];
     };
@@ -127,31 +137,38 @@ describe('API (e2e)', () => {
   });
 
   it('GET /prediction devuelve calidad del modelo y distribución', async () => {
-    const res = await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .get('/prediction')
       .expect(200);
-    const body = res.body as {
+    const body = response.body as {
       quality: { auc: number; sampleSize: number };
       buckets: { closed: number; open: number }[];
     };
     expect(body.quality.auc).toBeGreaterThan(0);
-    const total = body.buckets.reduce((s, b) => s + b.closed + b.open, 0);
+    const total = body.buckets.reduce(
+      (sum, bucket) => sum + bucket.closed + bucket.open,
+      0,
+    );
     expect(total).toBe(body.quality.sampleSize);
   });
 
   it('GET /clients filtra por nota y ordena por probabilidad', async () => {
-    const res = await request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .get('/clients')
       .query({ grade: 'A', sortBy: 'probability', pageSize: 10 })
       .expect(200);
     const items = (
-      res.body as {
+      response.body as {
         items: { prediction: { grade: string; probability: number } }[];
       }
     ).items;
     expect(items.length).toBeGreaterThan(0);
-    expect(items.every((c) => c.prediction.grade === 'A')).toBe(true);
-    const probs = items.map((c) => c.prediction.probability);
-    expect(probs).toEqual([...probs].sort((a, b) => b - a));
+    expect(items.every((client) => client.prediction.grade === 'A')).toBe(true);
+    const probs = items.map((client) => client.prediction.probability);
+    expect(probs).toEqual(
+      [...probs].sort(
+        (probabilityA, probabilityB) => probabilityB - probabilityA,
+      ),
+    );
   });
 });

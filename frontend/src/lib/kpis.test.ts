@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { closeRateComparison, meetingsComparison } from './kpis';
 
 const month = (
-  m: string,
+  month: string,
   meetings: number,
   closed: number,
   closeRate: number | null,
 ) => ({
-  month: m,
+  month,
   meetings,
   closed,
   closeRate,

@@ -59,7 +59,7 @@ export class ClientFilterDto {
   @DimensionFilter([...GRADE_VALUES])
   grade?: string[];
 
-  @DimensionFilter(VOLUME_BUCKETS.map((b) => b.value))
+  @DimensionFilter(VOLUME_BUCKETS.map((bucket) => bucket.value))
   volume?: string[];
 
   @DimensionFilter(filterValues('industry'))

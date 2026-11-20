@@ -54,7 +54,7 @@ export function findWinningTraits(
   if (groupRate === null) return [];
   const min = minReliableSample(group.length, 0.1);
 
-  return TRAIT_DIMENSIONS.filter((d) => d !== exclude)
+  return TRAIT_DIMENSIONS.filter((key) => key !== exclude)
     .flatMap((dimension) => {
       const best = breakdownByDimension(group, dimension)
         .filter(
@@ -66,7 +66,7 @@ export function findWinningTraits(
             row.closeRate !== null &&
             pointsDiff(row.closeRate, groupRate) >= MIN_LIFT_PTS,
         )
-        .sort((a, b) => (b.closeRate ?? 0) - (a.closeRate ?? 0))[0];
+        .sort((rowA, rowB) => (rowB.closeRate ?? 0) - (rowA.closeRate ?? 0))[0];
       return best
         ? [
             {
@@ -81,6 +81,6 @@ export function findWinningTraits(
           ]
         : [];
     })
-    .sort((a, b) => b.closeRate - a.closeRate)
+    .sort((traitA, traitB) => traitB.closeRate - traitA.closeRate)
     .slice(0, MAX_TRAITS);
 }

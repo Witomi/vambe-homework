@@ -144,6 +144,6 @@ describe('parseBatchResponse', () => {
       { ...validItem, ref: 'sin-ref' },
       { ...validItem, ref: 3 },
     ]);
-    expect(parseBatchResponse(text).map((i) => i.ref)).toEqual([1, 3]);
+    expect(parseBatchResponse(text).map((item) => item.ref)).toEqual([1, 3]);
   });
 });

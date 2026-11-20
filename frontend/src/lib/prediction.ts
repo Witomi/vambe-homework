@@ -25,25 +25,27 @@ export function probabilityRows(
   buckets: Prediction['buckets'],
 ): DistributionRow[] {
   // Solo el tramo con datos, para no mostrar barras vacías en los extremos.
-  const first = buckets.findIndex((b) => b.closed + b.open > 0);
-  const last = buckets.findLastIndex((b) => b.closed + b.open > 0);
-  return buckets.slice(first, last + 1).map((b) => ({
-    label: bucketLabel(b.from),
-    title: `Probabilidad ${bucketLabel(b.from)}–${bucketLabel(b.to)}`,
-    closed: b.closed,
-    open: b.open,
-    closeRate: rateOf(b.closed, b.open),
+  const first = buckets.findIndex((bucket) => bucket.closed + bucket.open > 0);
+  const last = buckets.findLastIndex(
+    (bucket) => bucket.closed + bucket.open > 0,
+  );
+  return buckets.slice(first, last + 1).map((bucket) => ({
+    label: bucketLabel(bucket.from),
+    title: `Probabilidad ${bucketLabel(bucket.from)}–${bucketLabel(bucket.to)}`,
+    closed: bucket.closed,
+    open: bucket.open,
+    closeRate: rateOf(bucket.closed, bucket.open),
   }));
 }
 
 /** Una barra por nota, de F a A. */
 export function gradeRows(grades: Prediction['grades']): DistributionRow[] {
   // De menor a mayor probabilidad, igual que la vista por probabilidad.
-  return [...grades].reverse().map((g) => ({
-    label: g.grade,
-    title: `Nota ${g.grade} · ${g.title} (${g.range})`,
-    closed: g.closed,
-    open: g.count - g.closed,
-    closeRate: rateOf(g.closed, g.count - g.closed),
+  return [...grades].reverse().map((grade) => ({
+    label: grade.grade,
+    title: `Nota ${grade.grade} · ${grade.title} (${grade.range})`,
+    closed: grade.closed,
+    open: grade.count - grade.closed,
+    closeRate: rateOf(grade.closed, grade.count - grade.closed),
   }));
 }

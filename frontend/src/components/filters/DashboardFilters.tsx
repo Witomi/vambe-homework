@@ -30,13 +30,16 @@ export function DashboardFilters({ meta }: { meta: Meta }) {
       <div className="flex flex-wrap items-center gap-2">
         <ClosedFilter
           value={searchParams.get('closed') ?? ''}
-          onChange={(v) => setParam('closed', v)}
+          onChange={(selection) => setParam('closed', selection)}
         />
         <MultiSelect
           label="Vendedor"
-          options={meta.sellers.map((s) => ({ value: s, label: s }))}
+          options={meta.sellers.map((seller) => ({
+            value: seller,
+            label: seller,
+          }))}
           selected={listParam(searchParams, 'sellers')}
-          onChange={(v) => setParam('sellers', v)}
+          onChange={(selection) => setParam('sellers', selection)}
         />
         {DASHBOARD_DIMENSIONS.map((key) => {
           const dimension = findDimension(meta, key);
@@ -46,7 +49,7 @@ export function DashboardFilters({ meta }: { meta: Meta }) {
               label={dimension.label}
               options={dimension.options}
               selected={listParam(searchParams, key)}
-              onChange={(v) => setParam(key, v)}
+              onChange={(selection) => setParam(key, selection)}
             />
           );
         })}

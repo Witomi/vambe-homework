@@ -22,12 +22,12 @@ function readOptions() {
       ids: { type: 'string' },
     },
   });
-  const toInt = (name: string, v: string) => {
-    const n = Number(v);
-    if (!Number.isInteger(n) || n <= 0) {
+  const toInt = (name: string, value: string) => {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
       throw new Error(`--${name} debe ser un entero positivo`);
     }
-    return n;
+    return parsed;
   };
   return {
     limit: values.limit ? toInt('limit', values.limit) : undefined,

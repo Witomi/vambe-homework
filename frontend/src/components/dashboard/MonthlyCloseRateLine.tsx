@@ -40,7 +40,7 @@ export function MonthlyCloseRateLine({
   average: number | null;
 }) {
   if (timeline.length < 2) return null;
-  const selected = timeline.find((p) => p.month === month);
+  const selected = timeline.find((point) => point.month === month);
 
   return (
     <div className="mt-3 h-24">

@@ -15,7 +15,7 @@ export interface RateStat {
 
 /** Cantidad, cerradas y tasa de cierre de un grupo de clientes. */
 export function rateStat(clients: readonly Client[]): RateStat {
-  const closed = clients.filter((c) => c.closed).length;
+  const closed = clients.filter((client) => client.closed).length;
   return {
     count: clients.length,
     closed,

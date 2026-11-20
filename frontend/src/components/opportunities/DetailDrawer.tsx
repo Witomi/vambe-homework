@@ -60,7 +60,7 @@ function DetailDrawer({
   onClose: () => void;
 }) {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
@@ -136,13 +136,13 @@ function DetailDrawer({
           )}
 
           <nav aria-label="Ir al detalle" className="space-y-2">
-            {detail.links.map((link, i) => (
+            {detail.links.map((link, index) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={clsx(
                   'flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium',
-                  i === 0
+                  index === 0
                     ? 'bg-brand hover:bg-brand-strong text-white'
                     : 'border-border hover:border-brand/40 border',
                 )}

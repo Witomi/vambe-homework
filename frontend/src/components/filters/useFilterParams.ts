@@ -20,9 +20,11 @@ export function useFilterParams() {
   const navigate = useCallback(
     (next: URLSearchParams) => {
       next.delete('page');
-      const qs = next.toString();
+      const query = next.toString();
       startTransition(() => {
-        router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
       });
     },
     [pathname, router],
@@ -32,8 +34,8 @@ export function useFilterParams() {
     (changes: Record<string, Value>) => {
       const next = new URLSearchParams(searchParams);
       for (const [key, value] of Object.entries(changes)) {
-        const str = Array.isArray(value) ? value.join(',') : value;
-        if (str) next.set(key, str);
+        const serialized = Array.isArray(value) ? value.join(',') : value;
+        if (serialized) next.set(key, serialized);
         else next.delete(key);
       }
       navigate(next);
@@ -55,7 +57,7 @@ export function useFilterParams() {
 
   const clearAll = useCallback(() => {
     const next = new URLSearchParams(searchParams);
-    FILTER_KEYS.forEach((k) => next.delete(k));
+    FILTER_KEYS.forEach((key) => next.delete(key));
     navigate(next);
   }, [navigate, searchParams]);
 

@@ -25,20 +25,23 @@ export async function getJson<T>(
   query?: URLSearchParams,
 ): Promise<T> {
   const url = `${API_URL}${path}${query?.size ? `?${query}` : ''}`;
-  const res = await fetch(url, {
+  const response = await fetch(url, {
     cache: 'no-store',
     headers: { Accept: 'application/json' },
   });
-  if (!res.ok) {
-    throw new ApiError(`API respondió ${res.status} en ${path}`, res.status);
+  if (!response.ok) {
+    throw new ApiError(
+      `API respondió ${response.status} en ${path}`,
+      response.status,
+    );
   }
 
-  const parsed = schema.safeParse(await res.json());
+  const parsed = schema.safeParse(await response.json());
   if (!parsed.success) {
     throw new Error(
       `Respuesta inesperada de ${path}: ${parsed.error.issues
         .slice(0, 3)
-        .map((i) => `${i.path.join('.')}: ${i.message}`)
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
         .join('; ')}`,
     );
   }

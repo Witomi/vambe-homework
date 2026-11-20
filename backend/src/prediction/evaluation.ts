@@ -5,23 +5,32 @@
  * alta que uno que no cerró. 0,5 = azar; 1 = ordena perfecto.
  * (Estadístico de Mann-Whitney, con empates contados a la mitad.)
  */
-export function auc(probs: readonly number[], outcomes: readonly number[]) {
-  const ranked = probs
-    .map((p, i) => ({ p, y: outcomes[i] }))
-    .sort((a, b) => a.p - b.p);
+export function auc(
+  probabilities: readonly number[],
+  outcomes: readonly number[],
+) {
+  const ranked = probabilities
+    .map((probability, index) => ({ probability, outcome: outcomes[index] }))
+    .sort((clientA, clientB) => clientA.probability - clientB.probability);
   let positives = 0;
   let rankSum = 0;
-  for (let i = 0; i < ranked.length;) {
-    let j = i;
-    while (j < ranked.length && ranked[j].p === ranked[i].p) j++;
-    const averageRank = (i + 1 + j) / 2;
-    for (let k = i; k < j; k++) {
-      if (ranked[k].y === 1) {
+  for (let start = 0; start < ranked.length;) {
+    // Clientes con la misma probabilidad comparten el rango promedio.
+    let end = start;
+    while (
+      end < ranked.length &&
+      ranked[end].probability === ranked[start].probability
+    ) {
+      end++;
+    }
+    const averageRank = (start + 1 + end) / 2;
+    for (let position = start; position < end; position++) {
+      if (ranked[position].outcome === 1) {
         positives++;
         rankSum += averageRank;
       }
     }
-    i = j;
+    start = end;
   }
   const negatives = ranked.length - positives;
   if (positives === 0 || negatives === 0) return 0.5;
@@ -31,13 +40,17 @@ export function auc(probs: readonly number[], outcomes: readonly number[]) {
 }
 
 /** Log loss (menor es mejor). */
-export function logLoss(probs: readonly number[], outcomes: readonly number[]) {
-  const eps = 1e-12;
-  const total = probs.reduce((sum, p, i) => {
-    const q = Math.min(Math.max(p, eps), 1 - eps);
-    return sum - (outcomes[i] ? Math.log(q) : Math.log(1 - q));
+export function logLoss(
+  probabilities: readonly number[],
+  outcomes: readonly number[],
+) {
+  // Evita log(0) cuando el modelo está seguro y se equivoca.
+  const epsilon = 1e-12;
+  const total = probabilities.reduce((sum, probability, index) => {
+    const clamped = Math.min(Math.max(probability, epsilon), 1 - epsilon);
+    return sum - (outcomes[index] ? Math.log(clamped) : Math.log(1 - clamped));
   }, 0);
-  return total / probs.length;
+  return total / probabilities.length;
 }
 
 export interface ProbabilityBin {
@@ -52,26 +65,26 @@ export interface ProbabilityBin {
 
 /** Agrupa a los clientes en rangos de probabilidad de ancho `width`. */
 export function binByProbability(
-  probs: readonly number[],
+  probabilities: readonly number[],
   outcomes: readonly number[],
   width: number,
 ): ProbabilityBin[] {
   const count = Math.round(1 / width);
-  const bins = Array.from({ length: count }, (_, i) => ({
-    from: i * width,
-    to: (i + 1) * width,
+  const bins = Array.from({ length: count }, (_, index) => ({
+    from: index * width,
+    to: (index + 1) * width,
     closed: 0,
     open: 0,
-    sum: 0,
+    probabilitySum: 0,
   }));
-  probs.forEach((p, i) => {
-    const bin = bins[Math.min(count - 1, Math.floor(p / width))];
-    if (outcomes[i]) bin.closed++;
+  probabilities.forEach((probability, index) => {
+    const bin = bins[Math.min(count - 1, Math.floor(probability / width))];
+    if (outcomes[index]) bin.closed++;
     else bin.open++;
-    bin.sum += p;
+    bin.probabilitySum += probability;
   });
-  return bins.map(({ sum, ...bin }) => ({
-    ...bin,
-    meanPredicted: bin.closed + bin.open ? sum / (bin.closed + bin.open) : 0,
-  }));
+  return bins.map(({ probabilitySum, ...bin }) => {
+    const members = bin.closed + bin.open;
+    return { ...bin, meanPredicted: members ? probabilitySum / members : 0 };
+  });
 }

@@ -38,7 +38,9 @@ export function AutomatedInquiriesChart({
 }) {
   const data = cumulativeInquiries(timeline);
   const selected =
-    data.find((p) => p.month === month) ?? data[data.length - 1] ?? null;
+    data.find((point) => point.month === month) ??
+    data[data.length - 1] ??
+    null;
   const estimated = kpis.categorized < kpis.meetings;
   const approx = estimated ? '≈ ' : '';
 

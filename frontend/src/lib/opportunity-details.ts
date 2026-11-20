@@ -67,28 +67,28 @@ export function segmentDetail(
 
 /** Detalle de una asignación vendedor → rubro. */
 export function assignmentDetail(
-  a: Opportunities['assignments'][number],
+  assignment: Opportunities['assignments'][number],
 ): Detail {
   return {
     eyebrow: 'Top vendedor por industria',
-    title: `Leads de ${a.industry.label} → ${a.seller}`,
+    title: `Leads de ${assignment.industry.label} → ${assignment.seller}`,
     stats: [
       {
-        label: `${a.seller} en este rubro`,
-        value: formatPct(a.sellerRate),
-        hint: `${a.sellerMeetings} reuniones`,
+        label: `${assignment.seller} en este rubro`,
+        value: formatPct(assignment.sellerRate),
+        hint: `${assignment.sellerMeetings} reuniones`,
       },
       {
         label: 'Equipo en este rubro',
-        value: formatPct(a.industryRate),
-        hint: `${formatPointsDiff(a.sellerRate, a.industryRate)} a favor de ${a.seller}`,
+        value: formatPct(assignment.industryRate),
+        hint: `${formatPointsDiff(assignment.sellerRate, assignment.industryRate)} a favor de ${assignment.seller}`,
       },
     ],
     links: [
-      panelLink({ industry: a.industry.value }),
+      panelLink({ industry: assignment.industry.value }),
       clientsLink(
-        { industry: a.industry.value, sellers: a.seller },
-        `Ver las reuniones de ${a.seller} en ${a.industry.label}`,
+        { industry: assignment.industry.value, sellers: assignment.seller },
+        `Ver las reuniones de ${assignment.seller} en ${assignment.industry.label}`,
       ),
     ],
   };

@@ -29,7 +29,10 @@ export class BatchCategorizer {
 
   async categorize(clients: RawClient[]): Promise<BatchResult> {
     const prompt = buildCategorizationPrompt(
-      clients.map((c, i) => ({ ref: i + 1, transcript: c.transcript })),
+      clients.map((client, index) => ({
+        ref: index + 1,
+        transcript: client.transcript,
+      })),
     );
 
     let text: string;
@@ -58,7 +61,9 @@ export class BatchCategorizer {
     items: ParsedItem[],
     model: string,
   ): BatchResult {
-    const pendingByRef = new Map(clients.map((c, i) => [i + 1, c]));
+    const pendingByRef = new Map(
+      clients.map((client, index) => [index + 1, client]),
+    );
     const records: Record<string, CategorizationRecord> = {};
     const categorizedAt = new Date().toISOString();
 

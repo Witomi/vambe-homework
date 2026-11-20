@@ -33,8 +33,11 @@ export function SellerIndustryTable({
   industries: IndustryRow[];
   minSample: number;
 }) {
-  const sellers = sellerStats.map((s) => s.seller);
-  const totalMeetings = sellerStats.reduce((sum, s) => sum + s.count, 0);
+  const sellers = sellerStats.map((performance) => performance.seller);
+  const totalMeetings = sellerStats.reduce(
+    (sum, performance) => sum + performance.count,
+    0,
+  );
 
   return (
     <Card
@@ -79,18 +82,24 @@ export function SellerIndustryTable({
               <td className="border-border border-t px-2 py-2 text-right font-semibold tabular-nums">
                 {formatNumber(totalMeetings)}
               </td>
-              {sellerStats.map((s) => (
-                <td key={s.seller} className="border-border border-t p-1">
+              {sellerStats.map((performance) => (
+                <td
+                  key={performance.seller}
+                  className="border-border border-t p-1"
+                >
                   <Link
-                    href={clientsHref({ sellers: s.seller }, SELLERS_ORIGIN)}
-                    title={`${s.seller}: ${formatNumber(s.count)} reuniones analizadas, ${formatPct(s.count / totalMeetings)} del equipo.`}
+                    href={clientsHref(
+                      { sellers: performance.seller },
+                      SELLERS_ORIGIN,
+                    )}
+                    title={`${performance.seller}: ${formatNumber(performance.count)} reuniones analizadas, ${formatPct(performance.count / totalMeetings)} del equipo.`}
                     className="hover:ring-brand/40 block rounded-md px-1.5 py-1 text-right tabular-nums hover:ring-1"
                   >
                     <span className="block font-semibold">
-                      {formatNumber(s.count)}
+                      {formatNumber(performance.count)}
                     </span>
                     <span className="text-subtle block text-xs">
-                      {formatPct(s.count / totalMeetings)} del total
+                      {formatPct(performance.count / totalMeetings)} del total
                     </span>
                   </Link>
                 </td>
@@ -110,17 +119,23 @@ export function SellerIndustryTable({
                 <td className="border-border border-t px-2 py-2 text-right font-medium tabular-nums">
                   {formatPct(row.team.closeRate)}
                 </td>
-                {row.sellers.map((result, i) => (
-                  <td key={sellers[i]} className="border-border border-t p-1">
+                {row.sellers.map((result, index) => (
+                  <td
+                    key={sellers[index]}
+                    className="border-border border-t p-1"
+                  >
                     <SellerCell
                       result={result}
                       teamRate={row.team.closeRate}
                       minSample={minSample}
                       href={clientsHref(
-                        { sellers: sellers[i], industry: row.industry.value },
+                        {
+                          sellers: sellers[index],
+                          industry: row.industry.value,
+                        },
                         SELLERS_ORIGIN,
                       )}
-                      title={`${sellers[i]} en ${row.industry.label}`}
+                      title={`${sellers[index]} en ${row.industry.label}`}
                     />
                   </td>
                 ))}

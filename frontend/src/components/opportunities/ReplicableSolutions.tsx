@@ -23,37 +23,41 @@ export function ReplicableSolutions({
         </p>
       ) : (
         <ul className="grid gap-3 md:grid-cols-2">
-          {solutions.map((s) => {
-            const hidden = s.industries.length - VISIBLE_INDUSTRIES;
+          {solutions.map((solution) => {
+            const hidden = solution.industries.length - VISIBLE_INDUSTRIES;
             return (
               <li
-                key={s.useCases.map((u) => u.value).join('+')}
+                key={solution.useCases
+                  .map((useCase) => useCase.value)
+                  .join('+')}
                 className="border-border rounded-lg border p-4"
               >
                 <h3 className="text-sm font-semibold">
-                  {s.useCases.map((u) => u.label).join(' + ')}
-                  {s.topIntegration && (
+                  {solution.useCases
+                    .map((useCase) => useCase.label)
+                    .join(' + ')}
+                  {solution.topIntegration && (
                     <span className="text-muted font-normal">
                       {' '}
-                      · integrada con {s.topIntegration.label}
+                      · integrada con {solution.topIntegration.label}
                     </span>
                   )}
                 </h3>
                 <p className="mt-1 text-2xl font-semibold tabular-nums">
-                  {s.industries.length}{' '}
+                  {solution.industries.length}{' '}
                   <span className="text-muted text-sm font-normal">
                     industrias
                   </span>
                 </p>
                 <p className="text-muted mt-1 text-xs tabular-nums">
-                  {formatNumber(s.clients)} clientes · cierra{' '}
-                  {formatPct(s.closeRate)} · {formatCompact(s.monthlyInquiries)}{' '}
-                  consultas/mes
+                  {formatNumber(solution.clients)} clientes · cierra{' '}
+                  {formatPct(solution.closeRate)} ·{' '}
+                  {formatCompact(solution.monthlyInquiries)} consultas/mes
                 </p>
                 <p className="text-subtle mt-2 text-xs">
-                  {s.industries
+                  {solution.industries
                     .slice(0, VISIBLE_INDUSTRIES)
-                    .map((i) => i.label)
+                    .map((integration) => integration.label)
                     .join(', ')}
                   {hidden > 0 && ` y ${hidden} más`}
                 </p>

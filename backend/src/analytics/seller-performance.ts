@@ -35,22 +35,24 @@ export function sellerPerformance(
 ): SellerPerformance[] {
   const overall = rateStat(categorized).closeRate ?? 0;
   const industryRate = new Map(
-    [...groupBy(categorized, (c) => [c.categories.industry]).entries()].map(
-      ([industry, group]) => [
-        industry,
-        group.length >= MIN_INDUSTRY_SAMPLE
-          ? (rateStat(group).closeRate ?? overall)
-          : overall,
-      ],
-    ),
+    [
+      ...groupBy(categorized, (client) => [
+        client.categories.industry,
+      ]).entries(),
+    ].map(([industry, group]) => [
+      industry,
+      group.length >= MIN_INDUSTRY_SAMPLE
+        ? (rateStat(group).closeRate ?? overall)
+        : overall,
+    ]),
   );
 
-  return [...groupBy(categorized, (c) => [c.seller]).entries()]
+  return [...groupBy(categorized, (client) => [client.seller]).entries()]
     .map(([seller, clients]) => {
       const stats = rateStat(clients);
       const expectedRate =
         clients.reduce(
-          (sum, c) => sum + industryRate.get(c.categories.industry)!,
+          (sum, client) => sum + industryRate.get(client.categories.industry)!,
           0,
         ) / clients.length;
       return {
@@ -62,6 +64,9 @@ export function sellerPerformance(
       };
     })
     .sort(
-      (a, b) => b.closeRate - b.expectedRate - (a.closeRate - a.expectedRate),
+      (performanceA, performanceB) =>
+        performanceB.closeRate -
+        performanceB.expectedRate -
+        (performanceA.closeRate - performanceA.expectedRate),
     );
 }

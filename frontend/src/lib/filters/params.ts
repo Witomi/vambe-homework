@@ -35,8 +35,8 @@ export function filterQuery(params: SearchParams): URLSearchParams {
   const query = new URLSearchParams();
   for (const key of FILTER_KEYS) {
     const value = params[key];
-    const str = Array.isArray(value) ? value.join(',') : value;
-    if (str) query.set(key, str);
+    const serialized = Array.isArray(value) ? value.join(',') : value;
+    if (serialized) query.set(key, serialized);
   }
   return query;
 }
@@ -47,12 +47,12 @@ export function listParam(params: URLSearchParams, key: string): string[] {
 }
 
 export function countActiveFilters(params: URLSearchParams): number {
-  return FILTER_KEYS.filter((k) => params.get(k)).length;
+  return FILTER_KEYS.filter((key) => params.get(key)).length;
 }
 
 /** Agrega el valor si no está, o lo quita si ya estaba. */
 export function toggleValue(list: string[], value: string): string[] {
   return list.includes(value)
-    ? list.filter((v) => v !== value)
+    ? list.filter((item) => item !== value)
     : [...list, value];
 }

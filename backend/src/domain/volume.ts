@@ -16,5 +16,5 @@ export type VolumeBucket = (typeof VOLUME_BUCKETS)[number]['value'];
 
 export function volumeBucket(monthly: number | null): VolumeBucket | null {
   if (monthly === null) return null;
-  return VOLUME_BUCKETS.find((b) => monthly < b.max)!.value;
+  return VOLUME_BUCKETS.find((bucket) => monthly < bucket.max)!.value;
 }

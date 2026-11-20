@@ -9,13 +9,13 @@ import { suggestAssignments } from './seller-assignment';
 
 /** `n` clientes con las mismas categorías, de los cuales `closed` cerraron. */
 function group(
-  n: number,
+  count: number,
   closed: number,
   categories: Partial<Categories>,
   extra: { seller?: string } = {},
 ) {
-  return Array.from({ length: n }, (_, i) =>
-    makeClient({ closed: i < closed, categories, ...extra }),
+  return Array.from({ length: count }, (_, index) =>
+    makeClient({ closed: index < closed, categories, ...extra }),
   );
 }
 
@@ -32,7 +32,9 @@ describe('buildSegmentMap', () => {
     ];
     const quadrants = buildSegmentMap(clients, base(clients));
     const where = (value: string) =>
-      quadrants.find((q) => q.segments.some((s) => s.value === value))?.key;
+      quadrants.find((quadrant) =>
+        quadrant.segments.some((segment) => segment.value === value),
+      )?.key;
 
     expect(where('salud')).toBe('protect');
     expect(where('retail')).toBe('grow');
@@ -46,7 +48,7 @@ describe('buildSegmentMap', () => {
       ...group(50, 31, { industry: 'retail' }), // 62%
     ];
     const quadrants = buildSegmentMap(clients, base(clients));
-    expect(quadrants.flatMap((q) => q.segments)).toEqual([]);
+    expect(quadrants.flatMap((quadrant) => quadrant.segments)).toEqual([]);
   });
 });
 
@@ -63,7 +65,7 @@ describe('findReplicableSolutions', () => {
 
     const [solution] = findReplicableSolutions(clients);
 
-    expect(solution.useCases.map((u) => u.value)).toEqual([
+    expect(solution.useCases.map((useCase) => useCase.value)).toEqual([
       'agendamiento',
       'recordatorios',
     ]);
@@ -95,7 +97,7 @@ describe('findRecoverableLeads', () => {
         categories: { monthlyInquiries: 5000 },
       }),
       makeClient({
-        id: 'notaA',
+        id: 'gradeA',
         closed: false,
         categories: { monthlyInquiries: 50, industry: 'retail' },
       }),
@@ -113,7 +115,7 @@ describe('findRecoverableLeads', () => {
     const probabilities: Record<string, number> = {
       chico: 0.72,
       grande: 0.71,
-      notaA: 0.8,
+      gradeA: 0.8,
       improbable: 0.4,
       ganado: 0.9,
     };
@@ -123,15 +125,19 @@ describe('findRecoverableLeads', () => {
         { label: 'Integraciones: CRM', weight: 0.5, oddsRatio: 1.62 },
       ],
       // El modelo estima que con Toro el lead de nota A ganaría 6 puntos.
-      bestSellerFor: (c: { id: string }) =>
-        c.id === 'notaA' ? { seller: 'Toro', gainPts: 6 } : null,
+      bestSellerFor: (client: { id: string }) =>
+        client.id === 'gradeA' ? { seller: 'Toro', gainPts: 6 } : null,
     };
 
     const recovery = findRecoverableLeads(clients, 0.68, scorer);
 
     // Ni el improbable (40%) ni el que ya cerró. Por probabilidad, aunque
     // el de 80% tenga menos consultas.
-    expect(recovery.top.map((l) => l.id)).toEqual(['notaA', 'chico', 'grande']);
+    expect(recovery.top.map((lead) => lead.id)).toEqual([
+      'gradeA',
+      'chico',
+      'grande',
+    ]);
     expect(recovery.candidates).toBe(3);
     expect(recovery.top[0].suggestedSeller).toEqual({
       seller: 'Toro',

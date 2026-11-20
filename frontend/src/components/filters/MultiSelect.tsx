@@ -25,10 +25,11 @@ export function MultiSelect({
 
   useEffect(() => {
     if (!open) return;
-    const onPointer = (e: PointerEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    const onPointer = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    const onKey = (event: KeyboardEvent) =>
+      event.key === 'Escape' && setOpen(false);
     document.addEventListener('pointerdown', onPointer);
     document.addEventListener('keydown', onKey);
     return () => {
@@ -40,7 +41,7 @@ export function MultiSelect({
   const toggle = (value: string) =>
     onChange(
       selected.includes(value)
-        ? selected.filter((v) => v !== value)
+        ? selected.filter((item) => item !== value)
         : [...selected, value],
     );
 
@@ -48,7 +49,8 @@ export function MultiSelect({
     selected.length === 0
       ? label
       : selected.length === 1
-        ? (options.find((o) => o.value === selected[0])?.label ?? label)
+        ? (options.find((option) => option.value === selected[0])?.label ??
+          label)
         : `${label} · ${selected.length}`;
 
   return (
@@ -57,7 +59,7 @@ export function MultiSelect({
         type="button"
         aria-expanded={open}
         aria-controls={listId}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((isOpen) => !isOpen)}
         className={clsx(
           'flex h-9 max-w-56 items-center gap-1.5 rounded-lg border px-3 text-sm transition-colors',
           selected.length
@@ -77,15 +79,15 @@ export function MultiSelect({
           aria-label={label}
           className="border-border bg-surface absolute z-20 mt-1 max-h-72 w-64 overflow-auto rounded-lg border p-1 shadow-lg"
         >
-          {options.map((o) => {
-            const checked = selected.includes(o.value);
+          {options.map((option) => {
+            const checked = selected.includes(option.value);
             return (
               <button
-                key={o.value}
+                key={option.value}
                 type="button"
                 role="option"
                 aria-selected={checked}
-                onClick={() => toggle(o.value)}
+                onClick={() => toggle(option.value)}
                 className="hover:bg-background flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm"
               >
                 <span
@@ -98,7 +100,7 @@ export function MultiSelect({
                 >
                   {checked && <Check className="size-3" aria-hidden />}
                 </span>
-                {o.label}
+                {option.label}
               </button>
             );
           })}

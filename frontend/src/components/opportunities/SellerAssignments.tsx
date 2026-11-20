@@ -24,26 +24,31 @@ export function SellerAssignments({
         </p>
       ) : (
         <ul className="divide-border divide-y">
-          {assignments.map((a) => (
+          {assignments.map((assignment) => (
             <li
-              key={a.industry.value}
+              key={assignment.industry.value}
               className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5 text-sm"
             >
               <DetailButton
-                detail={assignmentDetail(a)}
+                detail={assignmentDetail(assignment)}
                 className="hover:text-brand min-w-36 flex-1 font-medium"
               >
-                Leads de {a.industry.label}
+                Leads de {assignment.industry.label}
               </DetailButton>
               <ArrowRight className="text-subtle size-4" aria-hidden />
-              <span className="w-20 font-semibold">{a.seller}</span>
+              <span className="w-20 font-semibold">{assignment.seller}</span>
               <span className="text-muted text-xs tabular-nums">
-                cierra {formatPct(a.sellerRate)} vs. {formatPct(a.industryRate)}{' '}
-                del equipo{' '}
+                cierra {formatPct(assignment.sellerRate)} vs.{' '}
+                {formatPct(assignment.industryRate)} del equipo{' '}
                 <span className="text-brand-strong font-medium">
-                  ({formatPointsDiff(a.sellerRate, a.industryRate)})
+                  (
+                  {formatPointsDiff(
+                    assignment.sellerRate,
+                    assignment.industryRate,
+                  )}
+                  )
                 </span>{' '}
-                · {a.sellerMeetings} reuniones
+                · {assignment.sellerMeetings} reuniones
               </span>
             </li>
           ))}

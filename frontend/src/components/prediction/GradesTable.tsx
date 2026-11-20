@@ -31,40 +31,42 @@ export function GradesTable({ grades }: { grades: Prediction['grades'] }) {
             </tr>
           </thead>
           <tbody className="divide-border divide-y">
-            {grades.map((g) => (
-              <tr key={g.grade}>
+            {grades.map((grade) => (
+              <tr key={grade.grade}>
                 <td className="py-3 pr-3">
                   <span className="flex items-center gap-2">
-                    <GradeBadge grade={g.grade} />
-                    <span className="font-medium">{g.title}</span>
+                    <GradeBadge grade={grade.grade} />
+                    <span className="font-medium">{grade.title}</span>
                   </span>
                 </td>
-                <td className="text-muted py-3 pr-3 tabular-nums">{g.range}</td>
+                <td className="text-muted py-3 pr-3 tabular-nums">
+                  {grade.range}
+                </td>
                 <td className="py-3 pr-3 text-right tabular-nums">
                   <Link
-                    href={`/clientes?grade=${g.grade}`}
+                    href={`/clientes?grade=${grade.grade}`}
                     className="hover:text-brand underline-offset-2 hover:underline"
-                    title={`Ver los clientes con nota ${g.grade}`}
+                    title={`Ver los clientes con nota ${grade.grade}`}
                   >
-                    {formatNumber(g.count)}
+                    {formatNumber(grade.count)}
                   </Link>
                 </td>
                 <td className="text-muted py-3 pr-3 text-right tabular-nums">
-                  {formatPct(g.share)}
+                  {formatPct(grade.share)}
                 </td>
                 <td className="py-3 pr-3 text-right font-semibold tabular-nums">
-                  {formatPct(g.closeRate)}
+                  {formatPct(grade.closeRate)}
                 </td>
                 <td className="py-3 text-right tabular-nums">
                   <Link
-                    href={`/clientes?grade=${g.grade}&closed=false`}
+                    href={`/clientes?grade=${grade.grade}&closed=false`}
                     className="hover:text-brand underline-offset-2 hover:underline"
-                    title={`Ver los ${formatNumber(g.openLeads)} clientes con nota ${g.grade} que no cerraron`}
+                    title={`Ver los ${formatNumber(grade.openLeads)} clientes con nota ${grade.grade} que no cerraron`}
                   >
-                    {formatNumber(g.openLeads)} leads
+                    {formatNumber(grade.openLeads)} leads
                   </Link>
                   <span className="text-subtle block text-xs">
-                    {formatCompact(g.openInquiries)} consultas/mes
+                    {formatCompact(grade.openInquiries)} consultas/mes
                   </span>
                 </td>
               </tr>

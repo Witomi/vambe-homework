@@ -38,7 +38,9 @@ export class CategorizationService {
 
   /** Clientes sin categorizar, en el orden del CSV. */
   pendingClients(): RawClient[] {
-    return this.repository.findRaw().filter((c) => !this.store.has(c.id));
+    return this.repository
+      .findRaw()
+      .filter((client) => !this.store.has(client.id));
   }
 
   /** Categoriza los clientes que aún no tienen categorías (todos, o hasta `limit`). */
@@ -56,8 +58,12 @@ export class CategorizationService {
     options: RecategorizeOptions,
   ): Promise<CategorizationRunSummary> {
     const wanted = new Set(ids);
-    const targets = this.repository.findRaw().filter((c) => wanted.has(c.id));
-    const unknown = ids.filter((id) => !targets.some((c) => c.id === id));
+    const targets = this.repository
+      .findRaw()
+      .filter((client) => wanted.has(client.id));
+    const unknown = ids.filter(
+      (id) => !targets.some((client) => client.id === id),
+    );
     if (unknown.length) {
       throw new Error(`Clientes no encontrados: ${unknown.join(', ')}`);
     }
@@ -93,7 +99,10 @@ export class CategorizationService {
           // Reintento individual: aísla la transcripción problemática.
           const nextAttempt = job.attempt + 1;
           queue.push(
-            ...missing.map((c) => ({ clients: [c], attempt: nextAttempt })),
+            ...missing.map((client) => ({
+              clients: [client],
+              attempt: nextAttempt,
+            })),
           );
         } else {
           progress.failed += missing.length;

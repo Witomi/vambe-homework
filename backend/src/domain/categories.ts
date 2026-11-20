@@ -38,11 +38,11 @@ export type Categories = {
 export const DIMENSION_KEYS = Object.keys(DIMENSIONS) as DimensionKey[];
 
 export const SINGLE_DIMENSION_KEYS = DIMENSION_KEYS.filter(
-  (k) => !DIMENSIONS[k].multi,
+  (key) => !DIMENSIONS[key].multi,
 ) as SingleDimensionKey[];
 
 export const MULTI_DIMENSION_KEYS = DIMENSION_KEYS.filter(
-  (k) => DIMENSIONS[k].multi,
+  (key) => DIMENSIONS[key].multi,
 ) as MultiDimensionKey[];
 
 /** Se calcula en código a partir de otras dimensiones (no la responde el LLM). */
@@ -52,15 +52,20 @@ export function isDerived(key: DimensionKey): boolean {
 }
 
 /** Dimensiones que responde el LLM. */
-export const LLM_DIMENSION_KEYS = DIMENSION_KEYS.filter((k) => !isDerived(k));
+export const LLM_DIMENSION_KEYS = DIMENSION_KEYS.filter(
+  (key) => !isDerived(key),
+);
 
 /** Etiqueta legible de un valor: ('industry', 'salud') → "Salud / Clínicas". */
 export function optionLabel(key: DimensionKey, value: string): string {
-  return DIMENSIONS[key].options.find((o) => o.value === value)?.label ?? value;
+  return (
+    DIMENSIONS[key].options.find((option) => option.value === value)?.label ??
+    value
+  );
 }
 
 export function optionValues(key: DimensionKey): string[] {
-  return DIMENSIONS[key].options.map((o) => o.value);
+  return DIMENSIONS[key].options.map((option) => option.value);
 }
 
 /**
@@ -96,5 +101,5 @@ export function isActionable(value: string): boolean {
 
 /** Valores aceptados como filtro de una dimensión. */
 export function filterValues(key: DimensionKey): string[] {
-  return displayOptions(key).map((o) => o.value);
+  return displayOptions(key).map((option) => option.value);
 }

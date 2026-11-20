@@ -4,8 +4,8 @@ export default function Loading() {
       <div className="bg-border/60 h-12 w-80 rounded-lg" />
       <div className="bg-border/60 h-16 rounded-xl" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="bg-border/60 h-24 rounded-xl" />
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="bg-border/60 h-24 rounded-xl" />
         ))}
       </div>
       <div className="bg-border/60 h-48 rounded-xl" />

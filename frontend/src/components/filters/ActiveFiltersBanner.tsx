@@ -32,7 +32,7 @@ export function ActiveFiltersBanner({
   const chips = buildFilterChips(
     searchParams,
     createLabeler(meta),
-    meta.dimensions.map((d) => d.key),
+    meta.dimensions.map((dimension) => dimension.key),
   );
   const origin = ORIGINS[searchParams.get('origin') ?? ''];
 
@@ -42,7 +42,9 @@ export function ActiveFiltersBanner({
     setParam(
       chip.key,
       chip.multi
-        ? listParam(searchParams, chip.key).filter((v) => v !== chip.value)
+        ? listParam(searchParams, chip.key).filter(
+            (value) => value !== chip.value,
+          )
         : null,
     );
 

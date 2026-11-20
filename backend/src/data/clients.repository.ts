@@ -47,9 +47,13 @@ export class ClientsRepository implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     this.raw = parseClientsCsv(await readFile(this.csvPath, 'utf8'));
     this.searchIndex = new Map(
-      this.raw.map((c) => [
-        c.id,
-        normalizeText([c.name, c.email, c.phone, c.transcript].join(' ')),
+      this.raw.map((client) => [
+        client.id,
+        normalizeText(
+          [client.name, client.email, client.phone, client.transcript].join(
+            ' ',
+          ),
+        ),
       ]),
     );
     this.logger.log(`${this.raw.length} clientes cargados desde el CSV`);
@@ -81,15 +85,15 @@ export class ClientsRepository implements OnModuleInit {
 
   private currentSnapshot(): Snapshot {
     if (this.snapshot?.revision !== this.store.revision) {
-      const clients = this.raw.map((c) => ({
-        ...c,
-        categories: this.store.get(c.id)?.categories ?? null,
+      const clients = this.raw.map((client) => ({
+        ...client,
+        categories: this.store.get(client.id)?.categories ?? null,
       }));
       this.snapshot = {
         revision: this.store.revision,
         clients,
         categorized: clients.filter(isCategorized),
-        byId: new Map(clients.map((c) => [c.id, c])),
+        byId: new Map(clients.map((client) => [client.id, client])),
       };
     }
     return this.snapshot;

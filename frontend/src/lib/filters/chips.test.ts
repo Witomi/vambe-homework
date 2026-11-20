@@ -28,12 +28,12 @@ describe('buildFilterChips', () => {
     );
     const chips = buildFilterChips(params, createLabeler(meta), ['industry']);
 
-    expect(chips.map((c) => `${c.group}: ${c.label}`)).toEqual([
+    expect(chips.map((chip) => `${chip.group}: ${chip.label}`)).toEqual([
       'Búsqueda: “dental”',
       'Estado: No cerrados',
       'Vendedor: Puma',
       'Industria: Salud / Clínicas',
     ]);
-    expect(chips.find((c) => c.key === 'industry')?.multi).toBe(true);
+    expect(chips.find((chip) => chip.key === 'industry')?.multi).toBe(true);
   });
 });

@@ -90,8 +90,9 @@ export function ClientDrawer({ client, meta, params }: ClientDrawerProps) {
               />
               <div className="text-sm">
                 <p className="font-medium">
-                  {meta.grades.find((g) => g.value === client.prediction!.grade)
-                    ?.label ?? `Nota ${client.prediction.grade}`}
+                  {meta.grades.find(
+                    (grade) => grade.value === client.prediction!.grade,
+                  )?.label ?? `Nota ${client.prediction.grade}`}
                 </p>
                 <p className="text-muted text-xs">
                   Probabilidad de cierre estimada:{' '}

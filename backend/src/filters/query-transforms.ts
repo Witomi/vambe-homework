@@ -7,8 +7,8 @@
 export const toList = ({ value }: { value: unknown }): string[] | undefined => {
   if (value === undefined || value === '') return undefined;
   const list = (Array.isArray(value) ? value : [value])
-    .flatMap((v) => String(v).split(','))
-    .map((v) => v.trim())
+    .flatMap((value) => String(value).split(','))
+    .map((value) => value.trim())
     .filter(Boolean);
   return list.length ? list : undefined;
 };

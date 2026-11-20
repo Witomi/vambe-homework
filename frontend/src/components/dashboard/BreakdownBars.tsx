@@ -63,18 +63,20 @@ export function BreakdownBars({
   }
 
   const showAverage = metric === 'rate' && baseRate !== null;
-  const maxShare = Math.max(...rows.map((r) => r.share), 0.0001);
-  const byRelevance = (a: BreakdownRow, b: BreakdownRow) =>
+  const maxShare = Math.max(...rows.map((row) => row.share), 0.0001);
+  const byRelevance = (rowA: BreakdownRow, rowB: BreakdownRow) =>
     metric === 'rate'
-      ? (b.closeRate ?? 0) - (a.closeRate ?? 0)
-      : b.share - a.share;
+      ? (rowB.closeRate ?? 0) - (rowA.closeRate ?? 0)
+      : rowB.share - rowA.share;
 
-  const regular = rows.filter((r) => r.value !== trailingValue);
+  const regular = rows.filter((row) => row.value !== trailingValue);
   const reliable = regular
-    .filter((r) => r.count >= minSample)
+    .filter((row) => row.count >= minSample)
     .sort(byRelevance);
-  const small = regular.filter((r) => r.count < minSample).sort(byRelevance);
-  const trailing = rows.find((r) => r.value === trailingValue);
+  const small = regular
+    .filter((row) => row.count < minSample)
+    .sort(byRelevance);
+  const trailing = rows.find((row) => row.value === trailingValue);
 
   const rowProps = (row: BreakdownRow) => ({
     row,
@@ -98,7 +100,7 @@ export function BreakdownBars({
             <button
               type="button"
               aria-expanded={showSmall}
-              onClick={() => setShowSmall((s) => !s)}
+              onClick={() => setShowSmall((shown) => !shown)}
               className="text-muted hover:text-foreground flex items-center gap-1 px-1.5 py-1 text-xs"
             >
               <ChevronDown

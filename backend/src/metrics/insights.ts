@@ -59,29 +59,36 @@ export function generateInsights(input: InsightInput): Insight[] {
   const pickTop = (sorted: Candidate[]) => {
     const seen = new Set<DimensionKey>();
     return sorted
-      .filter((c) => !seen.has(c.dimension) && seen.add(c.dimension))
+      .filter(
+        (candidate) =>
+          !seen.has(candidate.dimension) && seen.add(candidate.dimension),
+      )
       .slice(0, PER_TONE);
   };
 
-  const describe = (c: Candidate, tone: InsightTone): Insight => ({
-    id: `${tone}-${c.dimension}-${c.row.value}`,
+  const describe = (candidate: Candidate, tone: InsightTone): Insight => ({
+    id: `${tone}-${candidate.dimension}-${candidate.row.value}`,
     tone,
-    title: `${DIMENSIONS[c.dimension].label}: ${c.row.label}`,
+    title: `${DIMENSIONS[candidate.dimension].label}: ${candidate.row.label}`,
     detail:
-      `Cierran ${formatPct(c.row.closeRate!)}, ` +
-      `${Math.abs(pointsDiff(c.row.closeRate!, baseRate))} puntos ` +
-      `${c.lift > 0 ? 'más' : 'menos'} que el promedio (${formatPct(baseRate)}). ` +
-      `${c.row.count} reuniones.`,
-    filter: { key: c.dimension, value: c.row.value },
+      `Cierran ${formatPct(candidate.row.closeRate!)}, ` +
+      `${Math.abs(pointsDiff(candidate.row.closeRate!, baseRate))} puntos ` +
+      `${candidate.lift > 0 ? 'más' : 'menos'} que el promedio (${formatPct(baseRate)}). ` +
+      `${candidate.row.count} reuniones.`,
+    filter: { key: candidate.dimension, value: candidate.row.value },
   });
 
   const positives = pickTop(
-    candidates.filter((c) => c.lift > 0.02).sort((a, b) => b.lift - a.lift),
-  ).map((c) => describe(c, 'positive'));
+    candidates
+      .filter((candidate) => candidate.lift > 0.02)
+      .sort((candidateA, candidateB) => candidateB.lift - candidateA.lift),
+  ).map((candidate) => describe(candidate, 'positive'));
 
   const negatives = pickTop(
-    candidates.filter((c) => c.lift < -0.02).sort((a, b) => a.lift - b.lift),
-  ).map((c) => describe(c, 'negative'));
+    candidates
+      .filter((candidate) => candidate.lift < -0.02)
+      .sort((candidateA, candidateB) => candidateA.lift - candidateB.lift),
+  ).map((candidate) => describe(candidate, 'negative'));
 
   return [...positives, ...negatives];
 }

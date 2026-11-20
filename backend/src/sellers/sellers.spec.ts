@@ -2,9 +2,14 @@ import { makeClient } from '../../test/fixtures';
 import { industryMatrix, sellerHighlights } from './seller-industries';
 
 /** `n` reuniones de un vendedor en un rubro, de las cuales `closed` cerraron. */
-function meetings(seller: string, industry: string, n: number, closed: number) {
-  return Array.from({ length: n }, (_, i) =>
-    makeClient({ seller, closed: i < closed, categories: { industry } }),
+function meetings(
+  seller: string,
+  industry: string,
+  count: number,
+  closed: number,
+) {
+  return Array.from({ length: count }, (_, index) =>
+    makeClient({ seller, closed: index < closed, categories: { industry } }),
   );
 }
 
@@ -18,7 +23,7 @@ describe('industryMatrix', () => {
   const rows = industryMatrix(clients, ['Ana', 'Beto']);
 
   it('ordena por reuniones y deja "Otro" al final', () => {
-    expect(rows.map((r) => r.industry.value)).toEqual([
+    expect(rows.map((row) => row.industry.value)).toEqual([
       'salud',
       'retail',
       'otro',
@@ -29,7 +34,7 @@ describe('industryMatrix', () => {
   it('calcula la tasa del equipo y de cada vendedor en el rubro', () => {
     const salud = rows[0];
     expect(salud.team).toEqual({ count: 20, closed: 14, closeRate: 0.7 });
-    expect(salud.sellers.map((s) => s.closeRate)).toEqual([0.9, 0.5]);
+    expect(salud.sellers.map((result) => result.closeRate)).toEqual([0.9, 0.5]);
   });
 
   it('marca sin datos a un vendedor sin reuniones en el rubro', () => {

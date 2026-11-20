@@ -16,9 +16,12 @@ export function buildModelReport(
   categorized: readonly CategorizedClient[],
   model: ClosingModel,
 ): PredictionResponse {
-  const probs = categorized.map((c) => model.probabilities.get(c.id) ?? 0);
-  const outcomes = categorized.map((c) => (c.closed ? 1 : 0));
-  const baseRate = outcomes.reduce((a, b) => a + b, 0) / outcomes.length;
+  const probs = categorized.map(
+    (client) => model.probabilities.get(client.id) ?? 0,
+  );
+  const outcomes = categorized.map((client) => (client.closed ? 1 : 0));
+  const baseRate =
+    outcomes.reduce((total, outcome) => total + outcome, 0) / outcomes.length;
 
   return {
     quality: {
@@ -48,8 +51,10 @@ function summarizeGrades(
   probs: readonly number[],
 ): GradeSummary[] {
   return GRADES.map(({ grade, title }) => {
-    const members = categorized.filter((_, i) => gradeOf(probs[i]) === grade);
-    const open = members.filter((c) => !c.closed);
+    const members = categorized.filter(
+      (_, index) => gradeOf(probs[index]) === grade,
+    );
+    const open = members.filter((client) => !client.closed);
     return {
       grade,
       title,
@@ -58,7 +63,7 @@ function summarizeGrades(
       share: categorized.length ? members.length / categorized.length : 0,
       openLeads: open.length,
       openInquiries: open.reduce(
-        (sum, c) => sum + (c.categories.monthlyInquiries ?? 0),
+        (sum, client) => sum + (client.categories.monthlyInquiries ?? 0),
         0,
       ),
     };
@@ -69,12 +74,12 @@ function summarizeGrades(
 function topFactors(factors: readonly Factor[]) {
   return {
     positive: factors
-      .filter((f) => f.weight > 0)
-      .sort((a, b) => b.weight - a.weight)
+      .filter((factor) => factor.weight > 0)
+      .sort((factorA, factorB) => factorB.weight - factorA.weight)
       .slice(0, TOP_FACTORS),
     negative: factors
-      .filter((f) => f.weight < 0)
-      .sort((a, b) => a.weight - b.weight)
+      .filter((factor) => factor.weight < 0)
+      .sort((factorA, factorB) => factorA.weight - factorB.weight)
       .slice(0, TOP_FACTORS),
   };
 }

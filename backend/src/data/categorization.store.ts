@@ -121,8 +121,8 @@ export class CategorizationStore implements OnModuleInit, OnModuleDestroy {
       items: Object.fromEntries(this.items),
     };
     await mkdir(dirname(this.path), { recursive: true });
-    const tmp = `${this.path}.tmp`;
-    await writeFile(tmp, JSON.stringify(file));
-    await rename(tmp, this.path);
+    const tempPath = `${this.path}.tmp`;
+    await writeFile(tempPath, JSON.stringify(file));
+    await rename(tempPath, this.path);
   }
 }

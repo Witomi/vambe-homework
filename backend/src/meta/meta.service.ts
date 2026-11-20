@@ -21,9 +21,9 @@ export class MetaService {
 
   get(): MetaResponse {
     const clients = this.repository.findRaw();
-    const dates = clients.map((c) => c.meetingDate).sort();
+    const dates = clients.map((client) => client.meetingDate).sort();
     const models = new Set(
-      clients.flatMap((c) => this.store.get(c.id)?.model ?? []),
+      clients.flatMap((client) => this.store.get(client.id)?.model ?? []),
     );
 
     return {
@@ -40,7 +40,7 @@ export class MetaService {
         label: `${grade} · ${title} (${gradeRange(grade)})`,
       })),
       notMentioned: NOT_MENTIONED,
-      sellers: [...new Set(clients.map((c) => c.seller))].sort(),
+      sellers: [...new Set(clients.map((client) => client.seller))].sort(),
       dateRange: { from: dates[0] ?? null, to: dates.at(-1) ?? null },
       categorization: {
         total: clients.length,

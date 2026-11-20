@@ -30,12 +30,19 @@ export const DEFAULT_TRAIN_OPTIONS: TrainOptions = {
 /** Se detiene cuando ningún coeficiente cambia más que esto. */
 const TOLERANCE = 1e-8;
 
-export const sigmoid = (z: number): number => 1 / (1 + Math.exp(-z));
+/** Convierte un puntaje (log-odds) en probabilidad entre 0 y 1. */
+export const sigmoid = (score: number): number => 1 / (1 + Math.exp(-score));
 
-export function predict(model: LogisticModel, x: readonly number[]): number {
-  let z = model.intercept;
-  for (let j = 0; j < x.length; j++) z += model.weights[j] * x[j];
-  return sigmoid(z);
+/** Probabilidad que el modelo asigna a un vector de variables. */
+export function predict(
+  model: LogisticModel,
+  features: readonly number[],
+): number {
+  let score = model.intercept;
+  for (let i = 0; i < features.length; i++) {
+    score += model.weights[i] * features[i];
+  }
+  return sigmoid(score);
 }
 
 /**
@@ -47,13 +54,13 @@ interface SparseRow {
   value: Float64Array;
 }
 
-function toSparse(x: readonly number[]): SparseRow {
+function toSparse(features: readonly number[]): SparseRow {
   const index = [0];
   const value = [1];
-  x.forEach((v, j) => {
-    if (v !== 0) {
-      index.push(j + 1);
-      value.push(v);
+  features.forEach((featureValue, position) => {
+    if (featureValue !== 0) {
+      index.push(position + 1);
+      value.push(featureValue);
     }
   });
   return { index: Int32Array.from(index), value: Float64Array.from(value) };
@@ -66,90 +73,98 @@ function toSparse(x: readonly number[]): SparseRow {
  * Cada paso de Newton resuelve (Xᵀ·W·X + l2·I)·Δ = Xᵀ·(p − y) + l2·w, con
  * W = p·(1 − p): usa la curvatura de la función, por eso converge en pocos
  * pasos en vez de los cientos del descenso de gradiente.
+ *
+ * @param features una fila por cliente (la X de la fórmula)
+ * @param labels 1 si cerró, 0 si no (la y de la fórmula)
  */
 export function train(
-  X: readonly (readonly number[])[],
-  y: readonly number[],
+  features: readonly (readonly number[])[],
+  labels: readonly number[],
   options: TrainOptions = DEFAULT_TRAIN_OPTIONS,
 ): LogisticModel {
-  const n = X.length;
-  const d = (X[0]?.length ?? 0) + 1; // + intercepto
-  const rows = X.map(toSparse);
-  const rate = Math.min(
-    Math.max(y.reduce((a, b) => a + b, 0) / n, 1e-3),
-    1 - 1e-3,
-  );
-  const theta = new Float64Array(d);
-  theta[0] = Math.log(rate / (1 - rate));
+  const rowCount = features.length;
+  const size = (features[0]?.length ?? 0) + 1; // variables + intercepto
+  const rows = features.map(toSparse);
+  const closedCount = labels.reduce((sum, label) => sum + label, 0);
+  const baseRate = Math.min(Math.max(closedCount / rowCount, 1e-3), 1 - 1e-3);
+  const coefficients = new Float64Array(size);
+  coefficients[0] = Math.log(baseRate / (1 - baseRate));
 
-  for (let iter = 0; iter < options.maxIterations; iter++) {
-    const gradient = new Float64Array(d);
-    const hessian = new Float64Array(d * d);
-    for (let j = 1; j < d; j++) {
-      gradient[j] = options.l2 * theta[j];
-      hessian[j * d + j] = options.l2;
+  for (let iteration = 0; iteration < options.maxIterations; iteration++) {
+    // La regularización aporta l2·w al gradiente y l2 a la diagonal (no al intercepto).
+    const gradient = new Float64Array(size);
+    const hessian = new Float64Array(size * size);
+    for (let j = 1; j < size; j++) {
+      gradient[j] = options.l2 * coefficients[j];
+      hessian[j * size + j] = options.l2;
     }
 
-    for (let i = 0; i < n; i++) {
-      const { index, value } = rows[i];
-      let z = 0;
-      for (let k = 0; k < index.length; k++) z += theta[index[k]] * value[k];
-      const p = sigmoid(z);
-      const error = p - y[i];
-      const curvature = p * (1 - p);
-      for (let a = 0; a < index.length; a++) {
-        gradient[index[a]] += error * value[a];
-        const row = index[a] * d;
-        const scaled = curvature * value[a];
-        for (let b = 0; b < index.length; b++) {
-          hessian[row + index[b]] += scaled * value[b];
+    for (let row = 0; row < rowCount; row++) {
+      const { index, value } = rows[row];
+      let score = 0;
+      for (let k = 0; k < index.length; k++) {
+        score += coefficients[index[k]] * value[k];
+      }
+      const probability = sigmoid(score);
+      const error = probability - labels[row];
+      const curvature = probability * (1 - probability);
+      for (let first = 0; first < index.length; first++) {
+        gradient[index[first]] += error * value[first];
+        const hessianRow = index[first] * size;
+        const scaled = curvature * value[first];
+        for (let second = 0; second < index.length; second++) {
+          hessian[hessianRow + index[second]] += scaled * value[second];
         }
       }
     }
 
-    const step = solveSymmetric(hessian, gradient, d);
-    let largest = 0;
-    for (let j = 0; j < d; j++) {
-      theta[j] -= step[j];
-      largest = Math.max(largest, Math.abs(step[j]));
+    const step = solveSymmetric(hessian, gradient, size);
+    let largestChange = 0;
+    for (let j = 0; j < size; j++) {
+      coefficients[j] -= step[j];
+      largestChange = Math.max(largestChange, Math.abs(step[j]));
     }
-    if (largest < TOLERANCE) break;
+    if (largestChange < TOLERANCE) break;
   }
 
-  return { intercept: theta[0], weights: Array.from(theta.subarray(1)) };
+  return {
+    intercept: coefficients[0],
+    weights: Array.from(coefficients.subarray(1)),
+  };
 }
 
 /**
- * Resuelve A·x = b para A simétrica definida positiva (Cholesky).
- * Un mínimo en la diagonal evita divisiones por 0 si una variable nunca
- * aparece y no hay regularización.
+ * Resuelve matrix·x = rightSide para una matriz simétrica definida positiva
+ * (descomposición de Cholesky: matrix = L·Lᵀ). Un mínimo en la diagonal
+ * evita divisiones por 0 si una variable nunca aparece y no hay regularización.
  */
 function solveSymmetric(
-  A: Float64Array,
-  b: Float64Array,
-  d: number,
+  matrix: Float64Array,
+  rightSide: Float64Array,
+  size: number,
 ): Float64Array {
-  const L = new Float64Array(d * d);
-  for (let i = 0; i < d; i++) {
+  const lower = new Float64Array(size * size);
+  for (let i = 0; i < size; i++) {
     for (let j = 0; j <= i; j++) {
-      let sum = A[i * d + j];
-      for (let k = 0; k < j; k++) sum -= L[i * d + k] * L[j * d + k];
-      L[i * d + j] =
-        i === j ? Math.sqrt(Math.max(sum, 1e-12)) : sum / L[j * d + j];
+      let sum = matrix[i * size + j];
+      for (let k = 0; k < j; k++)
+        sum -= lower[i * size + k] * lower[j * size + k];
+      lower[i * size + j] =
+        i === j ? Math.sqrt(Math.max(sum, 1e-12)) : sum / lower[j * size + j];
     }
   }
-  // L·u = b, luego Lᵀ·x = u.
-  const u = new Float64Array(d);
-  for (let i = 0; i < d; i++) {
-    let sum = b[i];
-    for (let k = 0; k < i; k++) sum -= L[i * d + k] * u[k];
-    u[i] = sum / L[i * d + i];
+  // Primero L·forward = rightSide, luego Lᵀ·solution = forward.
+  const forward = new Float64Array(size);
+  for (let i = 0; i < size; i++) {
+    let sum = rightSide[i];
+    for (let k = 0; k < i; k++) sum -= lower[i * size + k] * forward[k];
+    forward[i] = sum / lower[i * size + i];
   }
-  const x = new Float64Array(d);
-  for (let i = d - 1; i >= 0; i--) {
-    let sum = u[i];
-    for (let k = i + 1; k < d; k++) sum -= L[k * d + i] * x[k];
-    x[i] = sum / L[i * d + i];
+  const solution = new Float64Array(size);
+  for (let i = size - 1; i >= 0; i--) {
+    let sum = forward[i];
+    for (let k = i + 1; k < size; k++) sum -= lower[k * size + i] * solution[k];
+    solution[i] = sum / lower[i * size + i];
   }
-  return x;
+  return solution;
 }

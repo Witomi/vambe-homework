@@ -28,16 +28,16 @@ export interface ClientPrediction {
   grade: Grade;
 }
 
-export const GRADE_VALUES = GRADES.map((g) => g.grade);
+export const GRADE_VALUES = GRADES.map((definition) => definition.grade);
 
 /** Nota correspondiente a una probabilidad (0..1). */
 export function gradeOf(probability: number): Grade {
-  return GRADES.find((g) => probability >= g.min)!.grade;
+  return GRADES.find((definition) => probability >= definition.min)!.grade;
 }
 
 /** Rango legible de cada nota: "≥ 75%", "70%–75%", "< 62%". */
 export function gradeRange(grade: Grade): string {
-  const index = GRADES.findIndex((g) => g.grade === grade);
+  const index = GRADES.findIndex((definition) => definition.grade === grade);
   const min = GRADES[index].min;
   if (index === 0) return `≥ ${formatPct(min)}`;
   const max = GRADES[index - 1].min;

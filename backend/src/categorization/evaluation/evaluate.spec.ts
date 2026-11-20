@@ -14,7 +14,7 @@ const gold = (
 });
 
 const score = (report: ReturnType<typeof evaluate>, dimension: string) =>
-  report.dimensions.find((d) => d.dimension === dimension)!;
+  report.dimensions.find((score) => score.dimension === dimension)!;
 
 describe('evaluate', () => {
   const predicted = new Map<string, Categories>([
@@ -69,12 +69,12 @@ describe('evaluate', () => {
       [gold('a', { industry: 'salud' }), gold('b', { industry: 'ecommerce' })],
       predicted,
     );
-    const [a, b] = report.cases;
-    expect(a).toMatchObject({ position: 1, accuracy: 1, errors: [] });
-    expect(b.position).toBe(2);
-    expect(b.errors).toEqual(
+    const [caseA, caseB] = report.cases;
+    expect(caseA).toMatchObject({ position: 1, accuracy: 1, errors: [] });
+    expect(caseB.position).toBe(2);
+    expect(caseB.errors).toEqual(
       expect.arrayContaining(['Industria', 'Casos de uso']),
     );
-    expect(b.accuracy).toBeLessThan(1);
+    expect(caseB.accuracy).toBeLessThan(1);
   });
 });

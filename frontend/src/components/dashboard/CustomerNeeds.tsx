@@ -28,10 +28,10 @@ export function CustomerNeeds({
   const notMentioned = meta.notMentioned.value;
   const rows = metrics.dimensions[tab];
   const topRows = rows
-    .filter((r) => r.value !== notMentioned)
-    .sort((a, b) => b.share - a.share)
+    .filter((row) => row.value !== notMentioned)
+    .sort((rowA, rowB) => rowB.share - rowA.share)
     .slice(0, TOP);
-  const notMentionedRow = rows.find((r) => r.value === notMentioned);
+  const notMentionedRow = rows.find((row) => row.value === notMentioned);
 
   return (
     <Card

@@ -22,15 +22,15 @@ export class SellersService {
     const performance = sellerPerformance(categorized);
     const industries = industryMatrix(
       categorized,
-      performance.map((p) => p.seller),
+      performance.map((performance) => performance.seller),
     );
 
     return {
       baseRate: rateStat(categorized).closeRate,
       minSample: MIN_SELLER_INDUSTRY_SAMPLE,
-      sellers: performance.map((p, i) => ({
-        ...p,
-        ...sellerHighlights(industries, i),
+      sellers: performance.map((performance, index) => ({
+        ...performance,
+        ...sellerHighlights(industries, index),
       })),
       industries,
     };

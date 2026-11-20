@@ -22,8 +22,11 @@ export function SearchInput({
 
   useEffect(() => {
     if (draft === value) return;
-    const t = setTimeout(() => onChangeRef.current(draft.trim()), DEBOUNCE_MS);
-    return () => clearTimeout(t);
+    const timer = setTimeout(
+      () => onChangeRef.current(draft.trim()),
+      DEBOUNCE_MS,
+    );
+    return () => clearTimeout(timer);
   }, [draft, value]);
 
   return (
@@ -33,7 +36,7 @@ export function SearchInput({
       <input
         type="search"
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(event) => setDraft(event.target.value)}
         placeholder="Buscar cliente, email o palabra en la reunión…"
         className="placeholder:text-subtle min-w-0 flex-1 bg-transparent text-sm outline-none [&::-webkit-search-cancel-button]:hidden"
       />

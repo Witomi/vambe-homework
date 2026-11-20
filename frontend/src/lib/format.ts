@@ -4,22 +4,26 @@ const compactFormat = new Intl.NumberFormat('es-CL', {
   maximumFractionDigits: 1,
 });
 
-export const formatNumber = (n: number | null | undefined) =>
-  n === null || n === undefined ? '—' : numberFormat.format(Math.round(n));
+export const formatNumber = (value: number | null | undefined) =>
+  value === null || value === undefined
+    ? '—'
+    : numberFormat.format(Math.round(value));
 
-export const formatCompact = (n: number | null | undefined) =>
-  n === null || n === undefined ? '—' : compactFormat.format(n);
+export const formatCompact = (value: number | null | undefined) =>
+  value === null || value === undefined ? '—' : compactFormat.format(value);
 
 /** Número con decimales fijos en formato chileno: 1.234 → "1,2". */
-export const formatDecimal = (n: number, digits = 1) =>
+export const formatDecimal = (value: number, digits = 1) =>
   new Intl.NumberFormat('es-CL', {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
-  }).format(n);
+  }).format(value);
 
 /** Tasa como porcentaje: 0.6888 → "69%" (o "68,9%" con 1 decimal). */
-export const formatPct = (n: number | null | undefined, digits = 0) =>
-  n === null || n === undefined ? '—' : `${formatDecimal(n * 100, digits)}%`;
+export const formatPct = (value: number | null | undefined, digits = 0) =>
+  value === null || value === undefined
+    ? '—'
+    : `${formatDecimal(value * 100, digits)}%`;
 
 /** Razón de chances: 1.234 → "×1,23". */
 export const formatOdds = (odds: number, digits = 2) =>
@@ -37,9 +41,9 @@ export const pointsDiff = (rate: number, base: number) =>
   displayedPct(rate) - displayedPct(base);
 
 export const formatPointsDiff = (rate: number, base: number) => {
-  const pts = pointsDiff(rate, base);
-  const sign = pts > 0 ? '+' : pts < 0 ? '−' : '±';
-  return `${sign}${Math.abs(pts)} pts`;
+  const points = pointsDiff(rate, base);
+  const sign = points > 0 ? '+' : points < 0 ? '−' : '±';
+  return `${sign}${Math.abs(points)} pts`;
 };
 
 /**
@@ -48,9 +52,9 @@ export const formatPointsDiff = (rate: number, base: number) => {
  */
 export const formatChange = (current: number, previous: number) => {
   if (previous === 0) return null;
-  const pct = Math.round(((current - previous) / previous) * 100);
-  const sign = pct > 0 ? '+' : pct < 0 ? '−' : '±';
-  return `${sign}${Math.abs(pct)}%`;
+  const percent = Math.round(((current - previous) / previous) * 100);
+  const sign = percent > 0 ? '+' : percent < 0 ? '−' : '±';
+  return `${sign}${Math.abs(percent)}%`;
 };
 
 const MONTHS = [
@@ -69,15 +73,15 @@ const MONTHS = [
 ];
 
 /** "2024-03" → "mar 24" */
-export const formatMonth = (ym: string) => {
-  const [y, m] = ym.split('-');
-  return `${MONTHS[Number(m) - 1]} ${y.slice(2)}`;
+export const formatMonth = (yearMonth: string) => {
+  const [year, month] = yearMonth.split('-');
+  return `${MONTHS[Number(month) - 1]} ${year.slice(2)}`;
 };
 
 /** "2025-03" → "mar 2025" */
-export const formatMonthYear = (ym: string) => {
-  const [y, m] = ym.split('-');
-  return `${MONTHS[Number(m) - 1]} ${y}`;
+export const formatMonthYear = (yearMonth: string) => {
+  const [year, month] = yearMonth.split('-');
+  return `${MONTHS[Number(month) - 1]} ${year}`;
 };
 
 /** Celular chileno sin formato: "56976545678" → "+56 9 7654 5678". */
@@ -92,6 +96,6 @@ export const dialablePhone = (raw: string) =>
 
 /** "2024-03-15" → "15 mar 2024" */
 export const formatDate = (iso: string) => {
-  const [y, m, d] = iso.split('-');
-  return `${Number(d)} ${MONTHS[Number(m) - 1]} ${y}`;
+  const [year, month, day] = iso.split('-');
+  return `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
 };

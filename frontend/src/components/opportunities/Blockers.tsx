@@ -27,33 +27,36 @@ export function Blockers({
         </p>
       ) : (
         <ol className="space-y-3">
-          {blockers.map((b) => (
+          {blockers.map((blocker) => (
             <li
-              key={`${b.dimension}-${b.value}`}
+              key={`${blocker.dimension}-${blocker.value}`}
               className="border-border rounded-lg border p-3"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <DetailButton
-                  detail={segmentDetail(b, baseRate)}
+                  detail={segmentDetail(blocker, baseRate)}
                   className="hover:text-brand text-sm font-medium"
                 >
                   <span className="text-subtle font-normal">
-                    {b.dimensionLabel}:
+                    {blocker.dimensionLabel}:
                   </span>{' '}
-                  {b.label}
+                  {blocker.label}
                 </DetailButton>
                 <span className="text-xs tabular-nums">
-                  cierra {formatPct(b.closeRate)}{' '}
+                  cierra {formatPct(blocker.closeRate)}{' '}
                   <span className="text-negative-strong font-medium">
-                    ({formatPointsDiff(b.closeRate, baseRate)})
+                    ({formatPointsDiff(blocker.closeRate, baseRate)})
                   </span>{' '}
                   <span className="text-subtle">
-                    · {formatNumber(b.count)} reuniones
+                    · {formatNumber(blocker.count)} reuniones
                   </span>
                 </span>
               </div>
               <div className="mt-2">
-                <WinningTraitsList segment={b} origin={OPPORTUNITIES_ORIGIN} />
+                <WinningTraitsList
+                  segment={blocker}
+                  origin={OPPORTUNITIES_ORIGIN}
+                />
               </div>
             </li>
           ))}

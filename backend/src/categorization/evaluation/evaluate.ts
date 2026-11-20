@@ -52,11 +52,11 @@ const INQUIRY_FIELDS = [
   { key: 'peakMonthlyInquiries', label: 'Consultas/mes en peak' },
 ] as const;
 
-function jaccard(a: readonly string[], b: readonly string[]): number {
-  const setA = new Set(a);
-  const setB = new Set(b);
+function jaccard(listA: readonly string[], listB: readonly string[]): number {
+  const setA = new Set(listA);
+  const setB = new Set(listB);
   if (setA.size === 0 && setB.size === 0) return 1;
-  const intersection = [...setA].filter((v) => setB.has(v)).length;
+  const intersection = [...setA].filter((value) => setB.has(value)).length;
   return intersection / new Set([...setA, ...setB]).size;
 }
 
@@ -66,10 +66,11 @@ function similarity(
   expected: Categories,
   actual: Categories,
 ): number {
-  const e = expected[key];
-  const a = actual[key];
-  if (Array.isArray(e) && Array.isArray(a)) return jaccard(e, a);
-  return e === a ? 1 : 0;
+  const expectedValue = expected[key];
+  const actualValue = actual[key];
+  if (Array.isArray(expectedValue) && Array.isArray(actualValue))
+    return jaccard(expectedValue, actualValue);
+  return expectedValue === actualValue ? 1 : 0;
 }
 
 function inquiriesMatch(expected: number | null, actual: number | null) {
@@ -78,7 +79,9 @@ function inquiriesMatch(expected: number | null, actual: number | null) {
 }
 
 const mean = (values: readonly number[]) =>
-  values.length ? values.reduce((sum, v) => sum + v, 0) / values.length : 0;
+  values.length
+    ? values.reduce((sum, value) => sum + value, 0) / values.length
+    : 0;
 
 const share = (hits: readonly boolean[]) => mean(hits.map(Number));
 
@@ -103,8 +106,10 @@ function scoreCase(pair: Pair): CaseScore {
   return {
     position: pair.position,
     id: pair.id,
-    accuracy: share(checks.map((c) => c.correct)),
-    errors: checks.filter((c) => !c.correct).map((c) => c.label),
+    accuracy: share(checks.map((check) => check.correct)),
+    errors: checks
+      .filter((check) => !check.correct)
+      .map((check) => check.label),
   };
 }
 
@@ -116,26 +121,30 @@ export function evaluate(
   gold: readonly GoldItem[],
   predicted: ReadonlyMap<string, Categories>,
 ): EvaluationReport {
-  const pairs: Pair[] = gold.flatMap((g, i) => {
-    const actual = predicted.get(g.id);
-    return g.reviewed && actual
-      ? [{ position: i + 1, id: g.id, expected: g.expected, actual }]
+  const pairs: Pair[] = gold.flatMap((item, index) => {
+    const actual = predicted.get(item.id);
+    return item.reviewed && actual
+      ? [{ position: index + 1, id: item.id, expected: item.expected, actual }]
       : [];
   });
 
   const dimensions = DIMENSION_KEYS.map((key) => {
-    const scores = pairs.map((p) => similarity(key, p.expected, p.actual));
+    const scores = pairs.map((pair) =>
+      similarity(key, pair.expected, pair.actual),
+    );
     return {
       dimension: key,
       label: DIMENSIONS[key].label,
-      exactMatch: share(scores.map((s) => s === 1)),
+      exactMatch: share(scores.map((score) => score === 1)),
       overlap: DIMENSIONS[key].multi ? mean(scores) : null,
     };
   });
 
   const [monthly, peak] = INQUIRY_FIELDS.map(({ key }) =>
     share(
-      pairs.map((p) => inquiriesMatch(p.expected[key] ?? null, p.actual[key])),
+      pairs.map((pair) =>
+        inquiriesMatch(pair.expected[key] ?? null, pair.actual[key]),
+      ),
     ),
   );
 

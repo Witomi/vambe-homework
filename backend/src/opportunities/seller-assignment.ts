@@ -18,18 +18,23 @@ export function suggestAssignments(
   categorized: readonly CategorizedClient[],
 ): SellerAssignment[] {
   const industries = segmentsOf(categorized, 'industry')
-    .sort((a, b) => b.count - a.count)
+    .sort((segmentA, segmentB) => segmentB.count - segmentA.count)
     .slice(0, TOP_INDUSTRIES);
 
   return industries
     .flatMap((industry): SellerAssignment[] => {
       const clients = categorized.filter(
-        (c) => c.categories.industry === industry.value,
+        (client) => client.categories.industry === industry.value,
       );
-      const bySeller = [...groupBy(clients, (c) => [c.seller]).entries()]
+      const bySeller = [
+        ...groupBy(clients, (client) => [client.seller]).entries(),
+      ]
         .filter(([, group]) => group.length >= MIN_SELLER_INDUSTRY_SAMPLE)
         .map(([seller, group]) => ({ seller, ...rateStat(group) }))
-        .sort((a, b) => (b.closeRate ?? 0) - (a.closeRate ?? 0));
+        .sort(
+          (sellerA, sellerB) =>
+            (sellerB.closeRate ?? 0) - (sellerA.closeRate ?? 0),
+        );
 
       const best = bySeller[0];
       if (
@@ -49,8 +54,8 @@ export function suggestAssignments(
       ];
     })
     .sort(
-      (a, b) =>
-        pointsDiff(b.sellerRate, b.industryRate) -
-        pointsDiff(a.sellerRate, a.industryRate),
+      (assignmentA, assignmentB) =>
+        pointsDiff(assignmentB.sellerRate, assignmentB.industryRate) -
+        pointsDiff(assignmentA.sellerRate, assignmentA.industryRate),
     );
 }

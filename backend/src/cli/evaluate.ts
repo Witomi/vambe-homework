@@ -46,7 +46,7 @@ async function main() {
       return;
     }
     await report(
-      new Map(categorized.map((c) => [c.id, c.categories])),
+      new Map(categorized.map((client) => [client.id, client.categories])),
       values.cases,
     );
   } finally {
@@ -64,11 +64,11 @@ async function initGold(
   }
   const items: GoldItem[] = seededShuffle(categorized, seed)
     .slice(0, size)
-    .map((c) => ({
-      id: c.id,
-      transcript: c.transcript,
+    .map((client) => ({
+      id: client.id,
+      transcript: client.transcript,
       reviewed: false,
-      expected: c.categories,
+      expected: client.categories,
     }));
   await mkdir(dirname(GOLD_PATH), { recursive: true });
   await writeFile(GOLD_PATH, JSON.stringify(items, null, 2));
@@ -93,10 +93,10 @@ async function report(predicted: Map<string, Categories>, byCase: boolean) {
 
   console.log(`Casos evaluados: ${result.evaluated}\n`);
   console.table(
-    result.dimensions.map((d) => ({
-      Dimensión: d.label,
-      'Acierto exacto': formatPct(d.exactMatch),
-      Solapamiento: d.overlap === null ? '—' : formatPct(d.overlap),
+    result.dimensions.map((score) => ({
+      Dimensión: score.label,
+      'Acierto exacto': formatPct(score.exactMatch),
+      Solapamiento: score.overlap === null ? '—' : formatPct(score.overlap),
     })),
   );
   console.log(
@@ -106,18 +106,21 @@ async function report(predicted: Map<string, Categories>, byCase: boolean) {
     `Consultas/mes en peak dentro de ±20%: ${formatPct(result.peakInquiriesWithin20Pct)}`,
   );
 
-  const perfect = result.cases.filter((c) => c.accuracy === 1).length;
+  const perfect = result.cases.filter(
+    (caseScore) => caseScore.accuracy === 1,
+  ).length;
   const average =
-    result.cases.reduce((sum, c) => sum + c.accuracy, 0) / result.cases.length;
+    result.cases.reduce((sum, caseScore) => sum + caseScore.accuracy, 0) /
+    result.cases.length;
   console.log(
     `\nAcierto promedio por caso: ${formatPct(average)} · ${perfect} de ${result.evaluated} casos sin errores`,
   );
   if (byCase) {
     console.table(
-      result.cases.map((c) => ({
-        Caso: c.position,
-        Acierto: formatPct(c.accuracy),
-        Errores: c.errors.join(', ') || '—',
+      result.cases.map((caseScore) => ({
+        Caso: caseScore.position,
+        Acierto: formatPct(caseScore.accuracy),
+        Errores: caseScore.errors.join(', ') || '—',
       })),
     );
   }

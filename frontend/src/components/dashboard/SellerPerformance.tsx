@@ -46,31 +46,36 @@ export function SellerPerformance({ metrics }: { metrics: Metrics }) {
         <p className="text-muted text-sm">Sin reuniones analizadas.</p>
       ) : (
         <ul className="grid grid-cols-[fit-content(7rem)_minmax(4rem,1fr)_auto] gap-y-1">
-          {metrics.sellers.map((s) => {
-            const diff = pointsDiff(s.closeRate, s.expectedRate);
+          {metrics.sellers.map((performance) => {
+            const diff = pointsDiff(
+              performance.closeRate,
+              performance.expectedRate,
+            );
             return (
               <li
-                key={s.seller}
+                key={performance.seller}
                 className="col-span-full grid grid-cols-subgrid"
               >
                 <button
                   type="button"
-                  onClick={() => toggleParamValue('sellers', s.seller)}
-                  title={`${s.seller}: cerró ${formatPct(s.closeRate)} de ${formatNumber(s.count)} reuniones; se esperaba ${formatPct(s.expectedRate)} según sus rubros.`}
+                  onClick={() =>
+                    toggleParamValue('sellers', performance.seller)
+                  }
+                  title={`${performance.seller}: cerró ${formatPct(performance.closeRate)} de ${formatNumber(performance.count)} reuniones; se esperaba ${formatPct(performance.expectedRate)} según sus rubros.`}
                   className={clsx(
                     'hover:bg-background col-span-full grid grid-cols-subgrid items-center gap-x-3 rounded-md py-1 text-left',
-                    selected.includes(s.seller) && 'bg-brand-soft',
+                    selected.includes(performance.seller) && 'bg-brand-soft',
                   )}
                 >
-                  <span className="pl-1.5 text-xs">{s.seller}</span>
+                  <span className="pl-1.5 text-xs">{performance.seller}</span>
                   <BarTrack
-                    width={s.closeRate}
+                    width={performance.closeRate}
                     colorClass={diff >= 0 ? 'bg-positive' : 'bg-negative'}
-                    markerAt={s.expectedRate}
+                    markerAt={performance.expectedRate}
                   />
                   <span className="pr-1.5 text-right text-xs whitespace-nowrap tabular-nums">
                     <span className="font-medium">
-                      {formatPct(s.closeRate)}
+                      {formatPct(performance.closeRate)}
                     </span>
                     <span
                       className={clsx(
@@ -80,10 +85,13 @@ export function SellerPerformance({ metrics }: { metrics: Metrics }) {
                           : 'text-negative-strong',
                       )}
                     >
-                      {formatPointsDiff(s.closeRate, s.expectedRate)}
+                      {formatPointsDiff(
+                        performance.closeRate,
+                        performance.expectedRate,
+                      )}
                     </span>
                     <span className="text-subtle ml-1">
-                      (esp. {formatPct(s.expectedRate)})
+                      (esp. {formatPct(performance.expectedRate)})
                     </span>
                   </span>
                 </button>

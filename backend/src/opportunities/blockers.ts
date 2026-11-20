@@ -28,20 +28,20 @@ export function findBlockers(
 ): Blocker[] {
   return BLOCKER_DIMENSIONS.flatMap((dimension) =>
     segmentsOf(categorized, dimension).filter(
-      (s) => pointsDiff(s.closeRate, baseRate) <= -MIN_DROP_PTS,
+      (segment) => pointsDiff(segment.closeRate, baseRate) <= -MIN_DROP_PTS,
     ),
   )
     .sort(
-      (a, b) =>
-        pointsDiff(a.closeRate, baseRate) * a.count -
-        pointsDiff(b.closeRate, baseRate) * b.count,
+      (segmentA, segmentB) =>
+        pointsDiff(segmentA.closeRate, baseRate) * segmentA.count -
+        pointsDiff(segmentB.closeRate, baseRate) * segmentB.count,
     )
     .slice(0, TOP)
-    .map((s) => ({
-      ...s,
+    .map((segment) => ({
+      ...segment,
       winningTraits: findWinningTraits(
-        membersOf(categorized, s.dimension, s.value),
-        s.dimension,
+        membersOf(categorized, segment.dimension, segment.value),
+        segment.dimension,
       ),
     }));
 }

@@ -8,15 +8,15 @@ export function hrefWith(
 ): string {
   const next = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    const str = Array.isArray(value) ? value.join(',') : value;
-    if (str) next.set(key, str);
+    const serialized = Array.isArray(value) ? value.join(',') : value;
+    if (serialized) next.set(key, serialized);
   }
   for (const [key, value] of Object.entries(changes)) {
     if (value === null || value === '') next.delete(key);
     else next.set(key, String(value));
   }
-  const qs = next.toString();
-  return qs ? `${pathname}?${qs}` : pathname;
+  const query = next.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
 
 /**

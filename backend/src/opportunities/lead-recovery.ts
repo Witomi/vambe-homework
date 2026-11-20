@@ -27,7 +27,9 @@ export function findRecoverableLeads(
   scorer: LeadScorer,
 ): LeadRecovery {
   const scored = categorized
-    .filter((c) => !c.closed && c.categories.monthlyInquiries !== null)
+    .filter(
+      (client) => !client.closed && client.categories.monthlyInquiries !== null,
+    )
     .flatMap((client) => {
       const winScore = scorer.probabilityOf(client.id);
       if (winScore === undefined || winScore <= baseRate) return [];
@@ -50,11 +52,15 @@ export function findRecoverableLeads(
 
   return {
     candidates: scored.length,
-    monthlyInquiries: scored.reduce((sum, l) => sum + l.monthlyInquiries, 0),
+    monthlyInquiries: scored.reduce(
+      (sum, lead) => sum + lead.monthlyInquiries,
+      0,
+    ),
     top: [...scored]
       .sort(
-        (a, b) =>
-          b.winScore - a.winScore || b.monthlyInquiries - a.monthlyInquiries,
+        (leadA, leadB) =>
+          leadB.winScore - leadA.winScore ||
+          leadB.monthlyInquiries - leadA.monthlyInquiries,
       )
       .slice(0, TOP),
   };

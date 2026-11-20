@@ -22,9 +22,9 @@ export const SELLERS_ORIGIN = 'vendedores';
 export function SellerCards({ sellers }: { sellers: SellerSummary[] }) {
   return (
     <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {sellers.map((s, i) => (
-        <li key={s.seller}>
-          <SellerCard seller={s} rank={i + 1} />
+      {sellers.map((performance, index) => (
+        <li key={performance.seller}>
+          <SellerCard seller={performance} rank={index + 1} />
         </li>
       ))}
     </ul>
@@ -32,63 +32,64 @@ export function SellerCards({ sellers }: { sellers: SellerSummary[] }) {
 }
 
 function SellerCard({
-  seller: s,
+  seller: performance,
   rank,
 }: {
   seller: SellerSummary;
   rank: number;
 }) {
-  const diff = pointsDiff(s.closeRate, s.expectedRate);
+  const diff = pointsDiff(performance.closeRate, performance.expectedRate);
 
   return (
     <article className="border-border bg-surface flex h-full flex-col gap-4 rounded-xl border p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       <header className="flex items-start justify-between gap-2">
         <div>
           <p className="text-subtle text-xs">#{rank} en desempeño</p>
-          <h2 className="text-lg font-semibold">{s.seller}</h2>
+          <h2 className="text-lg font-semibold">{performance.seller}</h2>
         </div>
         <Badge tone={diff >= 0 ? 'brand' : 'bad'}>
-          {formatPointsDiff(s.closeRate, s.expectedRate)} vs. esperado
+          {formatPointsDiff(performance.closeRate, performance.expectedRate)}{' '}
+          vs. esperado
         </Badge>
       </header>
 
       <div className="space-y-2">
         <p className="text-sm">
           <span className="text-2xl font-semibold tabular-nums">
-            {formatPct(s.closeRate)}
+            {formatPct(performance.closeRate)}
           </span>{' '}
           <span className="text-muted">
-            de cierre en {formatNumber(s.count)} reuniones
+            de cierre en {formatNumber(performance.count)} reuniones
           </span>
         </p>
         <div className="grid">
           <BarTrack
-            width={s.closeRate}
+            width={performance.closeRate}
             colorClass={diff >= 0 ? 'bg-positive' : 'bg-negative'}
-            markerAt={s.expectedRate}
+            markerAt={performance.expectedRate}
           />
         </div>
         <p className="text-subtle text-xs">
-          Se esperaba {formatPct(s.expectedRate)} según los rubros de sus leads
-          (línea punteada).
+          Se esperaba {formatPct(performance.expectedRate)} según los rubros de
+          sus leads (línea punteada).
         </p>
       </div>
 
       <dl className="space-y-2 text-sm">
         <Highlight
           kind="strongest"
-          highlight={s.strongest}
+          highlight={performance.strongest}
           empty="No supera al equipo en ningún rubro con muestra suficiente."
         />
         <Highlight
           kind="weakest"
-          highlight={s.weakest}
+          highlight={performance.weakest}
           empty="No queda bajo el equipo en ningún rubro con muestra suficiente."
         />
       </dl>
 
       <Link
-        href={clientsHref({ sellers: s.seller }, SELLERS_ORIGIN)}
+        href={clientsHref({ sellers: performance.seller }, SELLERS_ORIGIN)}
         className="text-brand-strong mt-auto flex items-center gap-1 text-sm font-medium hover:underline"
       >
         Ver sus clientes
@@ -115,7 +116,7 @@ const HIGHLIGHT = {
 
 function Highlight({
   kind,
-  highlight: h,
+  highlight,
   empty,
 }: {
   kind: keyof typeof HIGHLIGHT;
@@ -134,15 +135,16 @@ function Highlight({
       <div className="min-w-0">
         <dt className="text-subtle text-xs">{style.label}</dt>
         <dd>
-          {h ? (
+          {highlight ? (
             <>
-              <span className="font-medium">{h.industry.label}</span>{' '}
+              <span className="font-medium">{highlight.industry.label}</span>{' '}
               <span className="text-muted text-xs tabular-nums">
-                {formatPct(h.closeRate)} vs. {formatPct(h.teamRate)} del equipo{' '}
+                {formatPct(highlight.closeRate)} vs.{' '}
+                {formatPct(highlight.teamRate)} del equipo{' '}
                 <span className={clsx('font-medium', style.diffClass)}>
-                  ({formatPointsDiff(h.closeRate, h.teamRate)})
+                  ({formatPointsDiff(highlight.closeRate, highlight.teamRate)})
                 </span>{' '}
-                · {h.count} reuniones
+                · {highlight.count} reuniones
               </span>
             </>
           ) : (

@@ -28,14 +28,16 @@ const NO_CHANGE: Change = { text: null, direction: 0 };
 /** Compara el mes elegido con el anterior y con el mismo mes del año pasado. */
 function compareWith(
   comparison: Comparison,
-  format: (m: MonthKpis) => string,
-  change: (m: MonthKpis) => Change,
+  format: (month: MonthKpis) => string,
+  change: (month: MonthKpis) => Change,
 ): ComparisonRow[] {
-  return [comparison.previousMonth, comparison.sameMonthLastYear].map((m) => ({
-    label: `vs. ${formatMonthYear(m.month)}`,
-    value: m.meetings ? format(m) : null,
-    ...(m.meetings ? change(m) : NO_CHANGE),
-  }));
+  return [comparison.previousMonth, comparison.sameMonthLastYear].map(
+    (month) => ({
+      label: `vs. ${formatMonthYear(month.month)}`,
+      value: month.meetings ? format(month) : null,
+      ...(month.meetings ? change(month) : NO_CHANGE),
+    }),
+  );
 }
 
 /** Reuniones del mes vs. los meses de referencia (cambio en %). */
@@ -43,10 +45,10 @@ export function meetingsComparison(comparison: Comparison): ComparisonRow[] {
   const current = comparison.current.meetings;
   return compareWith(
     comparison,
-    (m) => formatNumber(m.meetings),
-    (m) => ({
-      text: formatChange(current, m.meetings),
-      direction: Math.sign(current - m.meetings),
+    (month) => formatNumber(month.meetings),
+    (month) => ({
+      text: formatChange(current, month.meetings),
+      direction: Math.sign(current - month.meetings),
     }),
   );
 }
@@ -56,13 +58,13 @@ export function closeRateComparison(comparison: Comparison): ComparisonRow[] {
   const current = comparison.current.closeRate;
   return compareWith(
     comparison,
-    (m) => formatPct(m.closeRate),
-    (m) =>
-      current === null || m.closeRate === null
+    (month) => formatPct(month.closeRate),
+    (month) =>
+      current === null || month.closeRate === null
         ? NO_CHANGE
         : {
-            text: formatPointsDiff(current, m.closeRate),
-            direction: Math.sign(pointsDiff(current, m.closeRate)),
+            text: formatPointsDiff(current, month.closeRate),
+            direction: Math.sign(pointsDiff(current, month.closeRate)),
           },
   );
 }

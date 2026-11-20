@@ -24,10 +24,10 @@ export function FilterBar({ meta }: { meta: Meta }) {
 
   const primary = PRIMARY_DIMENSIONS.map((key) => findDimension(meta, key));
   const secondary = meta.dimensions.filter(
-    (d) => !PRIMARY_DIMENSIONS.includes(d.key),
+    (dimension) => !PRIMARY_DIMENSIONS.includes(dimension.key),
   );
   const hasSecondaryActive = [
-    ...secondary.map((d) => d.key),
+    ...secondary.map((dimension) => dimension.key),
     ...SECONDARY_PARAMS,
   ].some((key) => searchParams.get(key));
   const [showMore, setShowMore] = useState(hasSecondaryActive);
@@ -45,36 +45,39 @@ export function FilterBar({ meta }: { meta: Meta }) {
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput
           value={searchParams.get('search') ?? ''}
-          onChange={(v) => setParam('search', v)}
+          onChange={(selection) => setParam('search', selection)}
         />
         <ClosedFilter
           value={searchParams.get('closed') ?? ''}
-          onChange={(v) => setParam('closed', v)}
+          onChange={(selection) => setParam('closed', selection)}
         />
         <MultiSelect
           label="Vendedor"
-          options={meta.sellers.map((s) => ({ value: s, label: s }))}
+          options={meta.sellers.map((seller) => ({
+            value: seller,
+            label: seller,
+          }))}
           selected={listParam(searchParams, 'sellers')}
-          onChange={(v) => setParam('sellers', v)}
+          onChange={(selection) => setParam('sellers', selection)}
         />
         <MultiSelect
           label="Nota"
           options={meta.grades}
           selected={listParam(searchParams, 'grade')}
-          onChange={(v) => setParam('grade', v)}
+          onChange={(selection) => setParam('grade', selection)}
         />
-        {primary.map((d) => (
+        {primary.map((dimension) => (
           <MultiSelect
-            key={d.key}
-            label={d.label}
-            options={d.options}
-            selected={listParam(searchParams, d.key)}
-            onChange={(v) => setParam(d.key, v)}
+            key={dimension.key}
+            label={dimension.label}
+            options={dimension.options}
+            selected={listParam(searchParams, dimension.key)}
+            onChange={(selection) => setParam(dimension.key, selection)}
           />
         ))}
         <button
           type="button"
-          onClick={() => setShowMore((s) => !s)}
+          onClick={() => setShowMore((shown) => !shown)}
           aria-expanded={showMore}
           className="text-muted hover:text-foreground flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm"
         >
@@ -97,8 +100,8 @@ export function FilterBar({ meta }: { meta: Meta }) {
               type="checkbox"
               className="accent-brand"
               checked={searchParams.get('categorized') === 'true'}
-              onChange={(e) =>
-                setParam('categorized', e.target.checked ? 'true' : null)
+              onChange={(event) =>
+                setParam('categorized', event.target.checked ? 'true' : null)
               }
             />
             Solo categorizadas por IA
@@ -107,15 +110,15 @@ export function FilterBar({ meta }: { meta: Meta }) {
             label="Volumen de consultas"
             options={meta.volumeBuckets}
             selected={listParam(searchParams, 'volume')}
-            onChange={(v) => setParam('volume', v)}
+            onChange={(selection) => setParam('volume', selection)}
           />
-          {secondary.map((d) => (
+          {secondary.map((dimension) => (
             <MultiSelect
-              key={d.key}
-              label={d.label}
-              options={d.options}
-              selected={listParam(searchParams, d.key)}
-              onChange={(v) => setParam(d.key, v)}
+              key={dimension.key}
+              label={dimension.label}
+              options={dimension.options}
+              selected={listParam(searchParams, dimension.key)}
+              onChange={(selection) => setParam(dimension.key, selection)}
             />
           ))}
         </div>

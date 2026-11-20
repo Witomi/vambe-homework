@@ -21,18 +21,20 @@ export function industryMatrix(
   categorized: readonly CategorizedClient[],
   sellers: readonly string[],
 ): IndustryRow[] {
-  return [...groupBy(categorized, (c) => [c.categories.industry]).entries()]
+  return [
+    ...groupBy(categorized, (client) => [client.categories.industry]).entries(),
+  ]
     .sort(
-      ([a, ga], [b, gb]) =>
-        Number(isActionable(b)) - Number(isActionable(a)) ||
-        gb.length - ga.length,
+      ([industryA, groupA], [industryB, groupB]) =>
+        Number(isActionable(industryB)) - Number(isActionable(industryA)) ||
+        groupB.length - groupA.length,
     )
     .map(([industry, clients]) => {
-      const bySeller = groupBy(clients, (c) => [c.seller]);
+      const bySeller = groupBy(clients, (client) => [client.seller]);
       return {
         industry: { value: industry, label: optionLabel('industry', industry) },
         team: resultOf(clients),
-        sellers: sellers.map((s) => resultOf(bySeller.get(s) ?? [])),
+        sellers: sellers.map((seller) => resultOf(bySeller.get(seller) ?? [])),
       };
     });
 }
@@ -66,8 +68,11 @@ export function sellerHighlights(
     ];
   });
 
-  const diff = (h: IndustryHighlight) => pointsDiff(h.closeRate, h.teamRate);
-  const sorted = [...comparable].sort((a, b) => diff(b) - diff(a));
+  const diff = (highlight: IndustryHighlight) =>
+    pointsDiff(highlight.closeRate, highlight.teamRate);
+  const sorted = [...comparable].sort(
+    (highlightA, highlightB) => diff(highlightB) - diff(highlightA),
+  );
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
 

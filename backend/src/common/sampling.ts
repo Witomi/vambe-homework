@@ -5,15 +5,19 @@
  * cambien solas) y la elección de los casos del gold.
  */
 
-/** Generador pseudoaleatorio determinista (mulberry32). */
+/**
+ * Generador pseudoaleatorio determinista (mulberry32): devuelve números
+ * entre 0 y 1, siempre la misma secuencia para la misma semilla. Las
+ * constantes y desplazamientos son los del algoritmo original.
+ */
 function mulberry32(seed: number): () => number {
-  let a = seed >>> 0;
+  let state = seed >>> 0;
   return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    state = (state + 0x6d2b79f5) >>> 0;
+    let mixed = state;
+    mixed = Math.imul(mixed ^ (mixed >>> 15), mixed | 1);
+    mixed ^= mixed + Math.imul(mixed ^ (mixed >>> 7), mixed | 61);
+    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296;
   };
 }
 
@@ -22,8 +26,8 @@ export function seededShuffle<T>(items: readonly T[], seed: number): T[] {
   const random = mulberry32(seed);
   const result = [...items];
   for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
+    const swapWith = Math.floor(random() * (i + 1));
+    [result[i], result[swapWith]] = [result[swapWith], result[i]];
   }
   return result;
 }

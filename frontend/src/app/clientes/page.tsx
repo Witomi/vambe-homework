@@ -9,8 +9,8 @@ import { SearchParams, filterQuery } from '@/lib/filters/params';
 import { formatNumber } from '@/lib/format';
 import { createLabeler } from '@/lib/labels';
 
-const single = (v: string | string[] | undefined) =>
-  Array.isArray(v) ? v[0] : v;
+const single = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value[0] : value;
 
 export default async function ClientsPage({
   searchParams,
@@ -29,9 +29,9 @@ export default async function ClientsPage({
     api.meta(),
     api.clients(query),
     selectedId
-      ? api.client(selectedId).catch((e: unknown) => {
-          if (e instanceof ApiError && e.status === 404) return null;
-          throw e;
+      ? api.client(selectedId).catch((error: unknown) => {
+          if (error instanceof ApiError && error.status === 404) return null;
+          throw error;
         })
       : Promise.resolve(null),
   ]);

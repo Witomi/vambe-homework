@@ -23,14 +23,14 @@ export function PeriodSelect({
       <select
         value={value}
         disabled={isPending}
-        onChange={(e) => setParam('period', e.target.value)}
+        onChange={(event) => setParam('period', event.target.value)}
         className="h-full cursor-pointer rounded-md bg-transparent pr-1 font-medium focus:outline-none"
       >
         <option value={HISTORIC_PERIOD}>Histórico (todo el período)</option>
-        {months.map((month, i) => (
+        {months.map((month, index) => (
           <option key={month} value={month}>
             {formatMonthYear(month)}
-            {i === 0 ? ' (último mes)' : ''}
+            {index === 0 ? ' (último mes)' : ''}
           </option>
         ))}
       </select>

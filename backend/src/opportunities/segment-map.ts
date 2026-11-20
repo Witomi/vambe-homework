@@ -50,7 +50,7 @@ export function buildSegmentMap(
 
   for (const dimension of MAP_DIMENSIONS) {
     const segments = segmentsOf(categorized, dimension);
-    const volumeCut = median(segments.map((s) => s.count)) ?? 0;
+    const volumeCut = median(segments.map((segment) => segment.count)) ?? 0;
     for (const segment of segments) {
       const diff = pointsDiff(segment.closeRate, baseRate);
       if (Math.abs(diff) < NEUTRAL_BAND_PTS) continue;
@@ -77,8 +77,9 @@ export function buildSegmentMap(
       // Lo más relevante primero: mayor distancia al promedio.
       segments: buckets[key]
         .sort(
-          (a, b) =>
-            Math.abs(b.closeRate - baseRate) - Math.abs(a.closeRate - baseRate),
+          (segmentA, segmentB) =>
+            Math.abs(segmentB.closeRate - baseRate) -
+            Math.abs(segmentA.closeRate - baseRate),
         )
         .map((segment) => ({
           ...segment,

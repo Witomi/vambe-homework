@@ -26,7 +26,9 @@ export class ClientsService {
     return {
       items: sorted
         .slice(start, start + query.pageSize)
-        .map((c) => toListItem(c, this.prediction.predictionOf(c.id))),
+        .map((client) =>
+          toListItem(client, this.prediction.predictionOf(client.id)),
+        ),
       total: filtered.length,
       page: query.page,
       pageSize: query.pageSize,

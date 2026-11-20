@@ -30,11 +30,11 @@ const clients = [
 const grades: Record<string, string> = { a: 'A', b: 'C' };
 const context = {
   searchableText: (id: string) =>
-    normalizeText(clients.find((c) => c.id === id)!.transcript),
+    normalizeText(clients.find((client) => client.id === id)!.transcript),
   gradeOf: (id: string) => grades[id],
 };
 const ids = (filter: Parameters<typeof applyFilters>[1]) =>
-  applyFilters(clients, filter, context).map((c) => c.id);
+  applyFilters(clients, filter, context).map((client) => client.id);
 
 describe('applyFilters', () => {
   it('sin filtros devuelve todo', () => {
@@ -65,7 +65,7 @@ describe('applyFilters', () => {
       { integrations: ['no_menciona'] },
       { searchableText: () => '', gradeOf: () => undefined },
     );
-    expect(result.map((c) => c.id)).toEqual(['d']);
+    expect(result.map((client) => client.id)).toEqual(['d']);
   });
 
   it('AND entre dimensiones distintas', () => {

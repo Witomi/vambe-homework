@@ -42,7 +42,7 @@ export class GemmaProvider implements LlmProvider {
     });
     this.model = options.model;
     this.models = [options.model, options.fallbackModel].filter(
-      (m): m is string => !!m,
+      (model): model is string => !!model,
     );
   }
 

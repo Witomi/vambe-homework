@@ -46,14 +46,14 @@ function FactorColumn({
         {title}
       </h3>
       <ul className="divide-border divide-y">
-        {factors.map((f) => (
+        {factors.map((factor) => (
           <li
-            key={f.label}
+            key={factor.label}
             className="flex items-baseline justify-between gap-3 py-2 text-sm"
           >
-            <span>{f.label}</span>
+            <span>{factor.label}</span>
             <span className={`font-medium tabular-nums ${tone}`}>
-              {formatOdds(f.oddsRatio)}
+              {formatOdds(factor.oddsRatio)}
             </span>
           </li>
         ))}

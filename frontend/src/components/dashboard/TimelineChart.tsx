@@ -17,10 +17,10 @@ import { Card } from '../ui/Card';
 
 /** Reuniones por mes, separando las que terminaron en venta. */
 export function TimelineChart({ data }: { data: Metrics['timeline'] }) {
-  const rows = data.map((d) => ({
-    label: formatMonth(d.month),
-    closed: d.closed,
-    open: d.count - d.closed,
+  const rows = data.map((point) => ({
+    label: formatMonth(point.month),
+    closed: point.closed,
+    open: point.count - point.closed,
   }));
 
   return (

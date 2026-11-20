@@ -15,9 +15,9 @@ export interface TimelinePoint extends RateStat {
 
 /** Reuniones, tasa de cierre y consultas nuevas por mes, en orden cronológico. */
 export function timeline(clients: readonly Client[]): TimelinePoint[] {
-  const groups = groupBy(clients, (c) => [c.meetingDate.slice(0, 7)]);
+  const groups = groupBy(clients, (client) => [client.meetingDate.slice(0, 7)]);
   return [...groups.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([monthA], [monthB]) => monthA.localeCompare(monthB))
     .map(([month, group]) => ({
       month,
       ...rateStat(group),

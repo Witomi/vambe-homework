@@ -20,22 +20,22 @@ export function Tabs<T extends string>({
       className="bg-background flex flex-wrap gap-0.5 rounded-lg p-0.5"
       role="tablist"
     >
-      {options.map((o) => (
+      {options.map((option) => (
         <button
-          key={o.value}
+          key={option.value}
           type="button"
           role="tab"
-          aria-selected={o.value === value}
-          onClick={() => onChange(o.value)}
+          aria-selected={option.value === value}
+          onClick={() => onChange(option.value)}
           className={clsx(
             'rounded-md font-medium transition-colors',
             size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm',
-            o.value === value
+            option.value === value
               ? 'bg-surface text-foreground shadow-sm'
               : 'text-muted hover:text-foreground',
           )}
         >
-          {o.label}
+          {option.label}
         </button>
       ))}
     </div>

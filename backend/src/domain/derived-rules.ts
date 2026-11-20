@@ -22,15 +22,18 @@ const INFORMATIVE_USE_CASES: readonly string[] = ['faq', 'catalogo'];
  * - media: 1 integración o algún flujo transaccional (agendar, cotizar, …);
  * - baja: solo informar (preguntas frecuentes o catálogo).
  */
-export function deriveComplexity(c: ComplexityInput): Categories['complexity'] {
-  const sensitive = c.requirements.some(
-    (r) => r === 'multiidioma' || r === 'datos_sensibles',
+export function deriveComplexity(
+  categories: ComplexityInput,
+): Categories['complexity'] {
+  const sensitive = categories.requirements.some(
+    (requirement) =>
+      requirement === 'multiidioma' || requirement === 'datos_sensibles',
   );
-  if (c.integrations.length >= 2 || sensitive) return 'alta';
-  const transactional = c.useCases.some(
-    (u) => !INFORMATIVE_USE_CASES.includes(u),
+  if (categories.integrations.length >= 2 || sensitive) return 'alta';
+  const transactional = categories.useCases.some(
+    (useCase) => !INFORMATIVE_USE_CASES.includes(useCase),
   );
-  if (c.integrations.length === 1 || transactional) return 'media';
+  if (categories.integrations.length === 1 || transactional) return 'media';
   return 'baja';
 }
 

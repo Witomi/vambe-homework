@@ -12,11 +12,13 @@ export interface PromptItem {
 
 function describeDimensions(): string {
   return LLM_DIMENSION_KEYS.map((key) => {
-    const d: DimensionDefinition = DIMENSIONS[key];
-    const values = d.options.map((o) => o.value).join(' | ');
-    const shape = d.multi ? `lista de [${values}]` : values;
-    const criteria = (d.criteria ?? []).map((c) => `\n    · ${c}`).join('');
-    return `- "${key}" (${d.hint}): ${shape}${criteria}`;
+    const definition: DimensionDefinition = DIMENSIONS[key];
+    const values = definition.options.map((option) => option.value).join(' | ');
+    const shape = definition.multi ? `lista de [${values}]` : values;
+    const criteria = (definition.criteria ?? [])
+      .map((criterion) => `\n    · ${criterion}`)
+      .join('');
+    return `- "${key}" (${definition.hint}): ${shape}${criteria}`;
   }).join('\n');
 }
 
@@ -28,7 +30,10 @@ const DIMENSION_SPEC = describeDimensions();
  * impacto del rate limit), manteniendo la salida emparejada por `ref`.
  */
 export function buildCategorizationPrompt(items: PromptItem[]): string {
-  const input = items.map((i) => ({ ref: i.ref, texto: i.transcript }));
+  const input = items.map((item) => ({
+    ref: item.ref,
+    texto: item.transcript,
+  }));
 
   return `Eres un analista de ventas de Vambe, una plataforma de chatbots con IA para atención al cliente.
 Recibirás transcripciones de reuniones de venta donde un potencial cliente describe su negocio y necesidades.

@@ -33,7 +33,7 @@ export interface ClosingModel {
   probabilityWith(client: CategorizedClient, seller: string): number;
 }
 
-const outcome = (c: CategorizedClient) => (c.closed ? 1 : 0);
+const outcome = (client: CategorizedClient) => (client.closed ? 1 : 0);
 
 /**
  * Entrena la regresión logística de cierre.
@@ -52,10 +52,12 @@ export function fitClosingModel(
   const features = buildFeatures(categorized);
   // Cada vector se calcula una sola vez y se reutiliza en todas las partes.
   const vectors = new Map(
-    categorized.map((c) => [c.id, toVector(c, features)] as const),
+    categorized.map(
+      (client) => [client.id, toVector(client, features)] as const,
+    ),
   );
-  const vectorOf = (c: CategorizedClient) =>
-    vectors.get(c.id) ?? toVector(c, features);
+  const vectorOf = (client: CategorizedClient) =>
+    vectors.get(client.id) ?? toVector(client, features);
 
   const folds = chunk(
     seededShuffle(categorized, SEED),
@@ -63,8 +65,8 @@ export function fitClosingModel(
   );
   const crossValidate = (l2: number) => {
     const probabilities = new Map<string, number>();
-    folds.forEach((testFold, k) => {
-      const trainSet = folds.filter((_, i) => i !== k).flat();
+    folds.forEach((testFold, foldIndex) => {
+      const trainSet = folds.filter((_, index) => index !== foldIndex).flat();
       const model = train(trainSet.map(vectorOf), trainSet.map(outcome), {
         ...DEFAULT_TRAIN_OPTIONS,
         l2,
@@ -74,21 +76,22 @@ export function fitClosingModel(
       }
     });
     const loss = logLoss(
-      categorized.map((c) => probabilities.get(c.id) ?? 0),
+      categorized.map((client) => probabilities.get(client.id) ?? 0),
       categorized.map(outcome),
     );
     return { l2, probabilities, loss };
   };
-  const best = L2_CANDIDATES.map(crossValidate).reduce((a, b) =>
-    b.loss < a.loss ? b : a,
+  const best = L2_CANDIDATES.map(crossValidate).reduce(
+    (candidateA, candidateB) =>
+      candidateB.loss < candidateA.loss ? candidateB : candidateA,
   );
 
   const full = train(categorized.map(vectorOf), categorized.map(outcome), {
     ...DEFAULT_TRAIN_OPTIONS,
     l2: best.l2,
   });
-  const factors: Factor[] = full.weights.map((weight, j) => ({
-    label: features[j].label,
+  const factors: Factor[] = full.weights.map((weight, index) => ({
+    label: features[index].label,
     weight,
     oddsRatio: Math.exp(weight),
   }));
@@ -98,15 +101,18 @@ export function fitClosingModel(
     factors,
     folds: FOLDS,
     l2: best.l2,
-    sellers: [...new Set(categorized.map((c) => c.seller))].sort(),
+    sellers: [...new Set(categorized.map((client) => client.seller))].sort(),
     explain(client, max) {
-      const x = vectorOf(client);
+      const vector = vectorOf(client);
       return factors
-        .map((factor, j) => ({ factor, contribution: factor.weight * x[j] }))
-        .filter((c) => c.contribution > 0)
-        .sort((a, b) => b.contribution - a.contribution)
+        .map((factor, index) => ({
+          factor,
+          contribution: factor.weight * vector[index],
+        }))
+        .filter((entry) => entry.contribution > 0)
+        .sort((entryA, entryB) => entryB.contribution - entryA.contribution)
         .slice(0, max)
-        .map((c) => c.factor);
+        .map((entry) => entry.factor);
     },
     probabilityWith(client, seller) {
       return predict(full, toVector({ ...client, seller }, features));

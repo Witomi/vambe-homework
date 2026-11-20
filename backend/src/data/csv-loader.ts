@@ -37,7 +37,7 @@ export function parseClientsCsv(content: string): RawClient[] {
   });
 
   const missing = Object.values(COLUMNS).filter(
-    (c) => rows.length > 0 && !(c in rows[0]),
+    (column) => rows.length > 0 && !(column in rows[0]),
   );
   if (missing.length) {
     throw new Error(`Faltan columnas en el CSV: ${missing.join(', ')}`);

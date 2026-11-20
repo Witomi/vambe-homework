@@ -21,7 +21,7 @@ export class RateLimiter {
   }
 
   /** Bloquea a todos los workers durante `ms` (p. ej. tras un 429). */
-  pause(ms: number): void {
-    this.nextSlot = Math.max(this.nextSlot, Date.now() + ms);
+  pause(milliseconds: number): void {
+    this.nextSlot = Math.max(this.nextSlot, Date.now() + milliseconds);
   }
 }

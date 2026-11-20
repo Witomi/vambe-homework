@@ -36,7 +36,7 @@ describe('analytics', () => {
 
   it('breakdown de dimensión simple ordenado por volumen', () => {
     const rows = breakdownByDimension(clients, 'industry');
-    expect(rows.map((r) => [r.value, r.count, r.closed])).toEqual([
+    expect(rows.map((row) => [row.value, row.count, row.closed])).toEqual([
       ['salud', 2, 1],
       ['retail', 1, 1],
     ]);
@@ -46,15 +46,15 @@ describe('analytics', () => {
   it('en dimensiones múltiples cuenta a quienes no mencionan nada', () => {
     const rows = breakdownByDimension(clients, 'useCases');
     // El tercer cliente tiene useCases: [] → 1 de 3.
-    const none = rows.find((r) => r.value === 'no_menciona');
+    const none = rows.find((row) => row.value === 'no_menciona');
     expect(none).toMatchObject({ count: 1, label: 'No lo menciona' });
     expect(none?.share).toBeCloseTo(1 / 3);
   });
 
   it('en dimensiones múltiples un cliente cuenta en cada valor', () => {
     const rows = breakdownByDimension(clients, 'useCases');
-    expect(rows.find((r) => r.value === 'faq')?.count).toBe(2);
-    expect(rows.find((r) => r.value === 'agendamiento')?.count).toBe(1);
+    expect(rows.find((row) => row.value === 'faq')?.count).toBe(2);
+    expect(rows.find((row) => row.value === 'agendamiento')?.count).toBe(1);
   });
 
   it('median', () => {
@@ -75,9 +75,13 @@ describe('analytics', () => {
 });
 
 describe('findWinningTraits', () => {
-  const many = (n: number, closed: number, categories: Partial<Categories>) =>
-    Array.from({ length: n }, (_, i) =>
-      makeClient({ closed: i < closed, categories }),
+  const many = (
+    count: number,
+    closed: number,
+    categories: Partial<Categories>,
+  ) =>
+    Array.from({ length: count }, (_, index) =>
+      makeClient({ closed: index < closed, categories }),
     );
 
   it('encuentra el rasgo con el que el grupo cierra más', () => {
@@ -106,7 +110,7 @@ describe('findWinningTraits', () => {
       ...many(30, 27, { industry: 'retail' }),
       ...many(70, 28, { industry: 'salud' }),
     ];
-    expect(findWinningTraits(split).map((l) => l.dimension)).toContain(
+    expect(findWinningTraits(split).map((trait) => trait.dimension)).toContain(
       'industry',
     );
     expect(findWinningTraits(split, 'industry')).toEqual([]);

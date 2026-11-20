@@ -32,7 +32,7 @@ describe('probabilityRows', () => {
       bucket(0.3, 2, 2),
       bucket(0.4, 0, 0),
     ]);
-    expect(rows.map((r) => r.label)).toEqual(['10%', '20%', '30%']);
+    expect(rows.map((row) => row.label)).toEqual(['10%', '20%', '30%']);
     expect(rows[0]).toMatchObject({ closed: 1, open: 3, closeRate: 0.25 });
     // Un tramo vacío en medio se mantiene (con tasa 0).
     expect(rows[1].closeRate).toBe(0);
@@ -42,7 +42,7 @@ describe('probabilityRows', () => {
 describe('gradeRows', () => {
   it('ordena de la peor nota a la mejor y separa cerrados de abiertos', () => {
     const rows = gradeRows([grade('A', 10, 9), grade('B', 20, 10)]);
-    expect(rows.map((r) => r.label)).toEqual(['B', 'A']);
+    expect(rows.map((row) => row.label)).toEqual(['B', 'A']);
     expect(rows[1]).toMatchObject({ closed: 9, open: 1, closeRate: 0.9 });
   });
 });

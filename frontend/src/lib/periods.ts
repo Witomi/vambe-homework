@@ -8,8 +8,8 @@ export const HISTORIC_PERIOD = 'historico';
 /** Meses entre dos fechas ISO, del más reciente al más antiguo. */
 export function monthsBetween(from: string, to: string): string[] {
   const index = (iso: string) => {
-    const [y, m] = iso.split('-').map(Number);
-    return y * 12 + (m - 1);
+    const [year, month] = iso.split('-').map(Number);
+    return year * 12 + (month - 1);
   };
   const months: string[] = [];
   for (let i = index(to); i >= index(from); i--) {

@@ -7,15 +7,15 @@ import { makeClient } from '../../test/fixtures';
 describe('logistic regression', () => {
   it('aprende que una variable sube la probabilidad', () => {
     // x=1 cierra 90% de las veces; x=0, 30%.
-    const X: number[][] = [];
-    const y: number[] = [];
+    const features: number[][] = [];
+    const labels: number[] = [];
     for (let i = 0; i < 100; i++) {
-      X.push([1]);
-      y.push(i < 90 ? 1 : 0);
-      X.push([0]);
-      y.push(i < 30 ? 1 : 0);
+      features.push([1]);
+      labels.push(i < 90 ? 1 : 0);
+      features.push([0]);
+      labels.push(i < 30 ? 1 : 0);
     }
-    const model = train(X, y, { l2: 0.01, maxIterations: 50 });
+    const model = train(features, labels, { l2: 0.01, maxIterations: 50 });
 
     expect(predict(model, [1])).toBeCloseTo(0.9, 1);
     expect(predict(model, [0])).toBeCloseTo(0.3, 1);
@@ -23,10 +23,10 @@ describe('logistic regression', () => {
   });
 
   it('la regularización encoge pesos de variables raras', () => {
-    const X = [[1], [0], [0], [0]];
-    const y = [1, 0, 1, 0];
-    const weak = train(X, y, { l2: 0.01, maxIterations: 50 });
-    const strong = train(X, y, { l2: 10, maxIterations: 50 });
+    const features = [[1], [0], [0], [0]];
+    const labels = [1, 0, 1, 0];
+    const weak = train(features, labels, { l2: 0.01, maxIterations: 50 });
+    const strong = train(features, labels, { l2: 10, maxIterations: 50 });
     expect(Math.abs(strong.weights[0])).toBeLessThan(Math.abs(weak.weights[0]));
   });
 });
@@ -75,10 +75,10 @@ describe('grades', () => {
 
 describe('fitClosingModel', () => {
   // Toro cierra 90% en Salud; Puma, 30%. El resto de las variables es igual.
-  const clients = Array.from({ length: 200 }, (_, i) =>
+  const clients = Array.from({ length: 200 }, (_, index) =>
     makeClient({
-      seller: i % 2 ? 'Toro' : 'Puma',
-      closed: i % 2 ? i % 20 !== 1 : i % 10 < 3,
+      seller: index % 2 ? 'Toro' : 'Puma',
+      closed: index % 2 ? index % 20 !== 1 : index % 10 < 3,
       categories: { industry: 'salud' },
     }),
   );

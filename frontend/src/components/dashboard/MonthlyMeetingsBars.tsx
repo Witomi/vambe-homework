@@ -39,11 +39,11 @@ export function MonthlyMeetingsBars({
             content={<MeetingsTooltip />}
           />
           <Bar dataKey="count" radius={[3, 3, 0, 0]} isAnimationActive={false}>
-            {timeline.map((p) => (
+            {timeline.map((point) => (
               <Cell
-                key={p.month}
+                key={point.month}
                 fill={
-                  month === null || p.month === month
+                  month === null || point.month === month
                     ? CHART.series.primary
                     : CHART.series.primaryLight
                 }

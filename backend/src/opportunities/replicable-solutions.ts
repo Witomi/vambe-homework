@@ -12,8 +12,8 @@ const TOP = 4;
 /** Todos los pares (a, b) de una lista, en orden estable. */
 function pairs(values: string[]): [string, string][] {
   const sorted = [...values].sort();
-  return sorted.flatMap((a, i) =>
-    sorted.slice(i + 1).map((b): [string, string] => [a, b]),
+  return sorted.flatMap((first, index) =>
+    sorted.slice(index + 1).map((second): [string, string] => [first, second]),
   );
 }
 
@@ -26,17 +26,19 @@ export function findReplicableSolutions(
   categorized: readonly CategorizedClient[],
 ): ReplicableSolution[] {
   const min = minReliableSample(categorized.length);
-  const groups = groupBy(categorized, (c) => {
-    const useCases = c.categories.useCases.filter(
-      (u) => !IGNORED_USE_CASES.has(u),
+  const groups = groupBy(categorized, (client) => {
+    const useCases = client.categories.useCases.filter(
+      (useCase) => !IGNORED_USE_CASES.has(useCase),
     );
-    return pairs(useCases).map((p) => p.join('+'));
+    return pairs(useCases).map((pair) => pair.join('+'));
   });
 
   return [...groups.entries()]
     .map(([signature, clients]) => {
-      const industries = [...new Set(clients.map((c) => c.categories.industry))]
-        .filter((i) => i !== 'otro')
+      const industries = [
+        ...new Set(clients.map((client) => client.categories.industry)),
+      ]
+        .filter((industry) => industry !== 'otro')
         .map((value) => ({ value, label: optionLabel('industry', value) }));
       return { signature, clients, industries };
     })
@@ -45,9 +47,9 @@ export function findReplicableSolutions(
         clients.length >= min && industries.length >= MIN_INDUSTRIES,
     )
     .sort(
-      (a, b) =>
-        b.industries.length - a.industries.length ||
-        b.clients.length - a.clients.length,
+      (solutionA, solutionB) =>
+        solutionB.industries.length - solutionA.industries.length ||
+        solutionB.clients.length - solutionA.clients.length,
     )
     .slice(0, TOP)
     .map(({ signature, clients, industries }) => ({
@@ -59,7 +61,7 @@ export function findReplicableSolutions(
       industries,
       closeRate: rateStat(clients).closeRate ?? 0,
       monthlyInquiries: clients.reduce(
-        (sum, c) => sum + (c.categories.monthlyInquiries ?? 0),
+        (sum, client) => sum + (client.categories.monthlyInquiries ?? 0),
         0,
       ),
     }));
@@ -69,11 +71,13 @@ export function findReplicableSolutions(
 function topIntegration(
   clients: readonly CategorizedClient[],
 ): ReplicableSolution['topIntegration'] {
-  const groups = groupBy(clients, (c) =>
-    c.categories.integrations.filter((i) => i !== 'otro'),
+  const groups = groupBy(clients, (client) =>
+    client.categories.integrations.filter(
+      (integration) => integration !== 'otro',
+    ),
   );
   const [best] = [...groups.entries()].sort(
-    (a, b) => b[1].length - a[1].length,
+    (entryA, entryB) => entryB[1].length - entryA[1].length,
   );
   if (!best || best[1].length < clients.length / 4) return null;
   return { value: best[0], label: optionLabel('integrations', best[0]) };

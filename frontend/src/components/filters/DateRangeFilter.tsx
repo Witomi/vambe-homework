@@ -32,7 +32,7 @@ export function DateRangeFilter({
         value={from}
         min={min}
         max={to || max}
-        onChange={(e) => onChange(e.target.value, to)}
+        onChange={(event) => onChange(event.target.value, to)}
       />
       <span className="text-subtle" aria-hidden>
         →
@@ -47,7 +47,7 @@ export function DateRangeFilter({
         value={to}
         min={from || min}
         max={max}
-        onChange={(e) => onChange(from, e.target.value)}
+        onChange={(event) => onChange(from, event.target.value)}
       />
     </div>
   );

@@ -35,7 +35,7 @@ export function membersOf(
   key: DimensionKey,
   value: string,
 ): CategorizedClient[] {
-  return categorized.filter((c) => valuesOf(c, key).includes(value));
+  return categorized.filter((client) => valuesOf(client, key).includes(value));
 }
 
 /**
@@ -46,7 +46,7 @@ export function breakdownByDimension(
   categorized: readonly CategorizedClient[],
   key: DimensionKey,
 ): BreakdownRow[] {
-  const groups = groupBy(categorized, (c) => valuesOf(c, key));
+  const groups = groupBy(categorized, (client) => valuesOf(client, key));
 
   return displayOptions(key)
     .map((option) => {
@@ -59,7 +59,7 @@ export function breakdownByDimension(
       };
     })
     .filter((row) => row.count > 0)
-    .sort((a, b) => b.count - a.count);
+    .sort((rowA, rowB) => rowB.count - rowA.count);
 }
 
 export function breakdownAllDimensions(

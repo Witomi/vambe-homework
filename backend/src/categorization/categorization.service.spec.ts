@@ -7,15 +7,15 @@ import { BatchCategorizer } from './batch-categorizer';
 import { CategorizationService } from './categorization.service';
 import { LlmProvider } from './llm/llm-provider';
 
-const rawClients: RawClient[] = Array.from({ length: 5 }, (_, i) => ({
-  id: `id${i}`,
-  name: `Cliente ${i}`,
-  email: `c${i}@example.com`,
+const rawClients: RawClient[] = Array.from({ length: 5 }, (_, index) => ({
+  id: `id${index}`,
+  name: `Cliente ${index}`,
+  email: `c${index}@example.com`,
   phone: '569',
   seller: 'Puma',
   meetingDate: '2024-01-01',
   closed: true,
-  transcript: `Transcripción ${i}`,
+  transcript: `Transcripción ${index}`,
 }));
 
 /** Responde categorizando los `ref` presentes en el prompt. */
@@ -25,8 +25,8 @@ function answer(prompt: string, skipRefs: number[] = []): string {
   }[];
   return JSON.stringify(
     input
-      .filter((i) => !skipRefs.includes(i.ref))
-      .map((i) => ({ ...baseCategories, ref: i.ref })),
+      .filter((item) => !skipRefs.includes(item.ref))
+      .map((item) => ({ ...baseCategories, ref: item.ref })),
   );
 }
 
@@ -38,7 +38,9 @@ function setup(llm: LlmProvider) {
       return saved.size;
     },
     saveMany: (records: Record<string, CategorizationRecord>) => {
-      Object.entries(records).forEach(([k, v]) => saved.set(k, v));
+      Object.entries(records).forEach(([clientId, record]) =>
+        saved.set(clientId, record),
+      );
       return Promise.resolve();
     },
   } as unknown as CategorizationStore;

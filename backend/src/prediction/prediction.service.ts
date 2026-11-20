@@ -68,7 +68,9 @@ export class PredictionService {
         seller,
         probability: model.probabilityWith(client, seller),
       }))
-      .reduce((a, b) => (b.probability > a.probability ? b : a));
+      .reduce((optionA, optionB) =>
+        optionB.probability > optionA.probability ? optionB : optionA,
+      );
     const gainPts = pointsDiff(best.probability, current);
     return best.seller !== client.seller && gainPts >= 1
       ? { seller: best.seller, gainPts }

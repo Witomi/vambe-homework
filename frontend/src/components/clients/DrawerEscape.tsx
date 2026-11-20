@@ -7,8 +7,8 @@ import { useEffect } from 'react';
 export function DrawerEscape({ href }: { href: string }) {
   const router = useRouter();
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') router.replace(href, { scroll: false });
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') router.replace(href, { scroll: false });
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);

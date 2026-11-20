@@ -25,7 +25,7 @@ const many = (
   params: URLSearchParams,
   key: string,
   group: string,
-  labelOf: (value: string) => string = (v) => v,
+  labelOf: (value: string) => string = (value) => value,
 ): FilterChip[] =>
   listParam(params, key).map((value) => ({
     key,
@@ -59,13 +59,19 @@ export function buildFilterChips(
   if (to) chips.push(single('to', to, 'Hasta'));
 
   chips.push(...many(params, 'sellers', 'Vendedor'));
-  chips.push(...many(params, 'grade', 'Nota', (v) => labels.value('grade', v)));
   chips.push(
-    ...many(params, 'volume', 'Volumen', (v) => labels.value('volume', v)),
+    ...many(params, 'grade', 'Nota', (value) => labels.value('grade', value)),
+  );
+  chips.push(
+    ...many(params, 'volume', 'Volumen', (value) =>
+      labels.value('volume', value),
+    ),
   );
   for (const key of dimensionKeys) {
     chips.push(
-      ...many(params, key, labels.dimension(key), (v) => labels.value(key, v)),
+      ...many(params, key, labels.dimension(key), (value) =>
+        labels.value(key, value),
+      ),
     );
   }
   return chips;
