@@ -15,7 +15,7 @@ flowchart LR
     Repo --> Filters[applyFilters]
     Filters --> Clients[/api/clients/]
     Filters --> Metrics[/api/metrics<br/>agregaciones + insights/]
-    Tax[categories.ts] -.-> Svc & Filters & Meta[/api/meta/]
+    Tax[dimensions.ts] -.-> Svc & Filters & Meta[/api/meta/]
   end
   LLM <--> Google[(Google AI Studio<br/>Gemma 4)]
   Clients & Metrics & Meta --> Next[Next.js<br/>Server Components]
@@ -31,7 +31,7 @@ El flujo se divide en dos momentos:
 
 ### 1. La taxonomía es la fuente única de verdad
 
-`backend/src/domain/categories.ts` define cada dimensión: sus valores, etiquetas, descripción y una pista para el LLM. A partir de ese archivo se generan:
+`backend/src/domain/dimensions.ts` define cada dimensión: sus valores, etiquetas, descripción, una pista para el LLM y los criterios para elegir cada valor. A partir de ese archivo se generan:
 
 - la sección del **prompt** que lista los valores permitidos,
 - la **validación** de la respuesta del modelo,
@@ -72,7 +72,7 @@ En una segunda revisión encontré que el modelo **extrapolaba cifras de picos**
 
 Efecto colateral observado: al recategorizar, ~19% de las dimensiones simples de esos 86 clientes cambiaron de valor, aunque la temperatura es baja (0,1). Es una medida útil de la estabilidad del modelo: en casos ambiguos (p. ej. urgencia media vs. alta) su respuesta no es determinista.
 
-En una tercera iteración, guiada por los evals, reemplacé las descripciones de una línea por **criterios explícitos por valor** (`criteria` en `domain/categories.ts`), escritos como reglas observables y con orden de prioridad cuando varias aplican. Por ejemplo, para el tamaño: primero la cantidad de locales, después la de empleados y después cómo se describe el negocio; sin pistas, `no_especificado`, sin deducirlo del rubro ni del volumen. Los mismos criterios sirven para etiquetar el gold, así que el modelo y quien etiqueta aplican la misma definición. Las reglas fijas dejaron de pedírsele al LLM y se calculan en código: la **complejidad** (a partir de integraciones, requisitos y casos de uso, en `domain/complexity.ts`) y el dolor **volumen alto** cuando hay más de 5.000 consultas al mes (en el parser). Además de subir la precisión, las respuestas se volvieron más estables: en varias corridas seguidas el modelo dio exactamente lo mismo.
+En una tercera iteración, guiada por los evals, reemplacé las descripciones de una línea por **criterios explícitos por valor** (`criteria` en `domain/dimensions.ts`), escritos como reglas observables y con orden de prioridad cuando varias aplican. Por ejemplo, para el tamaño: primero la cantidad de locales, después la de empleados y después cómo se describe el negocio; sin pistas, `no_especificado`, sin deducirlo del rubro ni del volumen. Los mismos criterios sirven para etiquetar el gold, así que el modelo y quien etiqueta aplican la misma definición. Las reglas fijas dejaron de pedírsele al LLM y se calculan en código: la **complejidad** (a partir de integraciones, requisitos y casos de uso, en `domain/derived-rules.ts`) y el dolor **volumen alto** cuando hay más de 5.000 consultas al mes (mismo archivo). Además de subir la precisión, las respuestas se volvieron más estables: en varias corridas seguidas el modelo dio exactamente lo mismo.
 
 ### 6. Datos en memoria + JSON versionado, sin base de datos
 
@@ -168,7 +168,10 @@ backend/src
 ├── config/env.ts                 variables de entorno validadas con Zod (falla al arrancar si son inválidas)
 │
 ├── domain/                       modelo de negocio, sin dependencias de Nest
-│   ├── categories.ts             dimensiones, valores permitidos, etiquetas (optionLabel), "No lo menciona", isActionable
+│   ├── dimensions.ts             las dimensiones: valores permitidos, etiquetas y criterios para el LLM
+│   ├── categories.ts             tipos y utilidades sobre las dimensiones (optionLabel, "No lo menciona", isActionable)
+│   ├── derived-rules.ts          reglas calculadas en código: complejidad y volumen alto
+│   ├── volume.ts                 rangos de volumen de consultas y umbral de volumen alto
 │   ├── client.ts                 RawClient, Client, CategorizedClient (+ isCategorized)
 │   └── grades.ts                 notas A–F: cortes y rangos
 ├── common/                       utilidades genéricas: texto, formato es-CL, colecciones, muestreo reproducible, async

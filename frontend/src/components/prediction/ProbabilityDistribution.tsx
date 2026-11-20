@@ -14,21 +14,17 @@ import {
 } from 'recharts';
 import type { Prediction } from '@/lib/api/types';
 import { formatNumber, formatPct } from '@/lib/format';
+import {
+  type DistributionRow,
+  bucketLabel,
+  gradeRows,
+  probabilityRows,
+} from '@/lib/prediction';
 import { CHART, legendLabelStyle } from '@/lib/chart-theme';
 import { Card } from '../ui/Card';
 import { Tabs } from '../ui/Tabs';
 
 type View = 'probability' | 'grade';
-
-/** Una barra: un grupo de clientes y cuántos cerraron. */
-interface Row {
-  label: string;
-  /** Título del tooltip. */
-  title: string;
-  closed: number;
-  open: number;
-  closeRate: number;
-}
 
 const VIEWS: Record<View, { subtitle: string; axis: string }> = {
   probability: {
@@ -42,34 +38,6 @@ const VIEWS: Record<View, { subtitle: string; axis: string }> = {
     axis: 'Nota',
   },
 };
-
-const bucketLabel = (from: number) => `${Math.round(from * 100)}%`;
-const rateOf = (closed: number, open: number) =>
-  closed + open ? closed / (closed + open) : 0;
-
-function probabilityRows(buckets: Prediction['buckets']): Row[] {
-  // Solo el tramo con datos, para no mostrar barras vacías en los extremos.
-  const first = buckets.findIndex((b) => b.closed + b.open > 0);
-  const last = buckets.findLastIndex((b) => b.closed + b.open > 0);
-  return buckets.slice(first, last + 1).map((b) => ({
-    label: bucketLabel(b.from),
-    title: `Probabilidad ${bucketLabel(b.from)}–${bucketLabel(b.to)}`,
-    closed: b.closed,
-    open: b.open,
-    closeRate: rateOf(b.closed, b.open),
-  }));
-}
-
-function gradeRows(grades: Prediction['grades']): Row[] {
-  // De menor a mayor probabilidad, igual que la vista por probabilidad.
-  return [...grades].reverse().map((g) => ({
-    label: g.grade,
-    title: `Nota ${g.grade} · ${g.title} (${g.range})`,
-    closed: g.closed,
-    open: g.count - g.closed,
-    closeRate: rateOf(g.closed, g.count - g.closed),
-  }));
-}
 
 /**
  * Cuántos clientes cerraron y cuántos no, agrupados por la probabilidad que
@@ -129,7 +97,7 @@ export function ProbabilityDistribution({
               cursor={{ fill: 'rgba(0,0,0,0.04)' }}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null;
-                const row = payload[0].payload as Row;
+                const row = payload[0].payload as DistributionRow;
                 return (
                   <div className="border-border bg-surface rounded-lg border px-3 py-2 text-xs shadow-md">
                     <p className="font-medium">{row.title}</p>

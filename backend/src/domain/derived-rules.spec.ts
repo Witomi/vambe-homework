@@ -1,4 +1,4 @@
-import { deriveComplexity } from './complexity';
+import { applyHighVolumeRule, deriveComplexity } from './derived-rules';
 
 const base = { integrations: [], requirements: [], useCases: [] };
 
@@ -26,5 +26,24 @@ describe('deriveComplexity', () => {
     expect(
       deriveComplexity({ ...base, requirements: ['datos_sensibles'] }),
     ).toBe('alta');
+  });
+});
+
+describe('applyHighVolumeRule', () => {
+  it('más de 5.000 consultas al mes es volumen alto', () => {
+    expect(applyHighVolumeRule('consultas_repetitivas', 7500)).toBe(
+      'volumen_alto',
+    );
+  });
+
+  it('respeta los dolores más prioritarios y el volumen normal', () => {
+    expect(applyHighVolumeRule('perdida_ventas', 7500)).toBe('perdida_ventas');
+    expect(applyHighVolumeRule('crecimiento', 7500)).toBe('crecimiento');
+    expect(applyHighVolumeRule('consultas_repetitivas', 5000)).toBe(
+      'consultas_repetitivas',
+    );
+    expect(applyHighVolumeRule('consultas_repetitivas', null)).toBe(
+      'consultas_repetitivas',
+    );
   });
 });

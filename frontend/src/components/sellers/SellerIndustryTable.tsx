@@ -150,6 +150,13 @@ export function SellerIndustryTable({
   );
 }
 
+/** Color de una celda según su diferencia con el equipo, en puntos. */
+function toneOf(diffPts: number): 'up' | 'down' | 'even' {
+  if (diffPts >= NOTABLE_PTS) return 'up';
+  if (diffPts <= -NOTABLE_PTS) return 'down';
+  return 'even';
+}
+
 function SellerCell({
   result,
   teamRate,
@@ -168,14 +175,9 @@ function SellerCell({
   }
 
   const reliable = result.count >= minSample;
-  const diff = pointsDiff(result.closeRate, teamRate);
-  const tone = !reliable
-    ? 'muted'
-    : diff >= NOTABLE_PTS
-      ? 'up'
-      : diff <= -NOTABLE_PTS
-        ? 'down'
-        : 'even';
+  const tone = reliable
+    ? toneOf(pointsDiff(result.closeRate, teamRate))
+    : 'muted';
 
   return (
     <Link

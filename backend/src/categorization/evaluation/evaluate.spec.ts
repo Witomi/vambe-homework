@@ -63,4 +63,18 @@ describe('evaluate', () => {
     const report = evaluate([gold('a', {}, false)], predicted);
     expect(report.evaluated).toBe(0);
   });
+
+  it('reporta el acierto de cada caso y qué campos fallaron', () => {
+    const report = evaluate(
+      [gold('a', { industry: 'salud' }), gold('b', { industry: 'ecommerce' })],
+      predicted,
+    );
+    const [a, b] = report.cases;
+    expect(a).toMatchObject({ position: 1, accuracy: 1, errors: [] });
+    expect(b.position).toBe(2);
+    expect(b.errors).toEqual(
+      expect.arrayContaining(['Industria', 'Casos de uso']),
+    );
+    expect(b.accuracy).toBeLessThan(1);
+  });
 });

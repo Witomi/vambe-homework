@@ -7,14 +7,12 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import type { Metrics } from '@/lib/api/types';
+import { formatMonthYear, formatNumber, formatPct } from '@/lib/format';
 import {
-  formatChange,
-  formatMonthYear,
-  formatNumber,
-  formatPct,
-  formatPointsDiff,
-  pointsDiff,
-} from '@/lib/format';
+  type ComparisonRow,
+  closeRateComparison,
+  meetingsComparison,
+} from '@/lib/kpis';
 import { HISTORIC_PERIOD } from '@/lib/periods';
 import { AutomatedInquiriesChart } from './AutomatedInquiriesChart';
 import { MonthlyCloseRateLine } from './MonthlyCloseRateLine';
@@ -23,17 +21,6 @@ import { PeriodSelect } from './PeriodSelect';
 
 type Kpis = Metrics['kpis'];
 type Comparison = NonNullable<Metrics['monthComparison']>;
-type MonthKpis = Comparison['current'];
-
-/** Una fila "vs. feb 2025 · 407 · −34%" dentro de la tarjeta. */
-interface CompareRow {
-  label: string;
-  /** null: no hubo reuniones ese mes en el segmento. */
-  value: string | null;
-  text: string | null;
-  /** Signo del cambio: decide flecha y color. */
-  direction: number;
-}
 
 interface Kpi {
   label: string;
@@ -42,7 +29,7 @@ interface Kpi {
   detail: string;
   /** Gráfico pequeño bajo la cifra (opcional). */
   chart?: React.ReactNode;
-  compare: CompareRow[];
+  compare: ComparisonRow[];
   footer?: string;
 }
 
@@ -130,19 +117,6 @@ export function KpiCards({
   );
 }
 
-/** Filas de comparación: mes anterior y mismo mes del año pasado. */
-function compareRows(
-  comparison: Comparison,
-  format: (m: MonthKpis) => string,
-  change: (m: MonthKpis) => { text: string | null; direction: number },
-): CompareRow[] {
-  return [comparison.previousMonth, comparison.sameMonthLastYear].map((m) => ({
-    label: `vs. ${formatMonthYear(m.month)}`,
-    value: m.meetings ? format(m) : null,
-    ...(m.meetings ? change(m) : { text: null, direction: 0 }),
-  }));
-}
-
 function meetingsOfMonth(kpis: Kpis, comparison: Comparison): Kpi {
   const { current } = comparison;
   return {
@@ -150,14 +124,7 @@ function meetingsOfMonth(kpis: Kpis, comparison: Comparison): Kpi {
     icon: Handshake,
     value: formatNumber(current.meetings),
     detail: `${formatNumber(current.closed)} terminaron en venta`,
-    compare: compareRows(
-      comparison,
-      (m) => formatNumber(m.meetings),
-      (m) => ({
-        text: formatChange(current.meetings, m.meetings),
-        direction: Math.sign(current.meetings - m.meetings),
-      }),
-    ),
+    compare: meetingsComparison(comparison),
     footer: `${formatNumber(kpis.meetings)} en todo el período`,
   };
 }
@@ -169,17 +136,7 @@ function closeRateOfMonth(kpis: Kpis, comparison: Comparison): Kpi {
     icon: Target,
     value: formatPct(rate),
     detail: 'de las reuniones del mes se cierran',
-    compare: compareRows(
-      comparison,
-      (m) => formatPct(m.closeRate),
-      (m) =>
-        rate === null || m.closeRate === null
-          ? { text: null, direction: 0 }
-          : {
-              text: formatPointsDiff(rate, m.closeRate),
-              direction: Math.sign(pointsDiff(rate, m.closeRate)),
-            },
-    ),
+    compare: closeRateComparison(comparison),
     footer: `${formatPct(kpis.closeRate)} en todo el período`,
   };
 }

@@ -3,6 +3,7 @@
  *
  *   npm run evaluate -- --init 50   genera data/evaluation/gold.json con 50 casos
  *   npm run evaluate                compara las etiquetas revisadas con el LLM
+ *   npm run evaluate -- --cases     agrega el acierto de cada caso y sus errores
  *
  * Flujo: el archivo se genera con la respuesta del LLM pre-cargada en
  * `expected`. Una persona revisa cada caso, corrige lo que esté mal y marca
@@ -29,6 +30,7 @@ async function main() {
   const { values } = parseArgs({
     options: {
       init: { type: 'string' },
+      cases: { type: 'boolean', default: false },
       seed: { type: 'string', default: '7' },
     },
   });
@@ -43,7 +45,10 @@ async function main() {
       await initGold(categorized, Number(values.init), Number(values.seed));
       return;
     }
-    await report(new Map(categorized.map((c) => [c.id, c.categories])));
+    await report(
+      new Map(categorized.map((c) => [c.id, c.categories])),
+      values.cases,
+    );
   } finally {
     await app.close();
   }
@@ -73,7 +78,7 @@ async function initGold(
   );
 }
 
-async function report(predicted: Map<string, Categories>) {
+async function report(predicted: Map<string, Categories>, byCase: boolean) {
   if (!existsSync(GOLD_PATH)) {
     throw new Error(
       'No hay etiquetas. Genera la plantilla con: npm run evaluate -- --init 50',
@@ -100,6 +105,22 @@ async function report(predicted: Map<string, Categories>) {
   console.log(
     `Consultas/mes en peak dentro de ±20%: ${formatPct(result.peakInquiriesWithin20Pct)}`,
   );
+
+  const perfect = result.cases.filter((c) => c.accuracy === 1).length;
+  const average =
+    result.cases.reduce((sum, c) => sum + c.accuracy, 0) / result.cases.length;
+  console.log(
+    `\nAcierto promedio por caso: ${formatPct(average)} · ${perfect} de ${result.evaluated} casos sin errores`,
+  );
+  if (byCase) {
+    console.table(
+      result.cases.map((c) => ({
+        Caso: c.position,
+        Acierto: formatPct(c.accuracy),
+        Errores: c.errors.join(', ') || '—',
+      })),
+    );
+  }
 }
 
 main().catch((error: unknown) => {

@@ -21,7 +21,7 @@ interface Job {
 /**
  * Orquesta una corrida de categorización:
  *
- * 1. Elige una muestra aleatoria de clientes aún no categorizados.
+ * 1. Toma los clientes aún no categorizados, en orden aleatorio.
  * 2. La divide en lotes y los procesa con N workers concurrentes.
  * 3. Las transcripciones que el modelo no devolvió se reintentan de a una.
  * 4. Guarda cada lote apenas termina (la corrida se puede cortar y retomar).
@@ -36,7 +36,10 @@ export class CategorizationService {
     private readonly repository: ClientsRepository,
   ) {}
 
-  /** Clientes sin categorizar, en orden aleatorio reproducible. */
+  /**
+   * Clientes sin categorizar, en orden aleatorio: si la corrida se corta
+   * a la mitad, lo procesado es una muestra representativa.
+   */
   pendingClients(): RawClient[] {
     const pending = this.repository
       .findRaw()

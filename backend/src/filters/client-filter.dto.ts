@@ -7,7 +7,8 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { VOLUME_BUCKETS, filterValues } from '../domain/categories';
+import { filterValues } from '../domain/categories';
+import { VOLUME_BUCKETS } from '../domain/volume';
 import { GRADE_VALUES } from '../domain/grades';
 import { toBoolean, toList } from './query-transforms';
 

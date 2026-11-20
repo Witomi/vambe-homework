@@ -64,5 +64,7 @@ export const metricsSchema = z.object({
     }),
   ),
   dimensions: z.record(dimensionKeySchema, z.array(breakdownRowSchema)),
+  /** Mínimo de reuniones para que la tasa de un grupo sea confiable. */
+  minReliableSample: z.number().int(),
   insights: z.array(insightSchema),
 });

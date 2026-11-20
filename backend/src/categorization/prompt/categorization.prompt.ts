@@ -1,7 +1,7 @@
 import {
   DIMENSIONS,
-  DIMENSION_KEYS,
   DimensionDefinition,
+  LLM_DIMENSION_KEYS,
 } from '../../domain/categories';
 
 export interface PromptItem {
@@ -10,13 +10,8 @@ export interface PromptItem {
   transcript: string;
 }
 
-/** Dimensiones que responde el LLM (las derivadas se calculan en código). */
-const PROMPT_DIMENSION_KEYS = DIMENSION_KEYS.filter(
-  (key) => !('derived' in DIMENSIONS[key]),
-);
-
 function describeDimensions(): string {
-  return PROMPT_DIMENSION_KEYS.map((key) => {
+  return LLM_DIMENSION_KEYS.map((key) => {
     const d: DimensionDefinition = DIMENSIONS[key];
     const values = d.options.map((o) => o.value).join(' | ');
     const shape = d.multi ? `lista de [${values}]` : values;

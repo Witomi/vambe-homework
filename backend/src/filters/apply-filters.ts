@@ -3,8 +3,8 @@ import {
   DIMENSIONS,
   DimensionKey,
   NOT_MENTIONED,
-  volumeBucket,
 } from '../domain/categories';
+import { volumeBucket } from '../domain/volume';
 import { Client } from '../domain/client';
 import { normalizeText } from '../common/text';
 import { ClientFilterDto } from './client-filter.dto';

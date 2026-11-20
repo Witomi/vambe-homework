@@ -59,5 +59,10 @@ export interface MetricsResponse {
   /** Sobre las reuniones analizadas con IA, ordenado por desempeño ajustado. */
   sellers: SellerPerformance[];
   dimensions: Record<DimensionKey, BreakdownRow[]>;
+  /**
+   * Mínimo de reuniones analizadas para que la tasa de un grupo sea
+   * confiable; los grupos más chicos se muestran atenuados.
+   */
+  minReliableSample: number;
   insights: Insight[];
 }

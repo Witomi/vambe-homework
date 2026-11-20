@@ -4,7 +4,6 @@ import { useState } from 'react';
 import type { DimensionKey, Meta, Metrics } from '@/lib/api/types';
 import { listParam } from '@/lib/filters/params';
 import { findDimension } from '@/lib/labels';
-import { minReliableSample } from '@/lib/metrics';
 import { useFilterParams } from '../filters/useFilterParams';
 import { Card } from '../ui/Card';
 import { Tabs } from '../ui/Tabs';
@@ -54,7 +53,7 @@ export function DimensionExplorer({
           metric="rate"
           averageLabel="Promedio analizadas"
           baseRate={metrics.kpis.categorizedCloseRate}
-          minSample={minReliableSample(metrics.kpis)}
+          minSample={metrics.minReliableSample}
           onSelect={(value) => toggleParamValue(tab, value)}
           selected={listParam(searchParams, tab)}
         />

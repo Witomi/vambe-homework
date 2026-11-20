@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { isCategorized } from '../domain/client';
 import { ClientFilterService } from '../filters/client-filter.service';
 import { breakdownAllDimensions } from '../analytics/breakdown';
+import { minReliableSample } from '../analytics/rates';
 import { timeline } from './timeline';
 import { generateInsights } from './insights';
 import { computeKpis } from './kpis';
@@ -36,6 +37,7 @@ export class MetricsService {
       timeline: timeline(clients),
       sellers: sellerPerformance(categorized),
       dimensions,
+      minReliableSample: minReliableSample(categorized.length),
       insights: generateInsights({
         baseRate: kpis.categorizedCloseRate,
         categorizedCount: categorized.length,

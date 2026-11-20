@@ -3,9 +3,9 @@ import {
   DIMENSION_KEYS,
   DIMENSIONS,
   NOT_MENTIONED,
-  VOLUME_BUCKETS,
   displayOptions,
 } from '../domain/categories';
+import { VOLUME_BUCKETS } from '../domain/volume';
 import { CategorizationStore } from '../data/categorization.store';
 import { ClientsRepository } from '../data/clients.repository';
 import { GRADES, gradeRange } from '../domain/grades';

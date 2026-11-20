@@ -68,15 +68,16 @@ npm run categorize -- --ids a1b2c3d4e5f6,0f9e8d7c6b5a
 ```bash
 cd backend
 npm run evaluate -- --init 50   # genera data/evaluation/gold.json con 50 casos al azar
-# Revisar cada caso con los criterios de categories.ts, corregir "expected" y marcar "reviewed": true
-npm run evaluate                # reporta el acierto por dimensión
+# Revisar cada caso con los criterios de dimensions.ts, corregir "expected" y marcar "reviewed": true
+npm run evaluate                # reporta el acierto por dimensión y el promedio por caso
+npm run evaluate -- --cases     # agrega el acierto de cada caso y qué campos fallaron
 ```
 
 El reporte muestra el acierto exacto por dimensión, el solapamiento en las de lista y cuántas veces el volumen de consultas queda dentro de ±20%. La plantilla trae pre-cargada la respuesta del modelo para acelerar la revisión; conviene leer la transcripción antes de mirarla, para no sesgarse.
 
 ### Resultados actuales (50 casos etiquetados)
 
-Promedio de 2 corridas a temperatura 0 con el prompt actual. Los criterios de cada dimensión (en `backend/src/domain/categories.ts`) se ajustaron mirando 24 casos; los otros 26 se etiquetaron después solo con esos criterios escritos y funcionan como **prueba independiente**: si las reglas solo sirvieran para los casos usados para escribirlas, ahí bajaría el acierto.
+Promedio de 2 corridas a temperatura 0 con el prompt actual. Los criterios de cada dimensión (en `backend/src/domain/dimensions.ts`) se ajustaron mirando 24 casos; los otros 26 se etiquetaron después solo con esos criterios escritos y funcionan como **prueba independiente**: si las reglas solo sirvieran para los casos usados para escribirlas, ahí bajaría el acierto.
 
 **Por caso: 96% de las dimensiones correctas en promedio**; 29 de los 50 casos salen perfectos en ambas corridas.
 

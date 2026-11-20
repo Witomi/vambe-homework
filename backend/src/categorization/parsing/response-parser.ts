@@ -1,12 +1,13 @@
 import {
   Categories,
-  DIMENSIONS,
   MULTI_DIMENSION_KEYS,
+  MultiDimensionKey,
   SINGLE_DIMENSION_KEYS,
   SingleDimensionKey,
+  isDerived,
   optionValues,
 } from '../../domain/categories';
-import { deriveComplexity } from '../../domain/complexity';
+import { applyDerivedRules } from '../../domain/derived-rules';
 import { normalizeText } from '../../common/text';
 
 export class LlmResponseParseError extends Error {}
@@ -45,10 +46,10 @@ function resolveSingle(key: SingleDimensionKey, raw: unknown): string {
   );
 }
 
-function resolveMulti(key: string, raw: unknown): string[] {
+function resolveMulti(key: MultiDimensionKey, raw: unknown): string[] {
   if (raw === null || raw === undefined) return [];
   const list = Array.isArray(raw) ? raw : [raw];
-  const allowed = optionValues(key as keyof typeof DIMENSIONS);
+  const allowed = optionValues(key);
   const tokens = list.map(normalizeToken).filter((t) => allowed.includes(t));
   return [...new Set(tokens)];
 }
@@ -59,29 +60,6 @@ function resolveInquiries(raw: unknown): number | null {
   // En español "1.500" son mil quinientos: se descartan separadores.
   const n = typeof raw === 'number' ? raw : Number(raw.replace(/\D/g, ''));
   return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
-}
-
-/** Más consultas que esto al mes cuenta como volumen alto (≈170 al día). */
-export const HIGH_VOLUME_MONTHLY = 5000;
-
-/** Dolores con menor prioridad que "volumen alto" en los criterios. */
-const BELOW_HIGH_VOLUME = [
-  'fuera_de_horario',
-  'tiempo_respuesta',
-  'experiencia_cliente',
-  'consultas_repetitivas',
-  'otro',
-];
-
-/**
- * Aplica en código la regla de volumen de los criterios: el LLM no siempre
- * convierte "250 consultas diarias" a mensual antes de comparar.
- */
-function applyVolumeRule(painPoint: string, monthly: number | null): string {
-  const high = monthly !== null && monthly > HIGH_VOLUME_MONTHLY;
-  return high && BELOW_HIGH_VOLUME.includes(painPoint)
-    ? 'volumen_alto'
-    : painPoint;
 }
 
 /**
@@ -121,28 +99,20 @@ export function parseItem(raw: unknown): ParsedItem {
 
   const categories: Record<string, unknown> = {};
   for (const key of SINGLE_DIMENSION_KEYS) {
-    if ('derived' in DIMENSIONS[key]) continue;
-    categories[key] = resolveSingle(key, obj[key]);
+    if (!isDerived(key)) categories[key] = resolveSingle(key, obj[key]);
   }
   for (const key of MULTI_DIMENSION_KEYS) {
     categories[key] = resolveMulti(key, obj[key]);
   }
   categories.monthlyInquiries = resolveInquiries(obj.monthlyInquiries);
   categories.peakMonthlyInquiries = resolveInquiries(obj.peakMonthlyInquiries);
-  categories.painPoint = applyVolumeRule(
-    categories.painPoint as string,
-    categories.monthlyInquiries as number | null,
-  );
-  categories.complexity = deriveComplexity(
-    categories as Pick<
-      Categories,
-      'integrations' | 'requirements' | 'useCases'
-    >,
-  );
   categories.summary =
     typeof obj.summary === 'string' ? obj.summary.trim().slice(0, 200) : '';
 
-  return { ref, categories: categories as Categories };
+  return {
+    ref,
+    categories: applyDerivedRules(categories as Omit<Categories, 'complexity'>),
+  };
 }
 
 /**

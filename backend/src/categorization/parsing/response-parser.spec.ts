@@ -73,22 +73,15 @@ describe('parseItem', () => {
     expect(plain.categories.peakMonthlyInquiries).toBeNull();
   });
 
-  it('calcula la complejidad en código e ignora la del LLM', () => {
-    const { categories } = parseItem({ ...validItem, complexity: 'baja' });
-    // agendamiento + 1 integración → media
+  it('aplica las reglas calculadas en código', () => {
+    const { categories } = parseItem({
+      ...validItem,
+      complexity: 'baja',
+      monthlyInquiries: 7500,
+    });
+    // agendamiento + 1 integración → media, aunque el LLM diga otra cosa
     expect(categories.complexity).toBe('media');
-  });
-
-  it('más de 5.000 consultas al mes es volumen alto si no hay un dolor más prioritario', () => {
-    const high = { ...validItem, monthlyInquiries: 7500 };
-    expect(parseItem(high).categories.painPoint).toBe('volumen_alto');
-    // Pérdida de ventas tiene más prioridad que el volumen.
-    expect(
-      parseItem({ ...high, painPoint: 'perdida_ventas' }).categories.painPoint,
-    ).toBe('perdida_ventas');
-    expect(parseItem(validItem).categories.painPoint).toBe(
-      'consultas_repetitivas',
-    );
+    expect(categories.painPoint).toBe('volumen_alto');
   });
 
   it('normaliza mayúsculas, tildes y espacios', () => {
