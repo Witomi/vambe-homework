@@ -15,7 +15,7 @@ Panel comercial que toma las transcripciones de reuniones de venta de Vambe, las
 | **Predicción** | Probabilidad de cierre con regresión logística y **notas A–F** por cliente: cuánto cierra realmente cada nota, cerrados vs. no cerrados por probabilidad y qué rasgos la mueven |
 | **Clientes** | Búsqueda de texto, filtros por cualquier dimensión, orden, paginación y detalle con transcripción + categorización |
 
-> La arquitectura, las dimensiones elegidas y las decisiones técnicas están en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+> La arquitectura, las dimensiones elegidas y las decisiones técnicas están en [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Stack
 
@@ -101,7 +101,7 @@ npm run evaluate -- --cases     # agrega el acierto de cada caso y qué campos f
 
 El reporte muestra el acierto exacto por dimensión; en las dimensiones de lista (como casos de uso), también qué parte de la lista acertó aunque no sea completa (solapamiento), y cuántas veces el volumen de consultas queda dentro de ±20%. La plantilla trae pre-cargada la respuesta del modelo para acelerar la revisión; conviene leer la transcripción antes de mirarla, para no sesgarse.
 
-El acierto actual (96% de las dimensiones correctas por caso, sobre 50 casos) y el detalle por dimensión están en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#precisión-del-llm).
+El acierto actual (96% de las dimensiones correctas por caso, sobre 50 casos) y el detalle por dimensión están en [ARCHITECTURE.md](ARCHITECTURE.md#precisión-del-llm).
 
 ## Tests y calidad de código
 
@@ -136,11 +136,11 @@ El acierto actual (96% de las dimensiones correctas por caso, sobre 50 casos) y 
 
 ## Despliegue
 
-El servidor desplegado solo consulta los datos ya categorizados (`backend/data/categorizations.json`); no configures `GEMINI_API_KEY` en el hosting. El porqué está en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#6-categorización-offline-el-despliegue-solo-consulta).
+El servidor desplegado solo consulta los datos ya categorizados (`backend/data/categorizations.json`); no configures `GEMINI_API_KEY` en el hosting. El porqué está en [ARCHITECTURE.md](ARCHITECTURE.md#6-categorización-offline-el-despliegue-solo-consulta).
 
 - **Backend → Render**: el repo incluye `render.yaml`. En Render: *New → Blueprint*, elige el repo y define `FRONTEND_URL` con la URL de Vercel.
 - **Frontend → Vercel**: importa el repo con *Root Directory* `frontend` y define `NEXT_PUBLIC_API_URL=https://<backend>.onrender.com/api`.
 
 ## Próximas mejoras
 
-- **Categorización en producción**: procesar cada reunión nueva a medida que llega (desde el CRM o subiendo un CSV en la app) con una cola de trabajos, Postgres, versión del prompt guardada en cada categorización y evals como control de calidad antes de cambiar el prompt. Detalle en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#próximas-mejoras).
+- **Categorización en producción**: procesar cada reunión nueva a medida que llega (desde el CRM o subiendo un CSV en la app) con una cola de trabajos, Postgres, versión del prompt guardada en cada categorización y evals como control de calidad antes de cambiar el prompt. Detalle en [ARCHITECTURE.md](ARCHITECTURE.md#próximas-mejoras).
