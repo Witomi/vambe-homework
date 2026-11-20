@@ -167,9 +167,11 @@ Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `
 
 ## Despliegue
 
+**La categorización es un paso offline.** Las 10.000 reuniones se categorizan en local con `npm run categorize` y el resultado (`backend/data/categorizations.json`) se versiona en el repo. El servidor desplegado solo **consulta** esos datos: no necesita la API key de Gemma, no gasta cuota y todos ven los mismos números que miden los evals. Por eso `GEMINI_API_KEY` no se configura en el hosting.
+
 - **Backend → Render**: el repo incluye `render.yaml`. En Render: *New → Blueprint*, elige el repo y define `FRONTEND_URL` con la URL de Vercel.
 - **Frontend → Vercel**: importa el repo con *Root Directory* `frontend` y define `NEXT_PUBLIC_API_URL=https://<backend>.onrender.com/api`.
 
 ## Próximas mejoras
 
-- **Carga de CSV desde la app**: subir reuniones nuevas, categorizar solo las que no estén analizadas (en segundo plano, con barra de avance) y reentrenar el modelo. Requiere una base de datos (Postgres), un código de acceso para proteger la cuota del LLM y un máximo de filas por archivo. Detalle en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#limitaciones-y-próximos-pasos).
+- **Categorización en producción**: procesar cada reunión nueva a medida que llega (desde el CRM o subiendo un CSV en la app) con una cola de trabajos, Postgres, versión del prompt guardada en cada categorización y evals como control de calidad antes de cambiar el prompt. Detalle en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#categorización-en-producción-propuesta).

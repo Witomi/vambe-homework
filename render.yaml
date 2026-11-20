@@ -11,6 +11,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "24"
+      # Sin GEMINI_API_KEY a propósito: la categorización se hace offline y
+      # el servidor solo consulta backend/data/categorizations.json.
       # URL del frontend en Vercel (separar varias con coma)
       - key: FRONTEND_URL
         sync: false

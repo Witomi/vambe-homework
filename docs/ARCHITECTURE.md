@@ -262,8 +262,28 @@ Los tipos del frontend se derivan de sus esquemas Zod, no de una copia manual, a
 
 ## Limitaciones y próximos pasos
 
-- **Cobertura**: las 10.000 reuniones están categorizadas (~3 horas con el free tier de Gemma, 5 lotes de 10 en paralelo). Nuevas reuniones se procesan con `npm run categorize`, que solo toma las pendientes.
+- **Categorización offline**: las 10.000 reuniones se categorizan en local (~3 horas con el free tier de Gemma, 5 lotes de 10 en paralelo) y el resultado se versiona en el repo. El despliegue solo consulta; no tiene API key ni categoriza. Nuevas reuniones se procesan con `npm run categorize`, que solo toma las pendientes.
 - **Evaluación de calidad**: los 50 casos están etiquetados (resultados en el README). El acierto promedio por caso es 96%; lo más débil son los casos de uso (78% exacto, 90% de solapamiento) y la urgencia, que el modelo sube cuando el volumen es grande. Las 10.000 reuniones del repo se categorizaron con el prompt anterior; para que reflejen los criterios nuevos hay que recategorizarlas (~3 horas de cuota gratuita). Una muestra más grande y etiquetada por personas del equipo comercial daría una medición más confiable.
-- **Carga de CSV desde la app** (propuesta): subir reuniones nuevas desde el frontend, ver cuántas ya están analizadas (los IDs se derivan del contenido, así que no se repiten), categorizar solo las nuevas en segundo plano con barra de avance y reentrenar el modelo. Requiere persistencia real (Postgres en vez del JSON, porque el disco del hosting gratis se borra al reiniciar), un código de acceso para proteger la cuota del LLM y un máximo de filas por archivo.
-- **Categorización online**: un endpoint o cola (BullMQ) para categorizar reuniones nuevas a medida que llegan.
-- **Persistencia**: migrar a Postgres si el volumen crece o si se necesita escritura concurrente.
+- **Persistencia**: migrar a Postgres si el volumen crece o si se necesita escritura concurrente (ver la propuesta siguiente).
+
+### Categorización en producción (propuesta)
+
+Hoy la categorización es una carga única de 10.000 reuniones. En producción las reuniones llegan de a poco, y eso cambia la infraestructura, no la lógica: la taxonomía (`dimensions.ts`), el prompt, el parser y las reglas derivadas se reutilizan tal cual.
+
+| Tema | Hoy | En producción |
+| --- | --- | --- |
+| Disparador | Comando manual | Cada reunión nueva (webhook del CRM, grabación o CSV subido desde la app) crea un trabajo en una cola |
+| Datos | CSV + JSON en memoria | Postgres: reuniones y categorizaciones, con versión del prompt, modelo y respuesta cruda |
+| Workers | 5 en el mismo proceso | Proceso aparte que consume la cola (BullMQ con Redis, o pg-boss sobre Postgres) |
+| Control de cuota | En memoria | Compartido entre workers (Redis), para que varios procesos respeten el mismo límite |
+| Fallos | Reintento y luego «fallida» | Reintentos con espera y una cola de fallidos que se puede revisar y relanzar |
+| Duplicados | Id derivado del contenido | Idempotencia: no se reprocesa una reunión que ya tiene categorización con la versión actual del prompt |
+| Lotes | 10 fijos | Micro-lotes: lo que llegue en ~30 s, hasta 10, para bajar el costo sin demorar cada reunión |
+| Modelo | Gemma gratis (con 503 frecuentes) | Tier pagado con disponibilidad garantizada y salida estructurada si el modelo la soporta; el parser sigue validando |
+
+Además:
+
+- **Versión del prompt**: cada categorización guarda con qué versión se hizo. Al cambiar el prompt, un trabajo en segundo plano recategoriza las anteriores.
+- **Evals como control de calidad**: en CI, un cambio de prompt corre `npm run evaluate` contra el gold y no se acepta si baja de un umbral (p. ej. 95% por caso). En producción se vigila la deriva: % de «Otro» o «No especificado», respuestas que no se pudieron interpretar y reuniones fallidas; una muestra semanal revisada por el equipo comercial agranda el gold.
+- **Privacidad**: las transcripciones tienen datos personales. Antes de enviarlas al LLM conviene enmascarar emails, teléfonos y nombres, y usar un proveedor que no entrene con los datos.
+- **Carga de CSV desde la app**: subir reuniones nuevas, ver cuántas ya están analizadas (los IDs se derivan del contenido, así que no se repiten), encolar solo las nuevas con barra de avance y reentrenar el modelo de predicción. Requiere un código de acceso para proteger la cuota del LLM y un máximo de filas por archivo.
