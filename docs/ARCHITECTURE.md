@@ -1,193 +1,158 @@
 # Arquitectura y decisiones
 
-## Visión general
+Vambe Insights categoriza con un LLM (Gemma 4) las 10.000 transcripciones de reuniones de venta y muestra en un panel qué clientes cierran, qué piden y qué hacer con eso. El trabajo se divide en dos momentos: una **categorización offline** que llama al LLM una vez, y una **app de consulta** que nunca lo llama.
 
 ```mermaid
 flowchart LR
-  CSV[(clients.csv<br/>10.000 reuniones)] --> Repo
-  subgraph Backend [NestJS]
-    Repo[ClientsRepository<br/>en memoria]
-    Store[CategorizationStore<br/>categorizations.json]
-    CLI[[npm run categorize]] --> Svc[CategorizationService<br/>lotes · rate limit · reintentos]
-    Svc --> LLM[GemmaProvider]
-    Svc --> Store
-    Store --> Repo
-    Repo --> Filters[applyFilters]
-    Filters --> Clients[/api/clients/]
-    Filters --> Metrics[/api/metrics<br/>agregaciones + insights/]
-    Tax[dimensions.ts] -.-> Svc & Filters & Meta[/api/meta/]
+  CSV[(clients.csv)] --> Repo
+  subgraph Offline [Offline · npm run categorize]
+    CLI[CategorizationService<br/>lotes · cuota · reintentos] --> LLM[Gemma 4]
+    LLM --> Parser[response-parser<br/>+ reglas derivadas]
   end
-  LLM <--> Google[(Google AI Studio<br/>Gemma 4)]
-  Clients & Metrics & Meta --> Next[Next.js<br/>Server Components]
-  Next --> UI[General · Vendedores · Oportunidades · Predicción · Clientes]
+  CSV --> CLI
+  Parser --> JSON[(categorizations.json)]
+  subgraph API [NestJS · en memoria]
+    JSON --> Repo[ClientsRepository]
+    Repo --> Filters[filtros]
+    Repo --> Model[modelo de cierre<br/>regresión logística]
+    Filters --> Metrics[/metrics/] & Clients[/clients/]
+    Repo --> Sellers[/sellers/] & Opps[/opportunities/]
+    Model --> Opps & Pred[/prediction/] & Clients
+  end
+  Tax[dimensions.ts<br/>taxonomía] -.-> CLI & Filters & Meta[/meta/]
+  Metrics & Clients & Sellers & Opps & Pred & Meta --> Next[Next.js · 5 vistas]
 ```
 
-El flujo se divide en dos momentos:
+## Arquitectura
 
-1. **Offline: categorización.** Un comando de consola recorre las transcripciones pendientes, las manda a Gemma en lotes, valida la respuesta y guarda el resultado en `categorizations.json`.
-2. **Online: consulta.** La API carga el CSV y las categorizaciones en memoria, y responde listados y métricas filtradas en milisegundos. No llama al LLM en tiempo de consulta.
+**Backend (NestJS).** Cada módulo sigue la misma forma: `*.controller.ts` define la ruta (sin lógica), `*.service.ts` coordina y la lógica vive en funciones puras con su test. Las capas base no dependen de ningún módulo de funcionalidad, y entre módulos las dependencias van en una sola dirección:
+
+```
+capas base:  domain ← common ← analytics ← data
+módulos:     metrics ─► filters ─► prediction
+             clients ─► filters, prediction
+             opportunities ─► prediction
+             sellers, meta, health, categorization: solo capas base
+```
+
+```
+backend/src
+├── domain/          el negocio sin Nest: dimensiones (dimensions.ts), tipos (categories.ts, client.ts),
+│                    reglas derivadas (derived-rules.ts), volumen (volume.ts) y notas A–F (grades.ts)
+├── common/          utilidades genéricas: texto, formato, colecciones, muestreo, límite de requests
+├── analytics/       cálculos compartidos: tasas, desglose por dimensión, rasgos ganadores, desempeño por vendedor
+├── data/            CSV + categorizaciones en memoria (ClientsRepository, CategorizationStore)
+├── categorization/  pipeline del LLM: prompt/, llm/ (proveedor Gemma + cuota), parsing/, evaluation/
+├── filters/         el segmento filtrado, compartido por la tabla y las métricas
+├── metrics/ · sellers/ · opportunities/ · prediction/ · clients/ · meta/ · health/   un módulo por endpoint
+└── cli/             npm run categorize y npm run evaluate
+```
+
+**Frontend (Next.js 15).** Las páginas son Server Components: leen los filtros de la URL, piden los datos al backend y los validan con Zod antes de pasarlos a los componentes. Solo los controles interactivos son componentes cliente.
+
+```
+frontend/src
+├── app/             una carpeta por vista: General (/), vendedores, oportunidades, prediccion, clientes
+├── lib/             todo lo que no es presentación, con tests:
+│   ├── api/         cliente tipado, un esquema Zod por endpoint y tipos derivados
+│   ├── filters/     filtros ↔ URL, chips de filtros activos y links
+│   └── …            formato es-CL, etiquetas, KPIs, predicción, períodos, estadística
+└── components/      una carpeta por vista + ui/ (componentes base)
+```
 
 ## Decisiones clave
 
 ### 1. La taxonomía es la fuente única de verdad
+`domain/dimensions.ts` define cada dimensión: valores permitidos, etiquetas y criterios. De ahí se generan el prompt, la validación de la respuesta del LLM, los filtros de la API (un valor inexistente responde 400) y `/api/meta`, del que el frontend toma filtros y etiquetas. Agregar un valor es editar un archivo; no hay listas duplicadas que se desincronicen.
 
-`backend/src/domain/dimensions.ts` define cada dimensión: sus valores, etiquetas, descripción, una pista para el LLM y los criterios para elegir cada valor. A partir de ese archivo se generan:
+### 2. Categorías cerradas con criterios explícitos por valor
+El LLM elige entre valores predefinidos, así «Clínica dental» y «Consulta odontológica» caen ambas en `salud` y se pueden agregar. Cada valor tiene reglas observables con prioridad cuando varias aplican. Por ejemplo, el tamaño se decide primero por la cantidad de locales, después por la de empleados y después por cómo se describe el negocio, y sin pistas queda «No especificado» en vez de adivinarse. Los mismos criterios se usan para etiquetar los evals, así el modelo y quien etiqueta aplican la misma definición. *Descartado:* etiquetas libres (no se pueden comparar) y descripciones de una línea (el modelo las interpretaba distinto en cada corrida).
 
-- la sección del **prompt** que lista los valores permitidos,
-- la **validación** de la respuesta del modelo,
-- los **DTOs de filtros** (un valor fuera de la taxonomía responde 400),
-- el endpoint `/api/meta`, del que el **frontend** toma filtros y etiquetas.
+### 3. Reglas fijas en código, no en el LLM
+La **complejidad técnica** (alta con 2+ integraciones, varios idiomas o datos sensibles; media con 1 integración o algún flujo transaccional; baja si solo informa) y el dolor **volumen alto** (más de 5.000 consultas al mes) se calculan en `domain/derived-rules.ts` a partir de lo que el LLM extrajo. Pedírselas al modelo daba resultados inconsistentes: la complejidad pasó de 63% a 100% de acierto.
 
-Agregar una categoría nueva es editar un solo archivo; no hay listas duplicadas que se desincronicen.
+### 4. Validación defensiva de la respuesta del LLM
+Gemma no tiene *JSON mode* en esta API, así que `response-parser.ts` extrae el JSON aunque venga con texto alrededor, normaliza tildes y mayúsculas, reemplaza valores inexistentes por «Otro» o un valor neutro, interpreta cifras como «1.500» y descarta solo los elementos inválidos, no el lote completo.
 
-### 2. Categorías cerradas, no texto libre
+### 5. Pipeline de categorización barato y robusto
+- **Lotes de 10 transcripciones** por request, emparejadas por un número `ref`: 10 veces menos llamadas.
+- **`gemma-4-26b-a4b-it`** como modelo principal: solo activa ~4.000 millones de parámetros por palabra, así que es rápido, y la extracción no necesita más. El `31b` midió lo mismo (95% contra 96% por caso) y es más lento; queda como **respaldo** cuando el principal responde 503 (saturado), algo frecuente en el plan gratuito. Cada registro guarda qué modelo respondió.
+- **Razonamiento mínimo** (latencia ~10 veces menor) y **temperatura baja** (0 para evaluar).
+- **Control de cuota compartido** entre 5 workers: un semáforo genérico (`common/rate-limiter.ts`) y, ante un 429, una pausa para todos (`rate-limited.provider.ts`).
+- **Reanudable:** solo procesa reuniones sin categorizar y guarda cada lote con escritura atómica. Las que el modelo no devolvió se reintentan de a una.
 
-El LLM debe elegir entre valores predefinidos en vez de inventar etiquetas. Así las categorías se pueden agregar y comparar: "Clínica dental" y "Consulta odontológica" caen ambas en `salud`. La única salida libre es `summary`, que es solo informativa.
+### 6. Categorización offline: el despliegue solo consulta
+El resultado se versiona en el repo (`backend/data/categorizations.json`) y el servidor desplegado solo lo lee. Así no hay API key expuesta en el hosting ni gasto de cuota desde la app, todos ven los mismos números que miden los evals y el backend cabe en el plan gratuito de Render. Por eso `render.yaml` no define `GEMINI_API_KEY`.
 
-### 3. Validación defensiva de la salida del LLM
+### 7. Datos en memoria, sin base de datos
+Con 10.000 filas, filtrar y agregar en memoria toma milisegundos; una base de datos sumaría infraestructura sin beneficio a esta escala. El acceso a datos está aislado en `ClientsRepository` y `CategorizationStore`: pasar a Postgres es reimplementar esas dos clases. El store revisa cada 5 s si el archivo cambió, así el panel se actualiza mientras corre una categorización, sin reiniciar.
 
-Gemma no soporta *JSON mode* en esta API, así que `response-parser.ts`:
+### 8. Filtros compartidos y en la URL
+La tabla de clientes y las métricas usan el mismo DTO y la misma función `applyFilters`, así siempre muestran el mismo grupo. Los filtros combinan con **O** dentro de una dimensión (salud o retail) y con **Y** entre dimensiones (salud y referido). En el frontend viven en la URL: una vista filtrada se comparte, se guarda y funciona con «atrás».
 
-- extrae el JSON aunque venga dentro de bloques de código o con texto alrededor,
-- normaliza tildes, mayúsculas y espacios (`"Servicios Profesionales"` → `servicios_profesionales`),
-- descarta valores fuera de la taxonomía en listas y usa `otro` o un valor neutro en dimensiones simples,
-- convierte números en formato chileno (`"1.500"` → 1500),
-- descarta solo los elementos inválidos, no el lote completo; los que faltan se reintentan uno por uno.
+### 9. Métricas que no engañan
+- **Todo sale de los datos.** Hallazgos, cuadrantes, rasgos ganadores y sugerencias se calculan; no hay consejos escritos a mano.
+- **Desempeño ajustado por cartera.** Cada vendedor se compara con lo que se esperaría según los rubros de sus leads (estandarización directa), así un vendedor con rubros difíciles no queda último por la asignación que le tocó.
+- **Muestras chicas.** Un grupo necesita al menos 10 reuniones (o el 2% de las analizadas) para competir en un ranking; los más chicos se muestran atenuados con su rango probable (intervalo de Wilson al 95%). Los valores comodín («Otro», «No especificado») no generan hallazgos.
 
-### 4. Pipeline de categorización robusto y barato
+### 10. Predicción con regresión logística propia
+Estima la probabilidad de cierre a partir de lo que extrajo el LLM, el vendedor y la combinación vendedor × industria. Es una regresión logística con regularización L2, implementada sin dependencias y entrenada con el método de Newton: converge en ~10 pasos y es **interpretable**, porque cada factor se explica como cuánto multiplica las chances de cierre. La regularización se elige en cada entrenamiento entre {3, 10, 30, 100} con validación cruzada de 5 partes, y cada cliente recibe la probabilidad de un modelo que no lo vio, así las métricas no están infladas. Se entrena al arrancar (~2–3 s) y de nuevo solo si cambian los datos. Las **notas A–F** usan cortes fijos (A ≥ 85%, luego tramos de 5 puntos, F < 65%) y no cuantiles, para que la proporción de clientes en cada nota diga algo. *Descartado:* librerías de ML (dependencia pesada para un modelo de ~80 variables) y guardar el modelo entrenado (habría que mantenerlo sincronizado con los datos y el código para ahorrar 2 s).
 
-- **Lotes de 10 transcripciones por request**, emparejadas por `ref`: 10 veces menos llamadas que de a una.
-- **Thinking mínimo**: la extracción no requiere razonamiento largo. Bajó la latencia de ~60 s a ~4 s por transcripción.
-- **Rate limiter compartido** entre los workers concurrentes. Ante un 429 se pausan todos según el `retryDelay` que indica la API.
-- **Reintentos con backoff** ante 503/504 (frecuentes en el free tier), alternando con un **modelo de respaldo**.
-- **Reanudable e idempotente**: solo procesa clientes sin categorizar y persiste después de cada lote con escritura atómica (archivo temporal + rename).
-- **Orden del CSV:** los pendientes se procesan en el orden del archivo y los ya categorizados se saltan. Como el despliegue usa las 10.000 reuniones categorizadas, el orden no afecta los resultados; con una corrida a medias, las estimaciones que escalan lo analizado al total (consultas automatizadas) serían aproximadas.
-- Se guarda el **modelo que respondió** en cada registro, para trazabilidad.
+### 11. Contratos tipados en ambos lados
+El backend valida la entrada (`class-validator`, 400 ante valores desconocidos), la configuración al arrancar (Zod) y la respuesta del LLM (parser), y declara el tipo de cada respuesta en `*.types.ts`. El frontend valida cada respuesta con un esquema Zod y deriva sus tipos de él, así un cambio incompatible falla al llegar y no como un `undefined` en un gráfico. *Descartado:* un paquete de tipos compartido, que complicaría desplegar backend y frontend por separado.
 
-### 5. Iteración del prompt guiada por los datos
+### 12. Evals para guiar el prompt
+`npm run evaluate` compara la respuesta del LLM con 50 casos de referencia (`gold.json`, el *gold standard*). Los criterios se ajustaron mirando 24 casos y los otros 26 se etiquetaron después solo con los criterios escritos: son una **prueba independiente** que detecta reglas que solo sirven para los casos con que se escribieron. Los cambios de prompt se comparan a temperatura 0 y con 2–3 corridas, porque el modelo varía entre ejecuciones.
 
-En una primera corrida, revisando valores extremos, vi que el modelo **inventaba volúmenes** cuando la transcripción decía "miles de consultas", o los derivaba de "2.000 entregas mensuales". Eso inflaba el KPI de consultas automatizadas. Agregué reglas explícitas (usar solo cifras explícitas de consultas; si no hay, `null`) y criterios observables para la urgencia, y volví a correr la muestra completa con el prompt corregido.
+## Dimensiones
 
-En una segunda revisión encontré que el modelo **extrapolaba cifras de picos** como si fueran el volumen normal ("120 consultas por hora en el peak" → 345.600/mes; "3.000 mensajes diarios en Black Friday" → 90.000/mes). Agregué la regla de usar solo el volumen normal (si solo hay cifra de pico, `null`) y recategoricé únicamente los 86 clientes cuya transcripción menciona picos, temporadas, campañas o cifras por hora (`npm run categorize -- --ids ...`). El volumen cambió en 29 de ellos, el máximo bajó a 150.000/mes (un "5.000 consultas diarias" legítimo) y el KPI de consultas automatizadas bajó de 2,8 M a 2,06 M.
+| Dimensión | Tipo | Para qué sirve |
+| --- | --- | --- |
+| Industria | simple | Qué rubros convierten más y menos |
+| Tamaño | simple | Estrategia y pricing para pymes vs. cuentas grandes |
+| Canal de adquisición | simple | Retorno de cada canal de marketing |
+| Canal de consultas | simple | Qué canales debe cubrir el producto |
+| Dolor principal | simple | El problema de fondo, para ajustar el pitch |
+| Urgencia | simple | Prioridad de seguimiento del lead |
+| Estacionalidad | simple | Si tiene temporadas o campañas con más consultas |
+| Complejidad técnica | simple, calculada | Esfuerzo de implementación (decisión 3) |
+| Casos de uso | lista | Qué funciones pide al chatbot |
+| Integraciones | lista | Roadmap de conectores (CRM, ERP, agenda…) |
+| Requisitos clave | lista | 24/7, multiidioma, derivación a humano, datos sensibles… |
+| Objeciones | lista | Frenos explícitos (precio, comparando alternativas…) |
+| Consultas/mes y en peak | número | Volumen normal y de temporada alta, para dimensionar el valor |
+| Resumen | texto | Lectura rápida de la necesidad |
 
-Efecto colateral observado: al recategorizar, ~19% de las dimensiones simples de esos 86 clientes cambiaron de valor, aunque la temperatura es baja (0,1). Es una medida útil de la estabilidad del modelo: en casos ambiguos (p. ej. urgencia media vs. alta) su respuesta no es determinista.
+## Vistas
 
-En una tercera iteración, guiada por los evals, reemplacé las descripciones de una línea por **criterios explícitos por valor** (`criteria` en `domain/dimensions.ts`), escritos como reglas observables y con orden de prioridad cuando varias aplican. Por ejemplo, para el tamaño: primero la cantidad de locales, después la de empleados y después cómo se describe el negocio; sin pistas, `no_especificado`, sin deducirlo del rubro ni del volumen. Los mismos criterios sirven para etiquetar el gold, así que el modelo y quien etiqueta aplican la misma definición. Las reglas fijas dejaron de pedírsele al LLM y se calculan en código: la **complejidad** (a partir de integraciones, requisitos y casos de uso, en `domain/derived-rules.ts`) y el dolor **volumen alto** cuando hay más de 5.000 consultas al mes (mismo archivo). Además de subir la precisión, las respuestas se volvieron más estables: en varias corridas seguidas el modelo dio exactamente lo mismo.
+| Vista | Qué responde | Reglas clave |
+| --- | --- | --- |
+| **General** | Cifras del mes (vs. mes anterior y mismo mes del año pasado) o del histórico; lo más importante; qué clientes cierran más y qué piden; vendedores | Hallazgos: los 2 grupos que más suben y los 2 que más bajan la tasa, con al menos 3% de la muestra y 2 puntos de diferencia |
+| **Vendedores** | Cómo le va a cada uno frente a lo esperado, su mejor y peor rubro, y una tabla vendedor × industria | Rubros con 8+ reuniones del vendedor; se destacan diferencias de 5+ puntos con el equipo |
+| **Oportunidades** | Dónde poner el esfuerzo (mapa de segmentos), a quién volver a llamar, qué vendedor toma cada rubro, qué frena las ventas y qué construir una vez para muchos rubros | Mapa: volumen sobre o bajo la mediana × conversión a ±3 puntos del promedio. Leads: los 10 sin cerrar con mayor probabilidad, con sus razones y el vendedor que la subiría 1+ punto. Asignación: +5 puntos sobre el equipo. Frenos: rasgos 3+ puntos bajo el promedio, con sus rasgos ganadores. Soluciones: combinaciones de casos de uso presentes en 4+ industrias |
+| **Predicción** | Notas A–F con su tasa de cierre real, cerrados vs. no cerrados por probabilidad y factores que más la mueven | Decisión 10 |
+| **Clientes** | Búsqueda sin tildes, filtros por cualquier dimensión, orden, paginación y detalle con transcripción y categorización | Decisión 8 |
 
-### 6. Datos en memoria + JSON versionado, sin base de datos
-
-Con 10.000 filas, filtrar y agregar en memoria toma pocos milisegundos. Una base de datos agregaría infraestructura sin beneficio a esta escala. El acceso a datos está aislado en `ClientsRepository` y `CategorizationStore`, así que migrar a Postgres o SQLite solo implica reimplementar esas dos clases.
-
-El resultado de la categorización se versiona en el repo (ver la decisión 8).
-
-### 7. Filtros compartidos y en la URL
-
-Las métricas y la tabla usan **el mismo `ClientFilterDto` y la misma función `applyFilters`**, así que siempre muestran exactamente el mismo segmento. En el frontend los filtros viven en la URL: una vista filtrada se puede compartir, guardar o recorrer con "atrás". Las páginas son Server Components que leen los `searchParams`; los controles son componentes cliente que actualizan la URL dentro de una transición, sin bloquear la UI.
-
-Semántica: OR dentro de una dimensión (salud **o** educación), AND entre dimensiones (salud **y** referido).
-
-### 8. Categorización offline: el despliegue solo consulta
-
-Las 10.000 reuniones se categorizan en local con `npm run categorize` y el resultado (`backend/data/categorizations.json`) se versiona en el repo. El servidor desplegado solo **consulta** esos datos:
-
-- **No necesita la API key de Gemma**: no hay una clave expuesta en el hosting ni nadie puede gastar la cuota desde la app. Por eso `GEMINI_API_KEY` no se configura en Render (`render.yaml` lo deja fuera a propósito).
-- **Resultados estables**: todos ven los mismos números, y son los mismos que miden los evals. Categorizar en vivo podría cambiar algunas respuestas en cada corrida.
-- **Despliegue liviano**: el backend solo lee el CSV y el JSON y responde consultas, algo que el plan gratuito de Render (512 MB) maneja sin problema.
-
-Las reuniones nuevas se procesan con el mismo comando, que solo toma las pendientes. Cómo sería en producción, con reuniones llegando a diario, está en «Categorización en producción (propuesta)».
+**Rasgos ganadores** (`analytics/winning-traits.ts`): dentro de un grupo, los rasgos con los que sus clientes cierran 5+ puntos más que el grupo, con al menos el 10% del grupo y 10 reuniones. Son asociaciones, no causas: indican dónde mirar.
 
 ## API
 
 | Endpoint | Descripción |
 | --- | --- |
-| `GET /api/meta` | Taxonomía, vendedores, rango de fechas y cobertura de la categorización |
-| `GET /api/metrics?…filtros&period` | KPIs, series y desgloses del segmento filtrado. `period=YYYY-MM` compara ese mes con el anterior y con el mismo mes del año pasado (por defecto, el último mes); `period=historico` muestra solo los totales |
+| `GET /api/meta` | Taxonomía, opciones de filtro, vendedores, rango de fechas y cobertura de la categorización |
+| `GET /api/metrics?…filtros&period` | Vista General del segmento filtrado. `period=YYYY-MM` compara ese mes (por defecto, el último); `period=historico`, solo totales |
 | `GET /api/clients?…filtros&page&pageSize&sortBy&sortDir` | Listado paginado |
-| `GET /api/clients/:id` | Detalle con transcripción completa |
-| `GET /api/prediction` | Calidad del modelo de cierre, distribución por probabilidad y factores |
+| `GET /api/clients/:id` | Detalle con la transcripción completa |
 | `GET /api/sellers` | Desempeño por vendedor y tabla vendedor × industria |
-| `GET /api/opportunities` | Acciones sugeridas: mapa de segmentos, leads recuperables, asignación, frenos y soluciones replicables |
-| `GET /api/health` | Estado del servidor, para el health check del hosting |
+| `GET /api/opportunities` | Mapa de segmentos, leads a recuperar, asignación, frenos y soluciones replicables |
+| `GET /api/prediction` | Calidad del modelo, notas, distribución y factores |
+| `GET /api/health` | Estado del servidor, para el hosting |
 
-Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `grade` (A–F) y cada dimensión (`industry`, `leadSource`, …) como lista separada por comas. Los valores se validan contra la taxonomía (400 si no existen).
+Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `grade` y cada dimensión (`industry`, `leadSource`, …) como lista separada por comas.
 
-La semántica de los filtros (OR dentro de una dimensión, AND entre dimensiones) está en la decisión 7. Todas las respuestas tienen su tipo en el backend (`*.types.ts`) y su esquema Zod en el frontend (`lib/api/schemas/`).
+## Precisión del LLM
 
-## Dimensiones extraídas
-
-| Dimensión | Tipo | Para qué sirve |
-| --- | --- | --- |
-| **Industria** | simple | Segmentar el mercado, detectar rubros que convierten más y menos |
-| **Tamaño** | simple | Diferenciar pricing y estrategia entre pymes y cuentas grandes |
-| **Canal de adquisición** | simple | Medir el retorno de cada canal de marketing (referidos, eventos, LinkedIn…) |
-| **Canal de consultas** | simple | Saber qué canales debe cubrir el producto (WhatsApp, teléfono…) |
-| **Dolor principal** | simple | Ajustar el pitch al problema de fondo del cliente |
-| **Casos de uso** | múltiple | Qué funciones se piden (agendamiento, cotizaciones, FAQ…) |
-| **Integraciones** | múltiple | Priorizar el roadmap de conectores (CRM, ERP, agenda, POS…) |
-| **Requisitos clave** | múltiple | Capacidades exigidas: 24/7, multiidioma, derivación a humano, datos sensibles |
-| **Objeciones** | múltiple | Frenos explícitos en la reunión (precio, comparando alternativas…) |
-| **Urgencia** | simple | Priorizar el seguimiento de leads |
-| **Complejidad técnica** | simple (calculada) | Estimar el esfuerzo de implementación. No la responde el LLM: alta = 2+ integraciones, varios idiomas o datos sensibles; media = 1 integración o algún flujo transaccional; baja = solo informar |
-| **Consultas / mes** | número | Volumen normalizado (diarias × 30, semanales × 4) para dimensionar el valor |
-| **Resumen** | texto | Lectura rápida de la necesidad en la tabla |
-
-## Métricas del panel
-
-El panel se diseñó para leerse de arriba hacia abajo en pocos segundos: primero la respuesta rápida, después el detalle y al final el contexto. La exploración detallada (búsqueda y todas las dimensiones como filtro) vive en la vista *Clientes*.
-
-1. **Tres cifras clave**: reuniones, tasa de cierre y consultas mensuales automatizadas en los clientes cerrados (el valor que entrega Vambe).
-2. **Lo más importante**: los 2 grupos de clientes que más suben la tasa de cierre y los 2 que más la bajan. Solo se consideran grupos con al menos 3% de la muestra y se excluyen valores comodín como "Otro". Cada hallazgo filtra el panel al hacer clic.
-3. **¿Qué clientes cierran más?**: tasa de cierre por industria, canal de adquisición, tamaño o dolor principal, frente al promedio. Los grupos muy chicos se atenúan.
-4. **¿Qué piden los clientes?**: los 6 casos de uso o integraciones más mencionados.
-5. **Reuniones por mes** y **¿Cómo le va a cada vendedor?** como contexto. Los vendedores se comparan **ajustados por cartera**: para cada uno se calcula cuánto se esperaba que cerrara si hubiera cerrado como el promedio del equipo en cada uno de sus rubros (estandarización directa), y se ordena por la diferencia entre lo real y lo esperado. Así un vendedor con rubros difíciles no queda último por la asignación que le tocó.
-
-**Muestras chicas:** en los desgloses, los grupos con menos de 10 reuniones (o 2% de las analizadas) no compiten en el ranking: van plegados al final, porque "3 de 3" no es un 100% confiable. Al pasar el mouse por cualquier fila se ve su rango probable (intervalo de Wilson al 95%).
-
-La visualización sigue una paleta validada para daltonismo: azul = sobre el promedio, rojo = bajo el promedio, y el color siempre va acompañado de la cifra (diferencia en puntos y cantidad de reuniones).
-
-## Oportunidades: de las métricas a la acción
-
-El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un panel lateral con sus cifras, la acción sugerida y enlaces explícitos ("Ver este grupo en el panel" / "Ver sus N clientes"); al llegar al destino, un banner fijo muestra el filtro aplicado y permite volver. Cada bloque es una función pura en `backend/src/opportunities/` con su test, y responde una pregunta del equipo:
-
-| Bloque | Pregunta | Cómo se calcula |
-| --- | --- | --- |
-| **Mapa de segmentos** | ¿Dónde pongo el esfuerzo? | Cada rubro, canal y tamaño se clasifica por volumen (sobre o bajo la mediana de su dimensión) y conversión (±3 puntos del promedio; lo que queda dentro es ruido y se omite). Cada cuadrante se nombra por su regla (p. ej. «Muchas reuniones · cierran bajo el promedio»), sin recomendaciones escritas a mano. |
-| **Leads recuperables** | ¿A quién vuelvo a llamar? | Leads perdidos a los que la regresión logística (ver Predicción) les da una probabilidad de cierre sobre el promedio, empezando por los de más consultas al mes (más valor para Vambe). Cada uno muestra las dos variables que más le suben la probabilidad. |
-| **Top vendedores por industria** | ¿Qué vendedor cierra mejor cada rubro? | Para cada rubro frecuente, el vendedor que más cierra frente al equipo (al menos +5 puntos y 8 reuniones). |
-| **Frenos a resolver** | ¿Qué baja las ventas? | Requisitos, objeciones, integraciones y casos de uso que cierran bajo el promedio, ordenados por impacto (puntos perdidos × reuniones). Cada uno trae sus **rasgos ganadores** (`analytics/winning-traits.ts`): dentro del grupo con ese freno, los rasgos con los que sí se cerró (al menos +5 pts sobre el grupo, con 10+ reuniones y el 10% del grupo). Ningún consejo está escrito a mano: todo sale de los datos. |
-| **Soluciones replicables** | ¿Qué construyo una vez y vendo en muchos rubros? | Pares de casos de uso (sin contar FAQ, que piden casi todos) presentes en 4 o más industrias distintas. Son candidatos a plantillas verticales. |
-
-## Vendedores
-
-`backend/src/sellers/` (`GET /api/sellers`) muestra cómo le va a cada vendedor:
-
-- **Tarjeta por vendedor:** tasa de cierre frente a la esperada según los rubros de sus leads (la misma estandarización directa del panel, en `analytics/seller-performance.ts`), y su rubro más fuerte y más flojo frente al equipo (solo rubros accionables con 8 o más reuniones suyas).
-- **Tabla vendedor × industria:** tasa de cierre de cada vendedor en cada rubro y su diferencia con el equipo en ese mismo rubro. Se pintan las diferencias de 5 puntos o más; las celdas con menos de 8 reuniones van en gris. Cada celda lleva a esas reuniones en la tabla de clientes.
-
-## Predicción de cierre (regresión logística)
-
-`backend/src/prediction/` estima la probabilidad de que cada cliente compre a partir de lo que extrajo el LLM.
-
-- **Variables:** una variable 0/1 por cada valor de cada dimensión (rubro, canal, tamaño, dolor, urgencia, complejidad, canal de consultas, casos de uso, integraciones, requisitos, objeciones), el **vendedor** y la combinación **vendedor × industria** (hay vendedores que cierran mucho mejor ciertos rubros; los vendedores salen de los datos), más el volumen de consultas en escala logarítmica.
-- **Modelo:** regresión logística con regularización L2, implementada sin dependencias (`logistic-regression.ts`) y entrenada con el método de Newton (IRLS): converge al óptimo exacto en ~10 pasos y, recorriendo solo las variables distintas de 0 de cada fila, entrena 10.000 reuniones en menos de un segundo.
-- **Cuándo se entrena:** en memoria, al arrancar el servidor (`main.ts`, antes de aceptar visitas) y de nuevo solo si cambian las categorizaciones. No llama al LLM: usa las categorías ya guardadas en `categorizations.json`.
-- **Validación cruzada de 5 partes:** cada cliente recibe la probabilidad de un modelo que no lo vio al entrenar, así que las métricas no están infladas.
-- **Elección de la regularización:** no hay un valor fijo. En cada entrenamiento se prueban l2 ∈ {3, 10, 30, 100} con la misma validación cruzada y se usa el de menor log loss. Con más datos suele ganar uno menor (con ~7.000 reuniones, l2 = 10).
-- **Resultado:** la UI muestra el AUC y la mejora sobre no usar modelo calculados en cada entrenamiento (con ~7.000 reuniones, AUC ≈ 0,63). Agregar vendedor y vendedor × industria sumó ~0,01 de AUC; otras variables probadas (mes, señales del texto) no aportaron o no sirven para clientes nuevos.
-- **Notas A–F:** cada cliente recibe una nota según su probabilidad (A ≥ 85%, B 80–85%, C 75–80%, D 70–75%, E 65–70%, F < 65%), definida en `domain/grades.ts`. Los cortes son fijos y no cuantiles a propósito: así la tabla muestra qué porcentaje de clientes cae en cada nota, cuánto cerró realmente y cuántos leads sin cerrar (y consultas al mes) quedan en ella. Las notas se pueden filtrar y ordenar en *Clientes* (`?grade=A&sortBy=probability`).
-- **Uso:** la pestaña *Predicción* muestra la tabla de notas, la distribución de cerrados vs. no cerrados por probabilidad y los factores (razones de chances). *Oportunidades* usa estas probabilidades para elegir los leads a recuperar, y explica cada uno con las variables que más suben su probabilidad. Como el modelo conoce al vendedor, simula la probabilidad del lead con cada vendedor y sugiere el que más la sube (con los puntos que ganaría).
-
-## Medición de precisión
-
-`npm run evaluate` compara las categorías del LLM con un *gold standard* (`data/evaluation/gold.json`: casos con su categorización correcta): acierto exacto por dimensión, solapamiento (Jaccard) en dimensiones de lista y volumen de consultas dentro de ±20%. Solo cuentan los casos marcados como revisados.
-
-Los criterios se ajustaron mirando 24 de los 50 casos; los otros 26 se etiquetaron después aplicando solo los criterios escritos y sirvieron como **prueba independiente**, para descartar reglas que solo funcionaran en los casos usados para escribirlas.
-
-### Resultados actuales
-
-Promedio de 2 corridas a temperatura 0 con el prompt actual (criterios en `backend/src/domain/dimensions.ts`).
-
-**Por caso: 96% de las dimensiones correctas en promedio**; 29 de los 50 casos salen perfectos en ambas corridas.
+**96% de las dimensiones correctas por caso**, en promedio de 2 corridas sobre los 50 casos de referencia; 29 casos salen perfectos en ambas.
 
 | Dimensión | Ajuste (24) | Prueba (26) | Total | Prompt anterior (24) |
 | --- | --- | --- | --- | --- |
@@ -200,157 +165,31 @@ Promedio de 2 corridas a temperatura 0 con el prompt actual (criterios en `backe
 | Tamaño | 98% | 96% | 97% | 46% |
 | Canal de consultas | 96% | 98% | 97% | 94% |
 | Dolor principal | 94% | 96% | 95% | 88% |
-| Requisitos clave (solapamiento 97%) | 94% | 94% | 94% | 77% |
+| Requisitos clave | 94% | 94% | 94% | 77% |
 | Urgencia | 83% | 100% | 92% | 94% |
-| **Casos de uso** (solapamiento 90%) | 79% | 77% | **78%** | 38% |
+| Casos de uso (solapamiento 90%) | 79% | 77% | 78% | 38% |
 | Consultas/mes (±20%) | 100% | 92% | 96% | 100% |
 | Consultas/mes en peak (±20%) | 100% | 100% | 100% | 100% |
 
-La columna «Prompt anterior» mide el prompt previo contra las mismas etiquetas (solo los 24 casos de ajuste).
+Los casos de ajuste y de prueba dan resultados parejos, así que los criterios no quedaron hechos a la medida de los casos con que se escribieron. Los errores que quedan son reglas escritas que Gemma no siempre sigue: sube la urgencia cuando el volumen es grande y omite o agrega algún caso de uso suelto. Más ajustes al prompt arreglaban unos casos y rompían otros. Probar el `31b` como principal, una transcripción por request o el razonamiento activado no mejoró la precisión y multiplicó el tiempo.
 
-Qué cambió:
+*Limitaciones:* la muestra es chica (cada caso mueve 2–4 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos.
 
-- **Criterios explícitos por valor**, con orden de prioridad cuando varias reglas aplican. Por ejemplo, el tamaño se decide primero por la cantidad de locales, después por la de empleados y después por cómo se describe el negocio; sin pistas queda «No especificado», en vez de adivinarlo por el rubro o el volumen. «Catálogo» quedó acotado a productos físicos, propiedades, espacios y tours (presentar servicios, programas o un portafolio es «Preguntas frecuentes»).
-- **Reglas fijas calculadas en código** en vez de pedírselas al LLM, que las aplicaba de forma inconsistente: la complejidad (a partir de integraciones, requisitos y casos de uso) y el dolor «volumen alto» cuando hay más de 5.000 consultas al mes.
-- **El gold se revisó con los mismos criterios.** Había etiquetas contradictorias entre casos parecidos (p. ej. «la conocí a través de un colega en LinkedIn» marcado como referido en un caso y como LinkedIn en otros). Los casos dudosos los decidió una persona.
+## Limitaciones y producción
 
-Lo que falta:
+- **Escala:** los datos en memoria y el JSON alcanzan para 10.000 reuniones. Con más volumen o escrituras concurrentes, Postgres.
+- **Modelos mezclados:** cuando el principal está saturado responde el de respaldo, así que una parte de las categorizaciones viene del `31b`. En producción se usaría un plan pagado y un solo modelo.
+- **Evals:** 50 casos son una muestra chica; lo ideal es que el equipo comercial agrande el gold.
 
-- Los errores que quedan son casos en que Gemma no sigue una regla escrita: marca **urgencia alta** cuando el volumen es grande aunque el cliente no diga que lo supera, omite o agrega algún **caso de uso** suelto y no reconoce «para mejorar atención» como dolor de experiencia. Más ajustes al prompt arreglaban unos casos y rompían otros, así que se dejó en este punto.
-- Se descartaron por no mejorar: usar `gemma-4-31b-it` como modelo principal (95% por caso), procesar 1 transcripción por request y activar el razonamiento del modelo (mucho más lentos).
-- Las corridas tuvieron muchos errores 503 de la API; en esos casos responde el modelo de respaldo, lo que explica parte de la diferencia entre corridas.
-
-Limitaciones: es una muestra chica (cada caso mueve 2–4 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos. Las 10.000 reuniones del repo se categorizaron con el prompt anterior; los criterios nuevos aplican a las que se categoricen desde ahora (o al recategorizar todo).
-
-Para comparar cambios de prompt de forma justa: usar temperatura 0 (`LLM_TEMPERATURE=0`), correr cada versión 2–3 veces y comparar promedios.
-
-## Estructura del código
-
-### Backend (`backend/src`)
-
-Cada módulo de Nest sigue la misma forma: `*.controller.ts` (HTTP, sin lógica) → `*.service.ts` (coordina) → funciones puras en archivos propios (fáciles de testear). Los contratos de respuesta están en `*.types.ts` y los de entrada en DTOs validados con `class-validator`.
-
-```
-backend/src
-├── main.ts / app.module.ts       arranque, configuración HTTP y registro de módulos
-├── config/env.ts                 variables de entorno validadas con Zod (falla al arrancar si son inválidas)
-│
-├── domain/                       modelo de negocio, sin dependencias de Nest
-│   ├── dimensions.ts             las dimensiones: valores permitidos, etiquetas y criterios para el LLM
-│   ├── categories.ts             tipos y utilidades sobre las dimensiones (optionLabel, "No lo menciona", isActionable)
-│   ├── derived-rules.ts          reglas calculadas en código: complejidad y volumen alto
-│   ├── volume.ts                 rangos de volumen de consultas y umbral de volumen alto
-│   ├── client.ts                 RawClient, Client, CategorizedClient (+ isCategorized)
-│   └── grades.ts                 notas A–F: cortes y rangos
-├── common/                       utilidades genéricas: texto, formato es-CL, colecciones, muestreo reproducible, async, límite de requests por minuto
-├── analytics/                    cálculos puros compartidos por varios módulos
-│   ├── rates.ts                  rateStat, pointsDiff, minReliableSample
-│   ├── breakdown.ts              tasa de cierre por valor de cada dimensión (+ membersOf)
-│   ├── winning-traits.ts         rasgos ganadores: qué tenían los que sí cerraron dentro de un grupo
-│   └── seller-performance.ts     desempeño por vendedor ajustado por cartera
-├── data/                         persistencia
-│   ├── csv-loader.ts             CSV → RawClient[]
-│   ├── clients.repository.ts     clientes en memoria (findAll, findCategorized, findById) + búsqueda
-│   └── categorization.store.ts   categorizaciones en JSON (escritura atómica)
-│
-├── filters/                      segmento de clientes compartido por tabla y métricas
-├── clients/                      GET /api/clients[/:id]: orden, mapeo y paginación
-├── metrics/                      GET /api/metrics: kpis, timeline, insights, vendedores ajustados
-├── opportunities/                GET /api/opportunities: un archivo puro por bloque
-├── sellers/                      GET /api/sellers: tarjetas por vendedor y tabla vendedor × industria
-├── prediction/                   GET /api/prediction
-│   ├── features.ts               variables del modelo a partir de la taxonomía
-│   ├── logistic-regression.ts    entrenamiento y predicción (sin dependencias)
-│   ├── closing-model.ts          validación cruzada + modelo completo + explicaciones
-│   ├── model-report.ts           calidad, notas, distribución y factores
-│   └── prediction.service.ts     cachea el modelo por versión de los datos y expone la API
-├── meta/                         GET /api/meta (taxonomía y opciones de filtro)
-├── health/                       GET /api/health
-├── categorization/               pipeline LLM
-│   ├── categorization.service.ts orquesta la corrida (muestra o --ids), cola, workers, reintentos
-│   ├── batch-categorizer.ts      un lote: prompt → LLM → parseo → registros
-│   ├── llm/                      LlmProvider (interfaz), GemmaProvider, RateLimitedLlmProvider (decorator), createLlmProvider (elige el proveedor según la configuración)
-│   ├── prompt/                   construcción del prompt desde la taxonomía
-│   ├── parsing/                  validación y normalización de la respuesta del modelo
-│   └── evaluation/               comparación contra las etiquetas de referencia (gold)
-└── cli/                          comandos `npm run categorize` y `npm run evaluate`
-```
-
-**Reglas de dependencia.** Las capas base (`domain`, `common`, `analytics`, `data`) no importan módulos de features. Entre features, las dependencias van en una sola dirección y sin ciclos:
-
-```
-metrics ──► filters ──► prediction
-clients ──► filters, prediction
-opportunities ──► prediction
-sellers: solo capas base
-meta, health, categorization: sin dependencias de otros features
-```
-
-**Clientes categorizados con tipo propio.** Las funciones de análisis reciben `CategorizedClient` (con `categories` no nulo), que entrega `ClientsRepository.findCategorized()`. Así el compilador garantiza que nunca se analiza un cliente sin categorías, sin aserciones `!` repartidas por el código.
-
-### Frontend (`frontend/src`)
-
-Las páginas son Server Components que leen los filtros de la URL, llaman a la API y pasan datos ya validados a los componentes. Solo los componentes interactivos llevan `'use client'`.
-
-```
-frontend/src
-├── app/                          páginas: panel (/), vendedores, oportunidades, predicción y clientes
-├── lib/
-│   ├── api/
-│   │   ├── schemas/              esquemas Zod, un archivo por endpoint (contrato con el backend)
-│   │   ├── types.ts              tipos derivados de los esquemas (z.infer)
-│   │   ├── http.ts               fetch + validación + ApiError
-│   │   └── index.ts              cliente tipado: api.meta(), api.metrics(), …
-│   ├── filters/                  filtros ↔ URL (params.ts), chips de filtros activos, hrefs
-│   ├── format.ts / labels.ts / metrics.ts / stats.ts   formato es-CL, etiquetas, umbrales, intervalo de Wilson
-│   ├── chart-theme.ts            colores y estilos de los gráficos (mismos tokens que globals.css)
-└── components/
-    ├── filters/                  FilterBar compuesta de SearchInput, ClosedFilter, MultiSelect,
-    │                             DateRangeFilter, ActiveFilterChips + hook useFilterParams
-    ├── dashboard/                KPIs, hallazgos, gráficos y desgloses
-    ├── sellers/                  tarjetas por vendedor y tabla vendedor × industria
-    ├── opportunities/            mapa de segmentos, leads recuperables, asignación, frenos, soluciones
-    ├── prediction/               notas A–F, distribución y factores
-    ├── clients/                  tabla (ClientRow, SortableHeader), Pagination, ClientDrawer
-    └── ui/                       Card, Badge, Tabs, Sidebar, PageHeader
-```
-
-### Validación de tipos en ambos lados
-
-| Dónde | Qué se valida | Con qué |
-| --- | --- | --- |
-| Backend, entrada | Query params (filtros, paginación, orden); valores fuera de la taxonomía → 400 | `class-validator` + `ValidationPipe` |
-| Backend, configuración | Variables de entorno al arrancar | Zod |
-| Backend, LLM | Respuesta del modelo (JSON, valores permitidos, números) | `response-parser.ts` |
-| Backend, salida | Cada endpoint declara su tipo de respuesta | interfaces `*.types.ts` |
-| Frontend, entrada | Cada respuesta de la API se valida al llegar | Zod (`lib/api/schemas.ts`) |
-
-Los tipos del frontend se derivan de sus esquemas Zod, no de una copia manual, así que si el backend cambia un contrato el error aparece en el punto de entrada. Una alternativa sería un paquete compartido de tipos en un monorepo con workspaces; se descartó para no complicar el build y el despliegue por separado de Vercel y Render.
-
-## Limitaciones y próximos pasos
-
-- **Categorización offline** (ver la decisión 8): las 10.000 reuniones tomaron ~3 horas con el free tier de Gemma (5 lotes de 10 en paralelo); las nuevas se procesan con `npm run categorize`, que solo toma las pendientes.
-- **Evaluación de calidad**: los 50 casos están etiquetados (ver «Resultados actuales» más arriba). El acierto promedio por caso es 96%; lo más débil son los casos de uso (78% exacto, 90% de solapamiento) y la urgencia, que el modelo sube cuando el volumen es grande. Las 10.000 reuniones del repo se categorizaron con el prompt anterior; para que reflejen los criterios nuevos hay que recategorizarlas (~3 horas de cuota gratuita). Una muestra más grande y etiquetada por personas del equipo comercial daría una medición más confiable.
-- **Persistencia**: migrar a Postgres si el volumen crece o si se necesita escritura concurrente (ver la propuesta siguiente).
-
-### Categorización en producción (propuesta)
-
-Hoy la categorización es una carga única de 10.000 reuniones. En producción las reuniones llegan de a poco, y eso cambia la infraestructura, no la lógica: la taxonomía (`dimensions.ts`), el prompt, el parser y las reglas derivadas se reutilizan tal cual.
+**Categorización en producción (propuesta).** Hoy es una carga única; en producción las reuniones llegan a diario. Cambia la infraestructura, no la lógica: taxonomía, prompt, parser y reglas derivadas se reutilizan tal cual.
 
 | Tema | Hoy | En producción |
 | --- | --- | --- |
-| Disparador | Comando manual | Cada reunión nueva (webhook del CRM, grabación o CSV subido desde la app) crea un trabajo en una cola |
-| Datos | CSV + JSON en memoria | Postgres: reuniones y categorizaciones, con versión del prompt, modelo y respuesta cruda |
-| Workers | 5 en el mismo proceso | Proceso aparte que consume la cola (BullMQ con Redis, o pg-boss sobre Postgres) |
-| Control de cuota | En memoria | Compartido entre workers (Redis), para que varios procesos respeten el mismo límite |
-| Fallos | Reintento y luego «fallida» | Reintentos con espera y una cola de fallidos que se puede revisar y relanzar |
-| Duplicados | Id derivado del contenido | Idempotencia: no se reprocesa una reunión que ya tiene categorización con la versión actual del prompt |
-| Lotes | 10 fijos | Micro-lotes: lo que llegue en ~30 s, hasta 10, para bajar el costo sin demorar cada reunión |
-| Modelo | Gemma gratis (con 503 frecuentes) | Tier pagado con disponibilidad garantizada y salida estructurada si el modelo la soporta; el parser sigue validando |
+| Disparador | Comando manual | Cada reunión nueva (CRM, grabación o CSV subido en la app) crea un trabajo en una cola |
+| Datos | CSV + JSON en memoria | Postgres, con versión del prompt, modelo y respuesta cruda por categorización |
+| Workers | 5 en el mismo proceso | Proceso aparte que consume la cola (BullMQ o pg-boss), con control de cuota compartido |
+| Fallos | Reintento y luego «fallida» | Reintentos con espera y cola de fallidos que se puede relanzar |
+| Lotes | 10 fijos | Micro-lotes: lo que llegue en ~30 s, hasta 10 |
+| Modelo | Gemma gratis con 503 frecuentes | Plan pagado con disponibilidad garantizada; el parser sigue validando |
 
-Además:
-
-- **Versión del prompt**: cada categorización guarda con qué versión se hizo. Al cambiar el prompt, un trabajo en segundo plano recategoriza las anteriores.
-- **Evals como control de calidad**: en CI, un cambio de prompt corre `npm run evaluate` contra el gold y no se acepta si baja de un umbral (p. ej. 95% por caso). En producción se vigila la deriva: % de «Otro» o «No especificado», respuestas que no se pudieron interpretar y reuniones fallidas; una muestra semanal revisada por el equipo comercial agranda el gold.
-- **Privacidad**: las transcripciones tienen datos personales. Antes de enviarlas al LLM conviene enmascarar emails, teléfonos y nombres, y usar un proveedor que no entrene con los datos.
-- **Carga de CSV desde la app**: subir reuniones nuevas, ver cuántas ya están analizadas (los IDs se derivan del contenido, así que no se repiten), encolar solo las nuevas con barra de avance y reentrenar el modelo de predicción. Requiere un código de acceso para proteger la cuota del LLM y un máximo de filas por archivo.
+Además: al cambiar el prompt, un trabajo en segundo plano recategoriza lo anterior; en CI, un cambio de prompt no se acepta si los evals bajan de un umbral; en producción se vigila la deriva (% de «Otro», respuestas no interpretables, fallidas); las transcripciones se envían al LLM con emails, teléfonos y nombres enmascarados; y el modelo de predicción se entrena en un trabajo aparte y se guarda con versión.
