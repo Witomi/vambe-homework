@@ -1,9 +1,8 @@
 import { groupBy } from '../common/collections';
 import { CategorizedClient } from '../domain/client';
 import { optionLabel } from '../domain/categories';
-import { rateStat } from '../analytics/rates';
+import { minReliableSample, rateStat } from '../analytics/rates';
 import { ReplicableSolution } from './opportunities.types';
-import { minReliableSample } from '../analytics/rates';
 
 /** Casi todos piden FAQ: no distingue una solución de otra. */
 const IGNORED_USE_CASES = new Set(['faq']);
