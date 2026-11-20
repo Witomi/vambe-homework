@@ -30,8 +30,9 @@ export function computeKpis(
     categorizedCloseRate: rateStat(categorized).closeRate,
     medianMonthlyInquiries: median(inquiries),
     automatedMonthlyInquiries: automated,
-    // Las reuniones se analizan en orden aleatorio, así que las analizadas
-    // representan al resto: escalar por la cobertura estima el total.
+    // Con todas las reuniones analizadas (cobertura 100%) es el valor exacto.
+    // Con cobertura parcial, escala lo analizado al total: supone que las
+    // reuniones analizadas se parecen al resto.
     estimatedAutomatedMonthlyInquiries: coverage ? automated / coverage : null,
   };
 }

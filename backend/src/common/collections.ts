@@ -17,6 +17,15 @@ export function groupBy<T>(
   return groups;
 }
 
+/** Divide una lista en grupos de `size` elementos (el último puede ser menor). */
+export function chunk<T>(items: readonly T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
 /** Mediana de una lista de números, o null si está vacía. */
 export function median(values: number[]): number | null {
   if (!values.length) return null;

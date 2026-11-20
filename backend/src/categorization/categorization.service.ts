@@ -8,7 +8,7 @@ import {
   CategorizationRunSummary,
   RecategorizeOptions,
 } from './categorization.types';
-import { chunk, shuffle } from '../common/sampling';
+import { chunk } from '../common/collections';
 
 /** Intentos por transcripción antes de darla por fallida. */
 const MAX_ATTEMPTS = 3;
@@ -21,7 +21,7 @@ interface Job {
 /**
  * Orquesta una corrida de categorización:
  *
- * 1. Toma los clientes aún no categorizados, en orden aleatorio.
+ * 1. Toma los clientes aún no categorizados (los ya revisados se saltan).
  * 2. La divide en lotes y los procesa con N workers concurrentes.
  * 3. Las transcripciones que el modelo no devolvió se reintentan de a una.
  * 4. Guarda cada lote apenas termina (la corrida se puede cortar y retomar).
@@ -36,15 +36,9 @@ export class CategorizationService {
     private readonly repository: ClientsRepository,
   ) {}
 
-  /**
-   * Clientes sin categorizar, en orden aleatorio: si la corrida se corta
-   * a la mitad, lo procesado es una muestra representativa.
-   */
+  /** Clientes sin categorizar, en el orden del CSV. */
   pendingClients(): RawClient[] {
-    const pending = this.repository
-      .findRaw()
-      .filter((c) => !this.store.has(c.id));
-    return shuffle(pending);
+    return this.repository.findRaw().filter((c) => !this.store.has(c.id));
   }
 
   /** Categoriza los clientes que aún no tienen categorías (todos, o hasta `limit`). */

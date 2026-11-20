@@ -61,7 +61,7 @@ Gemma no soporta *JSON mode* en esta API, así que `response-parser.ts`:
 - **Rate limiter compartido** entre los workers concurrentes. Ante un 429 se pausan todos según el `retryDelay` que indica la API.
 - **Reintentos con backoff** ante 503/504 (frecuentes en el free tier), alternando con un **modelo de respaldo**.
 - **Reanudable e idempotente**: solo procesa clientes sin categorizar y persiste después de cada lote con escritura atómica (archivo temporal + rename).
-- **Orden aleatorio:** los pendientes se procesan al azar y no en el orden del CSV. Así, si la corrida se corta a medias, lo analizado sigue representando todo el período, los vendedores y los rubros, y las estimaciones del panel (que escalan lo analizado al total) siguen siendo válidas.
+- **Orden del CSV:** los pendientes se procesan en el orden del archivo y los ya categorizados se saltan. Como el despliegue usa las 10.000 reuniones categorizadas, el orden no afecta los resultados; con una corrida a medias, las estimaciones que escalan lo analizado al total (consultas automatizadas) serían aproximadas.
 - Se guarda el **modelo que respondió** en cada registro, para trazabilidad.
 
 ### 5. Iteración del prompt guiada por los datos
