@@ -183,7 +183,7 @@ Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `
 | Urgencia | 92% |
 | Casos de uso (lista completa) | 78% |
 
-**Por qué casos de uso queda más abajo:** es una lista (2,7 funciones por cliente en promedio) y solo cuenta como acierto si coincide completa. El modelo encuentra el 93% de las funciones que corresponden y el 94% de las que agrega son correctas, pero basta una de más o de menos para fallar el caso: 13 de los 100 resultados fallan por una sola función. Además, algunas tienen fronteras difusas incluso para una persona (preguntas frecuentes vs. catálogo, agendamiento vs. reservas), y muchas veces la transcripción describe las consultas que recibe el negocio sin decir qué debe hacer el bot. Los errores más repetidos son omitir *catálogo* o *pedidos* y agregar *calificación de leads* sin que se pida.
+**Por qué casos de uso queda más abajo:** es una lista (2,7 funciones por cliente en promedio) y solo cuenta como acierto si coincide completa. El modelo encuentra el 93% de las funciones que corresponden y el 94% de las que agrega son correctas, pero basta una de más o de menos para fallar el caso: 13 de los 100 resultados fallan por una sola función. Además, algunas tienen fronteras difusas incluso para una persona (preguntas frecuentes vs. catálogo, agendamiento vs. reservas), y muchas veces la transcripción describe las consultas que recibe el negocio sin decir qué debe hacer el bot. Los errores más repetidos son omitir *catálogo* o *pedidos* y agregar *calificación de leads* sin que se pida. Cambiar la redacción del prompt solo movió los errores de lugar; el siguiente paso sería cambiar de técnica: ejemplos resueltos en el prompt o una segunda pasada que exija citar la frase que justifica cada función.
 
 *Limitaciones:* la muestra es chica (cada caso mueve 2–4 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos.
 
@@ -192,7 +192,6 @@ Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `
 - **Escala:** los datos en memoria y el JSON alcanzan para 10.000 reuniones. Con más volumen o escrituras concurrentes, Postgres.
 - **Modelos mezclados:** cuando el principal está saturado responde el de respaldo, así que una parte de las categorizaciones viene del `31b`. En producción se usaría un plan pagado y un solo modelo.
 - **Evals:** 50 casos son una muestra chica; lo ideal es que el equipo comercial agrande el gold.
-- **Casos de uso:** se probaron dos cambios de prompt, medidos con 2 corridas sobre los 50 casos, y ninguno mejoró: pedir sí/no por cada función (59%: omite menos, pero marca de más) y precisar las reglas de catálogo, cotizaciones y pedidos (72%: corrige esos errores, pero aparecen otros). Cambiar la redacción mueve los errores de lugar, así que el siguiente paso es cambiar de técnica: ejemplos resueltos en el prompt (de reuniones fuera del gold), una segunda pasada que exija citar la frase que justifica cada función, o votación entre 3 corridas.
 
 **Categorización en producción (propuesta).** Hoy es una carga única; en producción las reuniones llegan a diario. Cambia la infraestructura, no la lógica: taxonomía, prompt, parser y reglas derivadas se reutilizan tal cual.
 
