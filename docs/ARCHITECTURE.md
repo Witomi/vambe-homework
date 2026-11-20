@@ -187,21 +187,33 @@ Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `
 
 *Limitaciones:* la muestra es chica (cada caso mueve 2–4 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos.
 
-## Limitaciones y producción
+## Limitaciones
 
 - **Escala:** los datos en memoria y el JSON alcanzan para 10.000 reuniones. Con más volumen o escrituras concurrentes, Postgres.
-- **Modelos mezclados:** cuando el principal está saturado responde el de respaldo, así que una parte de las categorizaciones viene del `31b`. En producción se usaría un plan pagado y un solo modelo.
+- **Modelos mezclados:** cuando el principal está saturado responde el de respaldo, así que una parte de las categorizaciones viene del `31b`.
 - **Evals:** 50 casos son una muestra chica; lo ideal es que el equipo comercial agrande el gold.
 
-**Categorización en producción (propuesta).** Hoy es una carga única; en producción las reuniones llegan a diario. Cambia la infraestructura, no la lógica: taxonomía, prompt, parser y reglas derivadas se reutilizan tal cual.
+## Próximas mejoras
 
-| Tema | Hoy | En producción |
+Diseño propuesto, no implementado.
+
+### Categorización en producción
+
+Hoy la categorización es una carga única de 10.000 reuniones; en producción las reuniones llegarían a diario. Cambia la infraestructura, no la lógica: taxonomía, prompt, parser y reglas derivadas se reutilizan tal cual.
+
+| Tema | Hoy | Propuesta |
 | --- | --- | --- |
 | Disparador | Comando manual | Cada reunión nueva (CRM, grabación o CSV subido en la app) crea un trabajo en una cola |
 | Datos | CSV + JSON en memoria | Postgres, con versión del prompt, modelo y respuesta cruda por categorización |
 | Workers | 5 en el mismo proceso | Proceso aparte que consume la cola (BullMQ o pg-boss), con control de cuota compartido |
 | Fallos | Reintento y luego «fallida» | Reintentos con espera y cola de fallidos que se puede relanzar |
 | Lotes | 10 fijos | Micro-lotes: lo que llegue en ~30 s, hasta 10 |
-| Modelo | Gemma gratis con 503 frecuentes | Plan pagado con disponibilidad garantizada; el parser sigue validando |
+| Modelo | Gemma gratis, con 503 frecuentes y respaldo de otro modelo | Plan pagado con disponibilidad garantizada y un solo modelo; el parser sigue validando |
 
-Además: al cambiar el prompt, un trabajo en segundo plano recategoriza lo anterior; en CI, un cambio de prompt no se acepta si los evals bajan de un umbral; en producción se vigila la deriva (% de «Otro», respuestas no interpretables, fallidas); las transcripciones se envían al LLM con emails, teléfonos y nombres enmascarados; y el modelo de predicción se entrena en un trabajo aparte y se guarda con versión.
+### Calidad y operación
+
+- **Versión del prompt:** al cambiar el prompt, un trabajo en segundo plano recategoriza lo anterior.
+- **Evals en CI:** un cambio de prompt no se acepta si los evals bajan de un umbral.
+- **Monitoreo de deriva:** % de «Otro», respuestas no interpretables y reuniones fallidas.
+- **Privacidad:** las transcripciones se envían al LLM con emails, teléfonos y nombres enmascarados.
+- **Modelo de predicción:** se entrena en un trabajo aparte y se guarda con versión, en vez de entrenarse al arrancar.

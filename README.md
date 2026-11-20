@@ -143,4 +143,4 @@ El servidor desplegado solo consulta los datos ya categorizados (`backend/data/c
 
 ## Próximas mejoras
 
-- **Categorización en producción**: procesar cada reunión nueva a medida que llega (desde el CRM o subiendo un CSV en la app) con una cola de trabajos, Postgres, versión del prompt guardada en cada categorización y evals como control de calidad antes de cambiar el prompt. Detalle en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#limitaciones-y-producción).
+- **Categorización en producción**: procesar cada reunión nueva a medida que llega (desde el CRM o subiendo un CSV en la app) con una cola de trabajos, Postgres, versión del prompt guardada en cada categorización y evals como control de calidad antes de cambiar el prompt. Detalle en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#próximas-mejoras).
