@@ -1,4 +1,4 @@
-import { sleep } from '../../common/async';
+import { sleep } from './async';
 
 /**
  * Espacia las llamadas para no superar `rpm` requests por minuto,

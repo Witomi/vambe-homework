@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { sleep } from '../../common/async';
-import { RateLimiter } from '../utils/rate-limiter';
+import { RateLimiter } from '../../common/rate-limiter';
 import { LlmProvider, LlmRateLimitError, LlmResult } from './llm-provider';
 
 const MAX_RATE_LIMIT_WAITS = 20;

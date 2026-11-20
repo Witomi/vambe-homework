@@ -65,6 +65,8 @@ npm run categorize -- --ids a1b2c3d4e5f6,0f9e8d7c6b5a
 
 ## Medir la precisión del LLM
 
+La precisión se mide contra `data/evaluation/gold.json`, el *gold standard* (término estándar en evaluación de modelos): casos con su categorización correcta, contra los que se compara la respuesta del LLM.
+
 ```bash
 cd backend
 npm run evaluate -- --init 50   # genera data/evaluation/gold.json con 50 casos al azar
@@ -127,7 +129,7 @@ Para comparar cambios de prompt de forma justa: usar temperatura 0 (`LLM_TEMPERA
 | frontend | `npm test` | Tests de la lógica pura (filtros ↔ URL, chips, formato, esquemas Zod) |
 | backend | `npm run test:e2e` | Tests de la API contra el CSV real |
 | backend | `npm run categorize` | Categoriza clientes con Gemma |
-| backend | `npm run evaluate` | Mide la precisión del LLM contra etiquetas humanas (ver abajo) |
+| backend | `npm run evaluate` | Mide la precisión del LLM contra etiquetas de referencia (ver abajo) |
 | ambos | `npm run lint` / `npm run format` | ESLint / Prettier |
 
 ## Variables de entorno

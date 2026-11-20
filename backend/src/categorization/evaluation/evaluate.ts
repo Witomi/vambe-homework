@@ -5,7 +5,7 @@ import {
   DimensionKey,
 } from '../../domain/categories';
 
-/** Una transcripción etiquetada a mano (el "gold standard"). */
+/** Un caso de referencia ("gold standard"): una transcripción con su categorización correcta. */
 export interface GoldItem {
   id: string;
   transcript: string;
@@ -109,7 +109,7 @@ function scoreCase(pair: Pair): CaseScore {
 }
 
 /**
- * Compara las categorías del LLM con las etiquetas humanas.
+ * Compara las categorías del LLM con las etiquetas de referencia del gold.
  * Solo considera casos revisados y con predicción disponible.
  */
 export function evaluate(

@@ -1,8 +1,8 @@
 /**
- * Evaluación de la precisión del LLM contra etiquetas humanas.
+ * Evaluación de la precisión del LLM contra etiquetas de referencia (gold).
  *
  *   npm run evaluate -- --init 50   genera data/evaluation/gold.json con 50 casos
- *   npm run evaluate                compara las etiquetas revisadas con el LLM
+ *   npm run evaluate                compara los casos revisados con el LLM
  *   npm run evaluate -- --cases     agrega el acierto de cada caso y sus errores
  *
  * Flujo: el archivo se genera con la respuesta del LLM pre-cargada en

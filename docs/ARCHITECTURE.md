@@ -152,7 +152,7 @@ El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un pa
 
 ## Medición de precisión
 
-`npm run evaluate` compara las categorías del LLM con un *gold standard* etiquetado a mano (`data/evaluation/gold.json`): acierto exacto por dimensión, solapamiento (Jaccard) en dimensiones de lista y volumen de consultas dentro de ±20%. Solo cuentan los casos marcados como revisados.
+`npm run evaluate` compara las categorías del LLM con un *gold standard* (`data/evaluation/gold.json`: casos con su categorización correcta): acierto exacto por dimensión, solapamiento (Jaccard) en dimensiones de lista y volumen de consultas dentro de ±20%. Solo cuentan los casos marcados como revisados.
 
 Los criterios se ajustaron mirando 24 de los 50 casos; los otros 26 se etiquetaron después aplicando solo los criterios escritos y sirvieron como **prueba independiente**, para descartar reglas que solo funcionaran en los casos usados para escribirlas. Los resultados están en el README.
 
@@ -174,7 +174,7 @@ backend/src
 │   ├── volume.ts                 rangos de volumen de consultas y umbral de volumen alto
 │   ├── client.ts                 RawClient, Client, CategorizedClient (+ isCategorized)
 │   └── grades.ts                 notas A–F: cortes y rangos
-├── common/                       utilidades genéricas: texto, formato es-CL, colecciones, muestreo reproducible, async
+├── common/                       utilidades genéricas: texto, formato es-CL, colecciones, muestreo reproducible, async, límite de requests por minuto
 ├── analytics/                    cálculos puros compartidos por varios módulos
 │   ├── rates.ts                  rateStat, pointsDiff, minReliableSample
 │   ├── breakdown.ts              tasa de cierre por valor de cada dimensión (+ membersOf)
@@ -204,8 +204,7 @@ backend/src
 │   ├── llm/                      LlmProvider (interfaz), GemmaProvider, RateLimitedLlmProvider (decorator), createLlmProvider (elige el proveedor según la configuración)
 │   ├── prompt/                   construcción del prompt desde la taxonomía
 │   ├── parsing/                  validación y normalización de la respuesta del modelo
-│   ├── evaluation/               comparación contra etiquetas humanas
-│   └── utils/rate-limiter.ts     control de requests por minuto
+│   └── evaluation/               comparación contra las etiquetas de referencia (gold)
 └── cli/                          comandos `npm run categorize` y `npm run evaluate`
 ```
 
