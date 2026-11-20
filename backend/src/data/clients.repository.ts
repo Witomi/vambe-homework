@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { normalizeText } from '../common/text';
+import { normalizeText } from '../utils/text';
 import { Env } from '../config/env';
 import {
   CategorizedClient,

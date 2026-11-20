@@ -1,4 +1,4 @@
-import { displayedPct } from '../common/format';
+import { displayedPct } from '../utils/format';
 import { Client } from '../domain/client';
 
 /**

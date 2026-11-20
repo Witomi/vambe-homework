@@ -1,4 +1,4 @@
-import { groupBy } from '../common/collections';
+import { groupBy } from '../utils/collections';
 import { CategorizedClient } from '../domain/client';
 import {
   DIMENSION_KEYS,

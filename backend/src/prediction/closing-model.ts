@@ -1,5 +1,5 @@
-import { chunk } from '../common/collections';
-import { seededShuffle } from '../common/sampling';
+import { chunk } from '../utils/collections';
+import { seededShuffle } from '../utils/sampling';
 import { CategorizedClient } from '../domain/client';
 import { logLoss } from './evaluation';
 import { buildFeatures, toVector } from './features';

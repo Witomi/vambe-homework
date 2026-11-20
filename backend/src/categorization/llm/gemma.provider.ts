@@ -1,6 +1,6 @@
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { Logger } from '@nestjs/common';
-import { sleep } from '../../common/async';
+import { sleep } from '../../utils/async';
 import { LlmProvider, LlmRateLimitError, LlmResult } from './llm-provider';
 
 export interface GemmaProviderOptions {

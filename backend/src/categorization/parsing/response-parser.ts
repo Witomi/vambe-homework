@@ -8,7 +8,7 @@ import {
   optionValues,
 } from '../../domain/categories';
 import { applyDerivedRules } from '../../domain/derived-rules';
-import { normalizeText } from '../../common/text';
+import { normalizeText } from '../../utils/text';
 
 export class LlmResponseParseError extends Error {}
 

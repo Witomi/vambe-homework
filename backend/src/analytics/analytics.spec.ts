@@ -1,5 +1,5 @@
 import { makeClient } from '../../test/fixtures';
-import { median } from '../common/collections';
+import { median } from '../utils/collections';
 import { Categories } from '../domain/categories';
 import { breakdownByDimension, membersOf } from './breakdown';
 import { findWinningTraits } from './winning-traits';

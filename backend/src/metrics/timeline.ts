@@ -1,5 +1,5 @@
 import { RateStat, rateStat } from '../analytics/rates';
-import { groupBy } from '../common/collections';
+import { groupBy } from '../utils/collections';
 import { Client, isCategorized } from '../domain/client';
 import { computeKpis } from './kpis';
 

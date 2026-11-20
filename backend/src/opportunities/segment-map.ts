@@ -1,8 +1,8 @@
 import { membersOf } from '../analytics/breakdown';
 import { findWinningTraits } from '../analytics/winning-traits';
 import { pointsDiff } from '../analytics/rates';
-import { median } from '../common/collections';
-import { formatPct } from '../common/format';
+import { median } from '../utils/collections';
+import { formatPct } from '../utils/format';
 import { CategorizedClient } from '../domain/client';
 import { DimensionKey } from '../domain/categories';
 import { Quadrant, QuadrantKey, Segment } from './opportunities.types';

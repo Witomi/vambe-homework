@@ -1,5 +1,5 @@
 import { makeClient } from '../../test/fixtures';
-import { normalizeText } from '../common/text';
+import { normalizeText } from '../utils/text';
 import { applyFilters } from './apply-filters';
 
 const clients = [

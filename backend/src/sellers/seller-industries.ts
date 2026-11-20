@@ -1,4 +1,4 @@
-import { groupBy } from '../common/collections';
+import { groupBy } from '../utils/collections';
 import { pointsDiff, rateStat } from '../analytics/rates';
 import { MIN_SELLER_INDUSTRY_SAMPLE } from '../analytics/seller-performance';
 import { CategorizedClient } from '../domain/client';

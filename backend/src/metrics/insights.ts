@@ -1,5 +1,5 @@
 import { minReliableSample, pointsDiff } from '../analytics/rates';
-import { formatPct } from '../common/format';
+import { formatPct } from '../utils/format';
 import { DIMENSIONS, DimensionKey, isActionable } from '../domain/categories';
 import { BreakdownRow, Insight, InsightTone } from './metrics.types';
 

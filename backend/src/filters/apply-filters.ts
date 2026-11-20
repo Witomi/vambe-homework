@@ -6,7 +6,7 @@ import {
 } from '../domain/categories';
 import { volumeBucket } from '../domain/volume';
 import { Client } from '../domain/client';
-import { normalizeText } from '../common/text';
+import { normalizeText } from '../utils/text';
 import { ClientFilterDto } from './client-filter.dto';
 
 /** Datos derivados que el filtro necesita además del cliente. */

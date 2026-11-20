@@ -8,7 +8,7 @@ import {
   CategorizationRunSummary,
   RecategorizeOptions,
 } from './categorization.types';
-import { chunk } from '../common/collections';
+import { chunk } from '../utils/collections';
 
 /** Intentos por transcripción antes de darla por fallida. */
 const MAX_ATTEMPTS = 3;

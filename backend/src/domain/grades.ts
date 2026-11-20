@@ -1,4 +1,4 @@
-import { formatPct } from '../common/format';
+import { formatPct } from '../utils/format';
 
 /**
  * Notas de cliente (A–F) según su probabilidad de cierre estimada.

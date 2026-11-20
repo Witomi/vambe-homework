@@ -30,10 +30,10 @@ flowchart LR
 Las **capas base** son el código compartido que no conoce a ningún módulo de funcionalidad: los módulos las usan a ellas, nunca al revés. Así la lógica común (por ejemplo, la tasa de cierre o el ajuste por cartera, que usan tres vistas) no se duplica y no hay dependencias circulares. Las flechas indican «importa de»:
 
 ```
-capas base:  common              (utilidades genéricas; no importa nada)
-             domain    ─► common (el negocio: clientes, dimensiones, notas, reglas)
-             analytics ─► domain, common (cálculos compartidos por varias vistas)
-             data      ─► domain, common (acceso a los datos)
+capas base:  utils               (utilidades genéricas; no importa nada)
+             domain    ─► utils  (el negocio: clientes, dimensiones, notas, reglas)
+             analytics ─► domain, utils (cálculos compartidos por varias vistas)
+             data      ─► domain, utils (acceso a los datos)
 
 módulos:     metrics ─► filters ─► prediction
              clients ─► filters, prediction
@@ -45,7 +45,7 @@ módulos:     metrics ─► filters ─► prediction
 backend/src
 ├── domain/          el negocio sin Nest: dimensiones (dimensions.ts), tipos (categories.ts, client.ts),
 │                    reglas derivadas (derived-rules.ts), volumen (volume.ts) y notas A–F (grades.ts)
-├── common/          utilidades genéricas: texto, formato, colecciones, muestreo, límite de requests
+├── utils/           utilidades genéricas: texto, formato, colecciones, muestreo, límite de requests
 ├── analytics/       cálculos compartidos: tasas, desglose por dimensión, rasgos ganadores, desempeño por vendedor
 ├── data/            CSV + categorizaciones en memoria (ClientsRepository, CategorizationStore)
 ├── categorization/  pipeline del LLM: prompt/, llm/ (proveedor Gemma + cuota), parsing/, evaluation/
@@ -84,7 +84,7 @@ Gemma no tiene *JSON mode* en esta API, así que `response-parser.ts` extrae el 
 - **Lotes de 10 transcripciones** por request, emparejadas por un número `ref`: 10 veces menos llamadas.
 - **`gemma-4-26b-a4b-it`** como modelo principal: solo activa ~4.000 millones de parámetros por palabra, así que es rápido, y la extracción no necesita más. El `31b` midió lo mismo (95% contra 96% por caso) y es más lento; queda como **respaldo** cuando el principal responde 503 (saturado), algo frecuente en el plan gratuito. Cada registro guarda qué modelo respondió.
 - **Razonamiento mínimo** (latencia ~10 veces menor) y **temperatura baja** (0 para evaluar).
-- **Control de cuota compartido** entre 5 workers: un semáforo genérico (`common/rate-limiter.ts`) y, ante un 429, una pausa para todos (`rate-limited.provider.ts`).
+- **Control de cuota compartido** entre 5 workers: un semáforo genérico (`utils/rate-limiter.ts`) y, ante un 429, una pausa para todos (`rate-limited.provider.ts`).
 - **Reanudable:** solo procesa reuniones sin categorizar y guarda cada lote con escritura atómica. Las que el modelo no devolvió se reintentan de a una.
 
 ### 6. Categorización offline: el despliegue solo consulta

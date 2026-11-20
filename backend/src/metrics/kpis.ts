@@ -1,4 +1,4 @@
-import { median } from '../common/collections';
+import { median } from '../utils/collections';
 import { CategorizedClient, Client } from '../domain/client';
 import { rateStat } from '../analytics/rates';
 import { Kpis } from './metrics.types';

@@ -1,4 +1,4 @@
-import { groupBy } from '../common/collections';
+import { groupBy } from '../utils/collections';
 import { CategorizedClient } from '../domain/client';
 import { optionLabel } from '../domain/categories';
 import { minReliableSample, rateStat } from '../analytics/rates';
