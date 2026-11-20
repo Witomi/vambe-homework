@@ -134,23 +134,9 @@ El acierto actual (96% de las dimensiones correctas por caso, sobre 50 casos) y 
 | --- | --- |
 | `NEXT_PUBLIC_API_URL` | URL pública del backend, p. ej. `http://localhost:3001/api` |
 
-## API
-
-| Endpoint | Descripción |
-| --- | --- |
-| `GET /api/meta` | Taxonomía, vendedores, rango de fechas y cobertura de la categorización |
-| `GET /api/metrics?…filtros&period` | KPIs, series y desgloses del segmento filtrado. `period=YYYY-MM` compara ese mes con el anterior y con el mismo mes del año pasado (por defecto, el último mes); `period=historico` muestra solo los totales |
-| `GET /api/clients?…filtros&page&pageSize&sortBy&sortDir` | Listado paginado |
-| `GET /api/clients/:id` | Detalle con transcripción completa |
-| `GET /api/prediction` | Calidad del modelo de cierre, distribución por probabilidad y factores |
-| `GET /api/sellers` | Desempeño por vendedor y tabla vendedor × industria |
-| `GET /api/opportunities` | Acciones sugeridas: mapa de segmentos, leads recuperables, asignación, frenos y soluciones replicables |
-
-Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `grade` (A–F) y cada dimensión (`industry`, `leadSource`, …) como lista separada por comas. Los valores se validan contra la taxonomía (400 si no existen).
-
 ## Despliegue
 
-**La categorización es un paso offline.** Las 10.000 reuniones se categorizan en local con `npm run categorize` y el resultado (`backend/data/categorizations.json`) se versiona en el repo. El servidor desplegado solo **consulta** esos datos: no necesita la API key de Gemma, no gasta cuota y todos ven los mismos números que miden los evals. Por eso `GEMINI_API_KEY` no se configura en el hosting.
+El servidor desplegado solo consulta los datos ya categorizados (`backend/data/categorizations.json`); no configures `GEMINI_API_KEY` en el hosting. El porqué está en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#8-categorización-offline-el-despliegue-solo-consulta).
 
 - **Backend → Render**: el repo incluye `render.yaml`. En Render: *New → Blueprint*, elige el repo y define `FRONTEND_URL` con la URL de Vercel.
 - **Frontend → Vercel**: importa el repo con *Root Directory* `frontend` y define `NEXT_PUBLIC_API_URL=https://<backend>.onrender.com/api`.

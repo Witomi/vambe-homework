@@ -78,13 +78,40 @@ En una tercera iteración, guiada por los evals, reemplacé las descripciones de
 
 Con 10.000 filas, filtrar y agregar en memoria toma pocos milisegundos. Una base de datos agregaría infraestructura sin beneficio a esta escala. El acceso a datos está aislado en `ClientsRepository` y `CategorizationStore`, así que migrar a Postgres o SQLite solo implica reimplementar esas dos clases.
 
-El resultado de la categorización se versiona en el repo: categorizar tiene costo y es lento, así que se hace una vez y la app desplegada no depende del LLM ni de su cuota.
+El resultado de la categorización se versiona en el repo (ver la decisión 8).
 
 ### 7. Filtros compartidos y en la URL
 
 Las métricas y la tabla usan **el mismo `ClientFilterDto` y la misma función `applyFilters`**, así que siempre muestran exactamente el mismo segmento. En el frontend los filtros viven en la URL: una vista filtrada se puede compartir, guardar o recorrer con "atrás". Las páginas son Server Components que leen los `searchParams`; los controles son componentes cliente que actualizan la URL dentro de una transición, sin bloquear la UI.
 
 Semántica: OR dentro de una dimensión (salud **o** educación), AND entre dimensiones (salud **y** referido).
+
+### 8. Categorización offline: el despliegue solo consulta
+
+Las 10.000 reuniones se categorizan en local con `npm run categorize` y el resultado (`backend/data/categorizations.json`) se versiona en el repo. El servidor desplegado solo **consulta** esos datos:
+
+- **No necesita la API key de Gemma**: no hay una clave expuesta en el hosting ni nadie puede gastar la cuota desde la app. Por eso `GEMINI_API_KEY` no se configura en Render (`render.yaml` lo deja fuera a propósito).
+- **Resultados estables**: todos ven los mismos números, y son los mismos que miden los evals. Categorizar en vivo podría cambiar algunas respuestas en cada corrida.
+- **Despliegue liviano**: el backend solo lee el CSV y el JSON y responde consultas, algo que el plan gratuito de Render (512 MB) maneja sin problema.
+
+Las reuniones nuevas se procesan con el mismo comando, que solo toma las pendientes. Cómo sería en producción, con reuniones llegando a diario, está en «Categorización en producción (propuesta)».
+
+## API
+
+| Endpoint | Descripción |
+| --- | --- |
+| `GET /api/meta` | Taxonomía, vendedores, rango de fechas y cobertura de la categorización |
+| `GET /api/metrics?…filtros&period` | KPIs, series y desgloses del segmento filtrado. `period=YYYY-MM` compara ese mes con el anterior y con el mismo mes del año pasado (por defecto, el último mes); `period=historico` muestra solo los totales |
+| `GET /api/clients?…filtros&page&pageSize&sortBy&sortDir` | Listado paginado |
+| `GET /api/clients/:id` | Detalle con transcripción completa |
+| `GET /api/prediction` | Calidad del modelo de cierre, distribución por probabilidad y factores |
+| `GET /api/sellers` | Desempeño por vendedor y tabla vendedor × industria |
+| `GET /api/opportunities` | Acciones sugeridas: mapa de segmentos, leads recuperables, asignación, frenos y soluciones replicables |
+| `GET /api/health` | Estado del servidor, para el health check del hosting |
+
+Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `grade` (A–F) y cada dimensión (`industry`, `leadSource`, …) como lista separada por comas. Los valores se validan contra la taxonomía (400 si no existen).
+
+La semántica de los filtros (OR dentro de una dimensión, AND entre dimensiones) está en la decisión 7. Todas las respuestas tienen su tipo en el backend (`*.types.ts`) y su esquema Zod en el frontend (`lib/api/schemas/`).
 
 ## Dimensiones extraídas
 
@@ -302,7 +329,7 @@ Los tipos del frontend se derivan de sus esquemas Zod, no de una copia manual, a
 
 ## Limitaciones y próximos pasos
 
-- **Categorización offline**: las 10.000 reuniones se categorizan en local (~3 horas con el free tier de Gemma, 5 lotes de 10 en paralelo) y el resultado se versiona en el repo. El despliegue solo consulta; no tiene API key ni categoriza. Nuevas reuniones se procesan con `npm run categorize`, que solo toma las pendientes.
+- **Categorización offline** (ver la decisión 8): las 10.000 reuniones tomaron ~3 horas con el free tier de Gemma (5 lotes de 10 en paralelo); las nuevas se procesan con `npm run categorize`, que solo toma las pendientes.
 - **Evaluación de calidad**: los 50 casos están etiquetados (ver «Resultados actuales» más arriba). El acierto promedio por caso es 96%; lo más débil son los casos de uso (78% exacto, 90% de solapamiento) y la urgencia, que el modelo sube cuando el volumen es grande. Las 10.000 reuniones del repo se categorizaron con el prompt anterior; para que reflejen los criterios nuevos hay que recategorizarlas (~3 horas de cuota gratuita). Una muestra más grande y etiquetada por personas del equipo comercial daría una medición más confiable.
 - **Persistencia**: migrar a Postgres si el volumen crece o si se necesita escritura concurrente (ver la propuesta siguiente).
 
