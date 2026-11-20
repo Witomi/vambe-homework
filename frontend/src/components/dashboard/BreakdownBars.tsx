@@ -10,7 +10,6 @@ import {
   formatPointsDiff,
   pointsDiff,
 } from '@/lib/format';
-import { wilsonInterval } from '@/lib/stats';
 import { BarTrack } from './BarTrack';
 
 export type BreakdownMetric = 'rate' | 'share';
@@ -159,11 +158,9 @@ function BarRow({
           ? 'bg-positive'
           : 'bg-negative';
 
-  const range = wilsonInterval(row.closed, row.count);
   const tooltip =
     metric === 'rate'
-      ? `${row.label}: ${formatPct(row.closeRate)} de ${formatNumber(row.count)} reuniones. ` +
-        `Rango probable: ${formatPct(range.low)}–${formatPct(range.high)}.`
+      ? `${row.label}: ${formatPct(row.closeRate)} de ${formatNumber(row.count)} reuniones.`
       : undefined;
 
   return (
@@ -246,9 +243,7 @@ function Legend() {
         <i className="bg-negative inline-block size-2 rounded-sm" aria-hidden />
         Bajo el promedio
       </span>
-      <span>
-        (n) = cantidad de reuniones · pasa el mouse para ver el rango probable
-      </span>
+      <span>(n) = cantidad de reuniones</span>
     </p>
   );
 }

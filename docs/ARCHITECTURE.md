@@ -63,7 +63,7 @@ frontend/src
 ├── lib/             todo lo que no es presentación, con tests:
 │   ├── api/         cliente tipado, un esquema Zod por endpoint y tipos derivados
 │   ├── filters/     filtros ↔ URL, chips de filtros activos y links
-│   └── …            formato es-CL, etiquetas, KPIs, predicción, períodos, estadística
+│   └── …            formato es-CL, etiquetas, KPIs, predicción, períodos
 └── components/      una carpeta por vista + ui/ (componentes base)
 ```
 
@@ -100,7 +100,7 @@ La tabla de clientes y las métricas usan el mismo DTO y la misma función `appl
 ### 9. Métricas que no engañan
 - **Todo sale de los datos.** Hallazgos, cuadrantes, rasgos ganadores y sugerencias se calculan; no hay consejos escritos a mano.
 - **Desempeño ajustado por cartera.** Cada vendedor se compara con lo que se esperaría según los rubros de sus leads (estandarización directa), así un vendedor con rubros difíciles no queda último por la asignación que le tocó.
-- **Muestras chicas.** Un grupo necesita al menos 10 reuniones (o el 2% de las analizadas) para competir en un ranking; los más chicos se muestran atenuados con su rango probable (intervalo de Wilson al 95%). Los valores comodín («Otro», «No especificado») no generan hallazgos.
+- **Muestras chicas.** Un grupo necesita al menos 10 reuniones (o el 2% de las analizadas) para competir en un ranking; los más chicos se muestran atenuados al final, porque «3 de 3» no es un 100% confiable. Los valores comodín («Otro», «No especificado») no generan hallazgos.
 
 ### 10. Predicción con regresión logística propia
 Estima la probabilidad de cierre a partir de lo que extrajo el LLM, el vendedor y la combinación vendedor × industria. Es una regresión logística con regularización L2, implementada sin dependencias y entrenada con el método de Newton: converge en ~10 pasos y es **interpretable**, porque cada factor se explica como cuánto multiplica las chances de cierre. La regularización se elige en cada entrenamiento entre {3, 10, 30, 100} con validación cruzada de 5 partes, y cada cliente recibe la probabilidad de un modelo que no lo vio, así las métricas no están infladas. Se entrena al arrancar (~2–3 s) y de nuevo solo si cambian los datos. Las **notas A–F** usan cortes fijos (A ≥ 85%, luego tramos de 5 puntos, F < 65%) y no cuantiles, para que la proporción de clientes en cada nota diga algo. *Descartado:* librerías de ML (dependencia pesada para un modelo de ~80 variables) y guardar el modelo entrenado (habría que mantenerlo sincronizado con los datos y el código para ahorrar 2 s).
