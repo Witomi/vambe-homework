@@ -154,7 +154,47 @@ El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un pa
 
 `npm run evaluate` compara las categorías del LLM con un *gold standard* (`data/evaluation/gold.json`: casos con su categorización correcta): acierto exacto por dimensión, solapamiento (Jaccard) en dimensiones de lista y volumen de consultas dentro de ±20%. Solo cuentan los casos marcados como revisados.
 
-Los criterios se ajustaron mirando 24 de los 50 casos; los otros 26 se etiquetaron después aplicando solo los criterios escritos y sirvieron como **prueba independiente**, para descartar reglas que solo funcionaran en los casos usados para escribirlas. Los resultados están en el README.
+Los criterios se ajustaron mirando 24 de los 50 casos; los otros 26 se etiquetaron después aplicando solo los criterios escritos y sirvieron como **prueba independiente**, para descartar reglas que solo funcionaran en los casos usados para escribirlas. 
+### Resultados actuales
+
+Promedio de 2 corridas a temperatura 0 con el prompt actual. Los criterios de cada dimensión (en `backend/src/domain/dimensions.ts`) se ajustaron mirando 24 casos; los otros 26 se etiquetaron después solo con esos criterios escritos y funcionan como **prueba independiente**: si las reglas solo sirvieran para los casos usados para escribirlas, ahí bajaría el acierto.
+
+**Por caso: 96% de las dimensiones correctas en promedio**; 29 de los 50 casos salen perfectos en ambas corridas.
+
+| Dimensión | Ajuste (24) | Prueba (26) | Total | Prompt anterior (24) |
+| --- | --- | --- | --- | --- |
+| Industria | 100% | 100% | 100% | 96% |
+| Canal de adquisición | 100% | 100% | 100% | 88% |
+| Complejidad técnica (calculada) | 100% | 100% | 100% | 63% |
+| Estacionalidad | 100% | 100% | 100% | 100% |
+| Objeciones | 100% | 100% | 100% | 100% |
+| Integraciones | 96% | 100% | 98% | 71% |
+| Tamaño | 98% | 96% | 97% | 46% |
+| Canal de consultas | 96% | 98% | 97% | 94% |
+| Dolor principal | 94% | 96% | 95% | 88% |
+| Requisitos clave (solapamiento 97%) | 94% | 94% | 94% | 77% |
+| Urgencia | 83% | 100% | 92% | 94% |
+| **Casos de uso** (solapamiento 90%) | 79% | 77% | **78%** | 38% |
+| Consultas/mes (±20%) | 100% | 92% | 96% | 100% |
+| Consultas/mes en peak (±20%) | 100% | 100% | 100% | 100% |
+
+La columna «Prompt anterior» mide el prompt previo contra las mismas etiquetas (solo los 24 casos de ajuste).
+
+Qué cambió:
+
+- **Criterios explícitos por valor**, con orden de prioridad cuando varias reglas aplican. Por ejemplo, el tamaño se decide primero por la cantidad de locales, después por la de empleados y después por cómo se describe el negocio; sin pistas queda «No especificado», en vez de adivinarlo por el rubro o el volumen. «Catálogo» quedó acotado a productos físicos, propiedades, espacios y tours (presentar servicios, programas o un portafolio es «Preguntas frecuentes»).
+- **Reglas fijas calculadas en código** en vez de pedírselas al LLM, que las aplicaba de forma inconsistente: la complejidad (a partir de integraciones, requisitos y casos de uso) y el dolor «volumen alto» cuando hay más de 5.000 consultas al mes.
+- **El gold se revisó con los mismos criterios.** Había etiquetas contradictorias entre casos parecidos (p. ej. «la conocí a través de un colega en LinkedIn» marcado como referido en un caso y como LinkedIn en otros). Los casos dudosos los decidió una persona.
+
+Lo que falta:
+
+- Los errores que quedan son casos en que Gemma no sigue una regla escrita: marca **urgencia alta** cuando el volumen es grande aunque el cliente no diga que lo supera, omite o agrega algún **caso de uso** suelto y no reconoce «para mejorar atención» como dolor de experiencia. Más ajustes al prompt arreglaban unos casos y rompían otros, así que se dejó en este punto.
+- Se descartaron por no mejorar: usar `gemma-4-31b-it` como modelo principal (95% por caso), procesar 1 transcripción por request y activar el razonamiento del modelo (mucho más lentos).
+- Las corridas tuvieron muchos errores 503 de la API; en esos casos responde el modelo de respaldo, lo que explica parte de la diferencia entre corridas.
+
+Limitaciones: es una muestra chica (cada caso mueve 2–4 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos. Las 10.000 reuniones del repo se categorizaron con el prompt anterior; los criterios nuevos aplican a las que se categoricen desde ahora (o al recategorizar todo).
+
+Para comparar cambios de prompt de forma justa: usar temperatura 0 (`LLM_TEMPERATURE=0`), correr cada versión 2–3 veces y comparar promedios.
 
 ## Estructura del código
 
@@ -262,7 +302,7 @@ Los tipos del frontend se derivan de sus esquemas Zod, no de una copia manual, a
 ## Limitaciones y próximos pasos
 
 - **Categorización offline**: las 10.000 reuniones se categorizan en local (~3 horas con el free tier de Gemma, 5 lotes de 10 en paralelo) y el resultado se versiona en el repo. El despliegue solo consulta; no tiene API key ni categoriza. Nuevas reuniones se procesan con `npm run categorize`, que solo toma las pendientes.
-- **Evaluación de calidad**: los 50 casos están etiquetados (resultados en el README). El acierto promedio por caso es 96%; lo más débil son los casos de uso (78% exacto, 90% de solapamiento) y la urgencia, que el modelo sube cuando el volumen es grande. Las 10.000 reuniones del repo se categorizaron con el prompt anterior; para que reflejen los criterios nuevos hay que recategorizarlas (~3 horas de cuota gratuita). Una muestra más grande y etiquetada por personas del equipo comercial daría una medición más confiable.
+- **Evaluación de calidad**: los 50 casos están etiquetados (ver «Resultados actuales» más arriba). El acierto promedio por caso es 96%; lo más débil son los casos de uso (78% exacto, 90% de solapamiento) y la urgencia, que el modelo sube cuando el volumen es grande. Las 10.000 reuniones del repo se categorizaron con el prompt anterior; para que reflejen los criterios nuevos hay que recategorizarlas (~3 horas de cuota gratuita). Una muestra más grande y etiquetada por personas del equipo comercial daría una medición más confiable.
 - **Persistencia**: migrar a Postgres si el volumen crece o si se necesita escritura concurrente (ver la propuesta siguiente).
 
 ### Categorización en producción (propuesta)
