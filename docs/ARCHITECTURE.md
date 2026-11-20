@@ -166,24 +166,24 @@ Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `
 
 **96% de las dimensiones correctas por caso**, en promedio de 2 corridas sobre los 50 casos de referencia; 29 casos salen perfectos en ambas.
 
-| Dimensión | Ajuste (24) | Prueba (26) | Total | Prompt anterior (24) |
-| --- | --- | --- | --- | --- |
-| Industria | 100% | 100% | 100% | 96% |
-| Canal de adquisición | 100% | 100% | 100% | 88% |
-| Complejidad técnica (calculada) | 100% | 100% | 100% | 63% |
-| Estacionalidad | 100% | 100% | 100% | 100% |
-| Objeciones | 100% | 100% | 100% | 100% |
-| Integraciones | 96% | 100% | 98% | 71% |
-| Tamaño | 98% | 96% | 97% | 46% |
-| Canal de consultas | 96% | 98% | 97% | 94% |
-| Dolor principal | 94% | 96% | 95% | 88% |
-| Requisitos clave | 94% | 94% | 94% | 77% |
-| Urgencia | 83% | 100% | 92% | 94% |
-| Casos de uso | 79% | 77% | 78% | 38% |
-| Consultas/mes (±20%) | 100% | 92% | 96% | 100% |
-| Consultas/mes en peak (±20%) | 100% | 100% | 100% | 100% |
+| Dimensión | Acierto |
+| --- | --- |
+| Industria | 100% |
+| Canal de adquisición | 100% |
+| Complejidad técnica (calculada) | 100% |
+| Estacionalidad | 100% |
+| Objeciones | 100% |
+| Consultas/mes en peak (±20%) | 100% |
+| Integraciones | 98% |
+| Tamaño | 97% |
+| Canal de consultas | 97% |
+| Consultas/mes (±20%) | 96% |
+| Dolor principal | 95% |
+| Requisitos clave | 94% |
+| Urgencia | 92% |
+| Casos de uso | 78% |
 
-Los casos de ajuste y de prueba dan resultados parejos, así que los criterios no quedaron hechos a la medida de los casos con que se escribieron. Los errores que quedan son reglas escritas que Gemma no siempre sigue: sube la urgencia cuando el volumen es grande y omite o agrega algún caso de uso suelto. Más ajustes al prompt arreglaban unos casos y rompían otros. Probar el `31b` como principal, una transcripción por request o el razonamiento activado no mejoró la precisión y multiplicó el tiempo.
+Los 24 casos usados para ajustar los criterios y los 26 de prueba dan resultados parejos (96% y 97% por caso), así que los criterios no quedaron hechos a la medida de los casos con que se escribieron. Los errores que quedan son reglas escritas que Gemma no siempre sigue: sube la urgencia cuando el volumen es grande y omite o agrega algún caso de uso suelto. Más ajustes al prompt arreglaban unos casos y rompían otros. Probar el `31b` como principal, una transcripción por request o el razonamiento activado no mejoró la precisión y multiplicó el tiempo.
 
 *Limitaciones:* la muestra es chica (cada caso mueve 2–4 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos.
 
