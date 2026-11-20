@@ -20,7 +20,7 @@ const STYLE: Record<Quadrant['key'], string> = {
 /**
  * Mapa volumen × conversión: cada grupo de clientes cae en uno de cuatro
  * cuadrantes según una regla sobre los datos. Al abrir un grupo se ven sus
- * palancas: qué tenían los que sí cerraron.
+ * rasgos ganadores: qué tenían los que sí cerraron.
  */
 export function SegmentMap({
   quadrants,

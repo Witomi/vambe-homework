@@ -1,5 +1,5 @@
 import { membersOf } from '../analytics/breakdown';
-import { findLevers } from '../analytics/levers';
+import { findWinningTraits } from '../analytics/winning-traits';
 import { pointsDiff } from '../analytics/rates';
 import { median } from '../common/collections';
 import { formatPct } from '../common/format';
@@ -82,7 +82,7 @@ export function buildSegmentMap(
         )
         .map((segment) => ({
           ...segment,
-          levers: findLevers(
+          winningTraits: findWinningTraits(
             membersOf(categorized, segment.dimension, segment.value),
             segment.dimension,
           ),

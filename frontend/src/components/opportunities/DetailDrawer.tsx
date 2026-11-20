@@ -5,7 +5,7 @@ import { ArrowRight, ChevronRight, X } from 'lucide-react';
 import Link from 'next/link';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { OPPORTUNITIES_ORIGIN, type Detail } from '@/lib/opportunity-details';
-import { LeverList } from './LeverList';
+import { WinningTraitsList } from './WinningTraitsList';
 
 const DetailContext = createContext<(detail: Detail) => void>(() => {});
 
@@ -123,13 +123,13 @@ function DetailDrawer({
             </p>
           )}
 
-          {detail.leversOf && (
+          {detail.winningTraitsOf && (
             <section>
               <h3 className="mb-2 text-sm font-semibold">
                 Qué tenían los que sí cerraron
               </h3>
-              <LeverList
-                segment={detail.leversOf}
+              <WinningTraitsList
+                segment={detail.winningTraitsOf}
                 origin={OPPORTUNITIES_ORIGIN}
               />
             </section>

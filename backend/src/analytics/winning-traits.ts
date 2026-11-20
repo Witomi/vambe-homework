@@ -4,10 +4,10 @@ import { breakdownByDimension } from './breakdown';
 import { minReliableSample, pointsDiff, rateStat } from './rates';
 
 /**
- * Dimensiones donde buscar palancas: lo que distingue a los clientes de un
+ * Dimensiones donde buscar rasgos ganadores: lo que distingue a los clientes de un
  * grupo que sí compraron. Todas salen de lo que el cliente contó.
  */
-const LEVER_DIMENSIONS: DimensionKey[] = [
+const TRAIT_DIMENSIONS: DimensionKey[] = [
   'leadSource',
   'industry',
   'businessSize',
@@ -23,10 +23,10 @@ const LEVER_DIMENSIONS: DimensionKey[] = [
 
 /** Una diferencia menor que esto, dentro de un grupo, es ruido. */
 const MIN_LIFT_PTS = 5;
-const MAX_LEVERS = 3;
+const MAX_TRAITS = 3;
 
 /** Un rasgo con el que los clientes de un grupo cierran más que el grupo. */
-export interface Lever {
+export interface WinningTrait {
   dimension: DimensionKey;
   dimensionLabel: string;
   value: string;
@@ -46,15 +46,15 @@ export interface Lever {
  *
  * Son asociaciones, no causas: muestran dónde mirar, no qué garantiza la venta.
  */
-export function findLevers(
+export function findWinningTraits(
   group: readonly CategorizedClient[],
   exclude?: DimensionKey,
-): Lever[] {
+): WinningTrait[] {
   const groupRate = rateStat(group).closeRate;
   if (groupRate === null) return [];
   const min = minReliableSample(group.length, 0.1);
 
-  return LEVER_DIMENSIONS.filter((d) => d !== exclude)
+  return TRAIT_DIMENSIONS.filter((d) => d !== exclude)
     .flatMap((dimension) => {
       const best = breakdownByDimension(group, dimension)
         .filter(
@@ -82,5 +82,5 @@ export function findLevers(
         : [];
     })
     .sort((a, b) => b.closeRate - a.closeRate)
-    .slice(0, MAX_LEVERS);
+    .slice(0, MAX_TRAITS);
 }

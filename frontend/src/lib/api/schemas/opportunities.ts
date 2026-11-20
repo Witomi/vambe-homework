@@ -13,10 +13,10 @@ const segmentSchema = z.object({
 });
 
 /** Rasgo con el que, dentro de un grupo, se cierra más que el grupo. */
-const leverSchema = segmentSchema.extend({ groupRate: rate });
+const winningTraitSchema = segmentSchema.extend({ groupRate: rate });
 
-const segmentWithLeversSchema = segmentSchema.extend({
-  levers: z.array(leverSchema),
+const segmentWithTraitsSchema = segmentSchema.extend({
+  winningTraits: z.array(winningTraitSchema),
 });
 
 export const opportunitiesSchema = z.object({
@@ -34,7 +34,7 @@ export const opportunitiesSchema = z.object({
       key: z.enum(['protect', 'grow', 'fix', 'deprioritize']),
       title: z.string(),
       description: z.string(),
-      segments: z.array(segmentWithLeversSchema),
+      segments: z.array(segmentWithTraitsSchema),
     }),
   ),
   solutions: z.array(
@@ -77,5 +77,5 @@ export const opportunitiesSchema = z.object({
       industryRate: rate,
     }),
   ),
-  blockers: z.array(segmentWithLeversSchema),
+  blockers: z.array(segmentWithTraitsSchema),
 });

@@ -36,7 +36,7 @@ export type Insight = z.infer<typeof insightSchema>;
 export type Opportunities = z.infer<typeof opportunitiesSchema>;
 export type Quadrant = Opportunities['quadrants'][number];
 export type Segment = Quadrant['segments'][number];
-export type Lever = Segment['levers'][number];
+export type WinningTrait = Segment['winningTraits'][number];
 export type OpportunityRules = Opportunities['rules'];
 
 export type Prediction = z.infer<typeof predictionSchema>;

@@ -1,8 +1,8 @@
-import { Lever } from '../analytics/levers';
+import { WinningTrait } from '../analytics/winning-traits';
 import { DimensionKey } from '../domain/categories';
 import { SellerSuggestion } from '../prediction/prediction.types';
 
-export type { Lever };
+export type { WinningTrait };
 
 /** Contrato de respuesta de `GET /api/opportunities`. */
 
@@ -17,8 +17,8 @@ export interface Segment {
 }
 
 /** Un grupo con los rasgos de los que, dentro de él, sí cerraron. */
-export interface SegmentWithLevers extends Segment {
-  levers: Lever[];
+export interface SegmentWithTraits extends Segment {
+  winningTraits: WinningTrait[];
 }
 
 export type QuadrantKey = 'protect' | 'grow' | 'fix' | 'deprioritize';
@@ -29,7 +29,7 @@ export interface Quadrant {
   title: string;
   /** Qué tienen en común sus grupos, con las cifras del corte. */
   description: string;
-  segments: SegmentWithLevers[];
+  segments: SegmentWithTraits[];
 }
 
 /** Combinación de necesidades que se repite en varias industrias. */
@@ -89,7 +89,7 @@ export interface SellerAssignment {
 }
 
 /** Rasgo que baja la conversión, con lo que tenían los que cerraron igual. */
-export type Blocker = SegmentWithLevers;
+export type Blocker = SegmentWithTraits;
 
 /**
  * Umbrales con los que se calcularon las secciones. Se envían para que la

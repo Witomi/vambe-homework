@@ -3,7 +3,7 @@ import { formatNumber, formatPct, formatPointsDiff } from '@/lib/format';
 import { OPPORTUNITIES_ORIGIN, segmentDetail } from '@/lib/opportunity-details';
 import { Card } from '../ui/Card';
 import { DetailButton } from './DetailDrawer';
-import { LeverList } from './LeverList';
+import { WinningTraitsList } from './WinningTraitsList';
 
 /**
  * Rasgos que bajan la tasa de cierre y, para cada uno, qué tenían los
@@ -53,7 +53,7 @@ export function Blockers({
                 </span>
               </div>
               <div className="mt-2">
-                <LeverList segment={b} origin={OPPORTUNITIES_ORIGIN} />
+                <WinningTraitsList segment={b} origin={OPPORTUNITIES_ORIGIN} />
               </div>
             </li>
           ))}

@@ -178,7 +178,7 @@ describe('findBlockers', () => {
     ];
     const [blocker] = findBlockers(clients, base(clients));
     expect(blocker.value).toBe('datos_sensibles');
-    expect(blocker.levers[0]).toMatchObject({
+    expect(blocker.winningTraits[0]).toMatchObject({
       dimension: 'leadSource',
       value: 'referido',
       count: 12,

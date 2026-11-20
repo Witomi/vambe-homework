@@ -127,7 +127,7 @@ El panel describe; esta vista propone qué hacer. Un clic en un grupo abre un pa
 | **Mapa de segmentos** | ¿Dónde pongo el esfuerzo? | Cada rubro, canal y tamaño se clasifica por volumen (sobre o bajo la mediana de su dimensión) y conversión (±3 puntos del promedio; lo que queda dentro es ruido y se omite). Cada cuadrante se nombra por su regla (p. ej. «Muchas reuniones · cierran bajo el promedio»), sin recomendaciones escritas a mano. |
 | **Leads recuperables** | ¿A quién vuelvo a llamar? | Leads perdidos a los que la regresión logística (ver Predicción) les da una probabilidad de cierre sobre el promedio, empezando por los de más consultas al mes (más valor para Vambe). Cada uno muestra las dos variables que más le suben la probabilidad. |
 | **Top vendedores por industria** | ¿Qué vendedor cierra mejor cada rubro? | Para cada rubro frecuente, el vendedor que más cierra frente al equipo (al menos +5 puntos y 8 reuniones). |
-| **Frenos a resolver** | ¿Qué baja las ventas? | Requisitos, objeciones, integraciones y casos de uso que cierran bajo el promedio, ordenados por impacto (puntos perdidos × reuniones). Cada uno trae sus **palancas** (`analytics/levers.ts`): dentro del grupo con ese freno, los rasgos con los que sí se cerró (al menos +5 pts sobre el grupo, con 10+ reuniones y el 10% del grupo). Ningún consejo está escrito a mano: todo sale de los datos. |
+| **Frenos a resolver** | ¿Qué baja las ventas? | Requisitos, objeciones, integraciones y casos de uso que cierran bajo el promedio, ordenados por impacto (puntos perdidos × reuniones). Cada uno trae sus **rasgos ganadores** (`analytics/winning-traits.ts`): dentro del grupo con ese freno, los rasgos con los que sí se cerró (al menos +5 pts sobre el grupo, con 10+ reuniones y el 10% del grupo). Ningún consejo está escrito a mano: todo sale de los datos. |
 | **Soluciones replicables** | ¿Qué construyo una vez y vendo en muchos rubros? | Pares de casos de uso (sin contar FAQ, que piden casi todos) presentes en 4 o más industrias distintas. Son candidatos a plantillas verticales. |
 
 ## Vendedores
@@ -178,7 +178,7 @@ backend/src
 ├── analytics/                    cálculos puros compartidos por varios módulos
 │   ├── rates.ts                  rateStat, pointsDiff, minReliableSample
 │   ├── breakdown.ts              tasa de cierre por valor de cada dimensión (+ membersOf)
-│   ├── levers.ts                 palancas: qué tenían los que sí cerraron dentro de un grupo
+│   ├── winning-traits.ts         rasgos ganadores: qué tenían los que sí cerraron dentro de un grupo
 │   └── seller-performance.ts     desempeño por vendedor ajustado por cartera
 ├── data/                         persistencia
 │   ├── csv-loader.ts             CSV → RawClient[]

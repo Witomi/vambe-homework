@@ -2,7 +2,7 @@ import { makeClient } from '../../test/fixtures';
 import { median } from '../common/collections';
 import { Categories } from '../domain/categories';
 import { breakdownByDimension, membersOf } from './breakdown';
-import { findLevers } from './levers';
+import { findWinningTraits } from './winning-traits';
 import { minReliableSample, pointsDiff, rateStat } from './rates';
 
 describe('analytics', () => {
@@ -74,7 +74,7 @@ describe('analytics', () => {
   });
 });
 
-describe('findLevers', () => {
+describe('findWinningTraits', () => {
   const many = (n: number, closed: number, categories: Partial<Categories>) =>
     Array.from({ length: n }, (_, i) =>
       makeClient({ closed: i < closed, categories }),
@@ -85,8 +85,8 @@ describe('findLevers', () => {
       ...many(20, 18, { leadSource: 'referido' }),
       ...many(80, 32, { leadSource: 'google' }),
     ];
-    const [lever] = findLevers(group);
-    expect(lever).toMatchObject({
+    const [trait] = findWinningTraits(group);
+    expect(trait).toMatchObject({
       dimension: 'leadSource',
       value: 'referido',
       closeRate: 0.9,
@@ -100,14 +100,16 @@ describe('findLevers', () => {
       ...many(3, 3, { leadSource: 'referido', industry: 'salud' }),
       ...many(97, 40, { leadSource: 'google', industry: 'salud' }),
     ];
-    expect(findLevers(group)).toEqual([]);
+    expect(findWinningTraits(group)).toEqual([]);
 
     const split = [
       ...many(30, 27, { industry: 'retail' }),
       ...many(70, 28, { industry: 'salud' }),
     ];
-    expect(findLevers(split).map((l) => l.dimension)).toContain('industry');
-    expect(findLevers(split, 'industry')).toEqual([]);
+    expect(findWinningTraits(split).map((l) => l.dimension)).toContain(
+      'industry',
+    );
+    expect(findWinningTraits(split, 'industry')).toEqual([]);
   });
 
   it('membersOf incluye "No lo menciona" en dimensiones de lista', () => {

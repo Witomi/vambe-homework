@@ -1,5 +1,5 @@
 import { membersOf } from '../analytics/breakdown';
-import { findLevers } from '../analytics/levers';
+import { findWinningTraits } from '../analytics/winning-traits';
 import { pointsDiff } from '../analytics/rates';
 import { CategorizedClient } from '../domain/client';
 import { DimensionKey } from '../domain/categories';
@@ -20,7 +20,7 @@ const TOP = 5;
 /**
  * Rasgos de la reunión que bajan la tasa de cierre, de mayor a menor
  * impacto (puntos perdidos × reuniones afectadas). Cada uno trae sus
- * palancas: qué tenían, dentro del grupo, los clientes que sí compraron.
+ * rasgos ganadores: qué tenían, dentro del grupo, los clientes que sí compraron.
  */
 export function findBlockers(
   categorized: readonly CategorizedClient[],
@@ -39,7 +39,7 @@ export function findBlockers(
     .slice(0, TOP)
     .map((s) => ({
       ...s,
-      levers: findLevers(
+      winningTraits: findWinningTraits(
         membersOf(categorized, s.dimension, s.value),
         s.dimension,
       ),

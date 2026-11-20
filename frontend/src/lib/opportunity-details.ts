@@ -13,8 +13,8 @@ export interface Detail {
   stats: { label: string; value: string; hint?: string }[];
   /** Qué significa este grupo. */
   description?: string;
-  /** Grupo cuyas palancas se muestran (qué tenían los que sí cerraron). */
-  leversOf?: Segment;
+  /** Grupo cuyos rasgos ganadores se muestran (qué tenían los que sí cerraron). */
+  winningTraitsOf?: Segment;
   /** Destinos explícitos: el usuario elige a dónde ir. */
   links: { label: string; href: string }[];
 }
@@ -54,7 +54,7 @@ export function segmentDetail(
       { label: 'Reuniones', value: formatNumber(segment.count) },
     ],
     description,
-    leversOf: segment,
+    winningTraitsOf: segment,
     links: [
       panelLink({ [segment.dimension]: segment.value }),
       clientsLink(
