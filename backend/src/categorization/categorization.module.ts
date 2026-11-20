@@ -4,7 +4,7 @@ import { DataModule } from '../data/data.module';
 import { BatchCategorizer } from './batch-categorizer';
 import { CategorizationService } from './categorization.service';
 import { LLM_PROVIDER } from './llm/llm-provider';
-import { createLlmProvider } from './llm/llm-provider.factory';
+import { createLlmProvider } from './llm/create-llm-provider';
 
 @Module({
   imports: [DataModule],

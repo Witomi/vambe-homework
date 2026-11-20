@@ -201,7 +201,7 @@ backend/src
 ├── categorization/               pipeline LLM
 │   ├── categorization.service.ts orquesta la corrida (muestra o --ids), cola, workers, reintentos
 │   ├── batch-categorizer.ts      un lote: prompt → LLM → parseo → registros
-│   ├── llm/                      LlmProvider (interfaz), GemmaProvider, RateLimitedLlmProvider (decorator), factory
+│   ├── llm/                      LlmProvider (interfaz), GemmaProvider, RateLimitedLlmProvider (decorator), createLlmProvider (elige el proveedor según la configuración)
 │   ├── prompt/                   construcción del prompt desde la taxonomía
 │   ├── parsing/                  validación y normalización de la respuesta del modelo
 │   ├── evaluation/               comparación contra etiquetas humanas
