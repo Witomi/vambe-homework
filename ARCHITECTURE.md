@@ -164,28 +164,30 @@ Filtros: `search`, `sellers`, `closed`, `categorized`, `from`, `to`, `volume`, `
 
 ## Precisión del LLM
 
-**96% de las dimensiones correctas por caso**, en promedio de 2 corridas sobre los 50 casos de referencia; 29 casos salen perfectos en ambas.
+Acierto de las categorizaciones incluidas en el repo (las que usa el panel desplegado) contra los 50 casos de referencia: **95% de las dimensiones correctas por caso**, con 28 de 50 casos sin errores. Se reproduce con `npm run evaluate`.
 
 | Dimensión | Acierto |
 | --- | --- |
 | Industria | 100% |
-| Canal de adquisición | 100% |
-| Complejidad técnica (calculada) | 100% |
-| Estacionalidad | 100% |
 | Objeciones | 100% |
 | Consultas/mes en peak (±20%) | 100% |
-| Integraciones | 98% |
-| Tamaño | 97% |
-| Canal de consultas | 97% |
-| Consultas/mes (±20%) | 96% |
-| Dolor principal | 95% |
-| Requisitos clave | 94% |
+| Canal de adquisición | 98% |
+| Canal de consultas | 98% |
+| Complejidad técnica (calculada) | 98% |
+| Estacionalidad | 98% |
+| Consultas/mes (±20%) | 98% |
+| Dolor principal | 96% |
+| Integraciones | 92% |
 | Urgencia | 92% |
-| Casos de uso (lista completa) | 78% |
+| Requisitos clave | 90% |
+| Tamaño | 86% |
+| Casos de uso (lista completa) | 80% |
 
-**Por qué casos de uso queda más abajo:** es una lista (2,7 funciones por cliente en promedio) y solo cuenta como acierto si coincide completa. El modelo encuentra el 93% de las funciones que corresponden y el 94% de las que agrega son correctas, pero basta una de más o de menos para fallar el caso: 13 de los 100 resultados fallan por una sola función. Además, algunas tienen fronteras difusas incluso para una persona (preguntas frecuentes vs. catálogo, agendamiento vs. reservas), y muchas veces la transcripción describe las consultas que recibe el negocio sin decir qué debe hacer el bot. Los errores más repetidos son omitir *catálogo* o *pedidos* y agregar *calificación de leads* sin que se pida. Cambiar la redacción del prompt solo movió los errores de lugar; el siguiente paso sería cambiar de técnica: ejemplos resueltos en el prompt o una segunda pasada que exija citar la frase que justifica cada función.
+Estos datos se generaron con temperatura 0,1 y mezclan el modelo principal (85%) y el de respaldo (15%). En condiciones controladas (temperatura 0, solo el modelo principal, promedio de 2 corridas) el acierto es 96%.
 
-*Limitaciones:* la muestra es chica (cada caso mueve 2–4 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos.
+**Por qué casos de uso queda más abajo:** es una lista (2,7 funciones por cliente en promedio) y solo cuenta como acierto si coincide completa. El modelo encuentra el 95% de las funciones que corresponden y el 97% de las que agrega son correctas, pero basta una de más o de menos para fallar el caso: 9 de los 10 casos con error fallan por una sola función. Además, algunas tienen fronteras difusas incluso para una persona (preguntas frecuentes vs. catálogo, agendamiento vs. reservas), y muchas veces la transcripción describe las consultas que recibe el negocio sin decir qué debe hacer el bot. El error más repetido es omitir *catálogo*. Cambiar la redacción del prompt solo movió los errores de lugar; el siguiente paso sería cambiar de técnica: ejemplos resueltos en el prompt o una segunda pasada que exija citar la frase que justifica cada función.
+
+*Limitaciones:* la muestra es chica (cada caso mueve 2 puntos) y las etiquetas no las puso el equipo comercial: un asistente de IA aplicó los criterios escritos y una persona revisó los primeros 24 casos y decidió los dudosos.
 
 ## Limitaciones
 
