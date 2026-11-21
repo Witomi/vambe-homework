@@ -105,7 +105,28 @@ npm run evaluate -- --cases     # agrega el acierto de cada caso y qué campos f
 
 El reporte muestra el acierto exacto por dimensión; en las dimensiones de lista (como casos de uso), también qué parte de la lista acertó aunque no sea completa (solapamiento), y cuántas veces el volumen de consultas queda dentro de ±20%. La plantilla trae pre-cargada la respuesta del modelo para acelerar la revisión; conviene leer la transcripción antes de mirarla, para no sesgarse.
 
-El acierto actual (96% de las dimensiones correctas por caso, sobre 50 casos) y el detalle por dimensión están en [ARCHITECTURE.md](ARCHITECTURE.md#precisión-del-llm).
+### Resultados
+
+Acierto de las categorizaciones incluidas en el repo (las que usa el panel desplegado) contra los 50 casos de referencia: **95% de las dimensiones correctas por caso**, con 28 de 50 casos sin errores.
+
+| Dimensión | Acierto |
+| --- | --- |
+| Industria | 100% |
+| Objeciones | 100% |
+| Consultas/mes en peak (±20%) | 100% |
+| Canal de adquisición | 98% |
+| Canal de consultas | 98% |
+| Complejidad técnica (calculada) | 98% |
+| Estacionalidad | 98% |
+| Consultas/mes (±20%) | 98% |
+| Dolor principal | 96% |
+| Integraciones | 92% |
+| Urgencia | 92% |
+| Requisitos clave | 90% |
+| Tamaño | 86% |
+| Casos de uso (lista completa) | 80% |
+
+Estos datos se generaron con temperatura 0,1 y mezclan el modelo principal (85%) y el de respaldo (15%), así que varían un poco respecto de la medición controlada (temperatura 0, 2 corridas, 96%) que está en [ARCHITECTURE.md](ARCHITECTURE.md#precisión-del-llm), junto con el porqué de que casos de uso quede más abajo.
 
 ## Tests y calidad de código
 
